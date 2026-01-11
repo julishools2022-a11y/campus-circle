@@ -206,8 +206,8 @@
 
             // Validation: Ensure email ends with .edu.ng
             // Note: You can remove this 'if' block if you want to allow all emails for testing
-           <!-- if (!email.includes(".edu.ng")) {
-                msg.textContent = "Please use a valid university email (.edu.ng)";-->
+            if (!email.includes(".edu.ng")) {
+                msg.textContent = "Please use a valid university email (.edu.ng)";
                 msg.style.color = "#ef4444";
                 btn.disabled = false;
                 btn.textContent = "Sign Up";
