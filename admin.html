@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>For Admins | Campus Circle</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root { 
+        --primary: #2563eb; 
+        --dark: #0f172a; 
+        --bg: #f8fafc; 
+        --white: #ffffff; 
+        --text: #334155; 
+        --text-light: #64748b; 
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+        margin: 0;
+        font-family: 'Roboto', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+
+    /* --- Header --- */
+    header {
+        background: var(--dark);
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        flex-wrap: wrap;
+    }
+
+    .logo {
+        color: var(--white);
+        font-weight: 900;
+        font-size: 20px;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    nav {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        overflow-x: auto;
+        padding-bottom: 5px;
+        -webkit-overflow-scrolling: touch;
+    }
+    nav::-webkit-scrollbar { display: none; }
+
+    nav a {
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+        transition: color 0.2s;
+    }
+
+    nav a:hover, nav a.active {
+        color: var(--white);
+    }
+    
+    nav a.btn {
+        background: var(--primary);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 700;
+    }
+
+    /* --- Page Hero --- */
+    .page-hero {
+        background: var(--white);
+        text-align: center;
+        padding: 60px 20px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .page-hero h1 {
+        color: var(--dark);
+        font-size: 2.2rem;
+        margin: 0 0 10px 0;
+        font-weight: 900;
+    }
+
+    .page-hero p {
+        font-size: 1.1rem;
+        color: var(--text-light);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* --- Main Content --- */
+    .content {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+        flex: 1;
+        width: 100%;
+    }
+
+    h2 {
+        color: var(--dark);
+        font-size: 1.5rem;
+        margin-top: 40px;
+        margin-bottom: 20px;
+        font-weight: 700;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 10px;
+        display: inline-block;
+    }
+
+    p {
+        color: var(--text);
+        margin-bottom: 20px;
+        font-size: 1rem;
+    }
+
+    /* List Styling */
+    ul {
+        list-style: none; /* Remove default bullets */
+        padding: 0;
+        margin-bottom: 30px;
+    }
+
+    li {
+        background: var(--white);
+        margin-bottom: 10px;
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        font-weight: 500;
+        color: var(--dark);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    /* CTA Section */
+    .cta {
+        text-align: center;
+        margin-top: 40px;
+        margin-bottom: 40px;
+    }
+
+    .btn-primary {
+        display: inline-block;
+        background: var(--primary);
+        color: white;
+        text-decoration: none;
+        padding: 16px 32px;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1.1rem;
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+        transition: transform 0.2s, background-color 0.2s;
+    }
+
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-primary:active { transform: scale(0.97); }
+
+    /* --- Footer --- */
+    footer {
+        text-align: center;
+        padding: 30px 20px;
+        color: #94a3b8;
+        font-size: 0.9rem;
+        border-top: 1px solid #e2e8f0;
+        background: var(--bg);
+        margin-top: auto;
+    }
+
+    /* Mobile Header Adjust */
+    @media (max-width: 768px) {
+        header { flex-direction: column; gap: 15px; align-items: flex-start; }
+        nav { width: 100%; justify-content: space-between; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">🎓 Campus Circle</div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="marketplace.html">Marketplace</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="students.html">For Students</a>
+      <a href="admin.html" class="active">For Admins</a>
+      <a href="sign up.html" class="btn">Join Now</a>
+    </nav>
+  </header>
+
+  <section class="page-hero">
+    <h1>For Universities and Campus Leaders</h1>
+    <p>Partner with Campus Circle to make student-to-student commerce safe, organized, and transparent.</p>
+  </section>
+
+  <section class="content">
+    <h2>Benefits for Universities</h2>
+    <ul>
+      <li>✅ Reduce fraud and unsafe meetups on and around campus</li>
+      <li>✅ Strengthen campus community engagement</li>
+      <li>✅ Encourage peer-led economic collaboration</li>
+      <li>✅ Provide students with verified, accountable marketplaces</li>
+    </ul>
+
+    <h2>Campus Ambassador Program</h2>
+    <p>Student leaders can represent Campus Circle at their university. Ambassadors help onboard students, moderate listings, and organize safe trading initiatives on campus.</p>
+
+    <div class="cta">
+      <a href="contact.html" class="btn-primary">Partner With Us</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 Campus Circle | Empowering Campus Commerce.</p>
+  </footer>
+  <script src="script.js"></script>
+</body>
+</html>

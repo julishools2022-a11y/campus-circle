@@ -1,0 +1,220 @@
+/* ==========================================================
+   Campus Circle - Global Styles
+   Theme: Blue/Slate Professional
+   Layout: Full Screen App (Fixed Header/Footer)
+   ========================================================== */
+
+:root {
+  /* Color Palette */
+  --primary: #2563eb;       /* Bright Blue */
+  --primary-dark: #1d4ed8;  /* Darker Blue (Hover) */
+  --secondary: #eff6ff;     /* Light Blue Background */
+  --dark: #0f172a;          /* Slate 900 (Text/Header) */
+  --text: #334155;          /* Slate 700 (Body Text) */
+  --text-light: #64748b;    /* Slate 500 (Subtext) */
+  --bg: #f8fafc;            /* Slate 50 (Page BG) */
+  --white: #ffffff;
+  --success: #16a34a;       /* Green */
+  --danger: #ef4444;        /* Red */
+  
+  /* Layout Variables */
+  --header-height: 60px;
+  --bottom-nav-height: 60px;
+}
+
+/* ===== 1. APP SHELL SETUP (Critical for Mobile) ===== */
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  overflow: hidden; /* Prevents body scroll, we scroll .main-scroll-area instead */
+}
+
+body {
+  font-family: 'Roboto', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollable Container for Content */
+.main-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth iOS scroll */
+  background: var(--bg);
+  width: 100%;
+  padding-bottom: 80px; /* Space for bottom nav on mobile */
+  scroll-behavior: smooth;
+}
+
+/* ===== 2. HEADER & NAVIGATION ===== */
+header {
+  background: var(--dark);
+  padding: 0 20px;
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+header .logo {
+  color: var(--white);
+  font-weight: 900;
+  font-size: 1.2rem;
+  text-decoration: none;
+  white-space: nowrap;
+  letter-spacing: -0.5px;
+}
+
+/* Desktop Navigation */
+nav.desktop-nav {
+  display: none;
+  gap: 20px;
+  align-items: center;
+}
+
+nav.desktop-nav a {
+  color: #94a3b8;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+nav.desktop-nav a:hover, nav.desktop-nav a.active {
+  color: var(--white);
+}
+
+nav.desktop-nav .btn-join {
+  background: var(--primary);
+  color: white !important;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+/* Mobile Scrollable Header Nav (When not using desktop nav) */
+nav.mobile-scroll-nav {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  margin-left: 20px;
+  -webkit-overflow-scrolling: touch;
+}
+nav.mobile-scroll-nav::-webkit-scrollbar { display: none; }
+
+/* Show desktop nav only on large screens */
+@media (min-width: 850px) {
+  nav.desktop-nav { display: flex; }
+  nav.mobile-scroll-nav { display: none; }
+}
+
+/* ===== 3. MOBILE BOTTOM BAR ===== */
+.nav-mobile {
+  background: var(--white);
+  border-top: 1px solid #e2e8f0;
+  padding: 10px 0;
+  display: flex;
+  justify-content: space-around;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  z-index: 1000;
+  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+}
+
+.nav-mobile a {
+  text-decoration: none;
+  color: #94a3b8;
+  font-size: 0.7rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.nav-mobile a.active {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.nav-mobile svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+
+@media (min-width: 850px) {
+  .nav-mobile { display: none; }
+  .main-scroll-area { padding-bottom: 0; }
+}
+
+/* ===== 4. HERO SECTIONS ===== */
+/* Main Landing Hero */
+.hero {
+  background: var(--white);
+  text-align: center;
+  padding: 60px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.hero h1 { font-size: 2.5rem; margin-bottom: 15px; letter-spacing: -1px; color: var(--dark); font-weight: 900; }
+.hero p { font-size: 1.1rem; max-width: 600px; margin: 0 auto 30px; line-height: 1.6; color: var(--text-light); }
+
+/* Simple Page Hero (About, Students) */
+.page-hero {
+  background: var(--white);
+  text-align: center;
+  padding: 40px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+.page-hero h1 { font-size: 2rem; color: var(--dark); margin-bottom: 10px; font-weight: 800; }
+.page-hero p { color: var(--text-light); max-width: 600px; margin: 0 auto; }
+
+/* ===== 5. BUTTONS & UI ELEMENTS ===== */
+.btn {
+  display: inline-block;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.2s;
+  border: none;
+  font-size: 1rem;
+}
+
+.btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-secondary { background: var(--secondary); color: var(--primary); }
+.btn:active { transform: scale(0.97); }
+
+/* ===== 6. GRIDS & CARDS (Marketplace & Features) ===== */
+.content { max-width: 1200px; margin: 0 auto; padding: 40px 20px; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: var(--white);
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  border: 1px solid #f1f5f9;
+  transition: transform 0.2s;
+}
+
+.card:hover { transform: translateY(-3px); border-color: var(--primary); }
+.card h3 { margin-top: 0; color: var(--dark); font-size: 1.1rem; }
+.card p { color: var(--text-light); font-size: 0.95rem; line-height: 1

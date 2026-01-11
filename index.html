@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Circle | Home</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root { 
+        --primary: #2563eb; 
+        --primary-dark: #1d4ed8;
+        --dark: #0f172a; 
+        --bg: #f8fafc; 
+        --white: #ffffff; 
+        --text: #334155; 
+        --text-light: #64748b; 
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    /* --- App Layout --- */
+    html, body { height: 100%; margin: 0; overflow: hidden; }
+    body { 
+        font-family: 'Roboto', sans-serif; 
+        background: var(--bg); 
+        color: var(--text); 
+        display: flex; 
+        flex-direction: column; 
+    }
+
+    /* --- Header (Updated for Mobile) --- */
+    header {
+        background: var(--dark);
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+        z-index: 100;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        flex-wrap: wrap; /* Allows wrapping on small screens */
+    }
+
+    .logo { 
+        color: var(--white); 
+        font-weight: 900; 
+        font-size: 20px; 
+        text-decoration: none; 
+        white-space: nowrap; 
+        margin-right: 20px;
+    }
+
+    /* Navigation - Horizontal Scroll on Mobile */
+    nav { 
+        display: flex; 
+        gap: 20px; 
+        align-items: center; 
+        overflow-x: auto; 
+        padding-bottom: 0;
+        -webkit-overflow-scrolling: touch;
+        flex: 1;
+        justify-content: flex-end;
+    }
+    
+    /* Hide scrollbar */
+    nav::-webkit-scrollbar { display: none; }
+
+    nav a { 
+        color: #94a3b8; 
+        text-decoration: none; 
+        font-size: 14px; 
+        font-weight: 500; 
+        transition: color 0.2s; 
+        white-space: nowrap;
+    }
+    
+    nav a:hover { color: var(--white); }
+    
+    nav a.btn-join { 
+        background: var(--primary); 
+        color: white; 
+        padding: 8px 16px; 
+        border-radius: 6px; 
+        font-weight: 700; 
+    }
+
+    /* --- Scrollable Content Area --- */
+    .main-scroll-area {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        background: var(--bg);
+        width: 100%;
+        padding-bottom: 20px; /* Small padding at bottom */
+    }
+
+    /* --- Sections --- */
+    section { padding: 60px 20px; border-bottom: 1px solid #e2e8f0; }
+    
+    /* Hero Section */
+    .hero { background: var(--white); text-align: center; padding: 80px 20px; }
+    .hero h1 { font-size: 2.5rem; margin-bottom: 15px; letter-spacing: -1px; color: var(--dark); font-weight: 900; }
+    .hero p { font-size: 1.2rem; max-width: 600px; margin: 0 auto 30px; line-height: 1.6; color: var(--text-light); }
+    
+    .cta-group { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+    .btn { padding: 12px 24px; border-radius: 8px; font-weight: 700; text-decoration: none; transition: transform 0.2s; display: inline-block; }
+    .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
+    .btn-secondary { background: #eff6ff; color: var(--primary); }
+    .btn:active { transform: scale(0.96); }
+
+    /* Features Grid */
+    .features h2 { text-align: center; margin-bottom: 40px; font-size: 2rem; color: var(--dark); }
+    .grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+        gap: 20px; 
+        max-width: 1200px; margin: 0 auto;
+    }
+    .card { background: var(--white); padding: 30px; border-radius: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .card h3 { font-size: 1.1rem; margin-bottom: 10px; color: var(--dark); margin-top: 0; }
+    .card p { font-size: 0.95rem; margin: 0; color: var(--text-light); }
+
+    /* Contact Section */
+    .contact-section { background: var(--white); }
+    .contact-wrapper { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 40px; }
+    
+    @media(min-width: 768px) { .contact-wrapper { grid-template-columns: 1.5fr 1fr; } }
+
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-size: 0.9rem; font-weight: 700; color: var(--dark); margin-bottom: 5px; }
+    input, textarea { 
+        width: 100%; padding: 12px; border: 1px solid #cbd5e1; 
+        border-radius: 8px; background: #f8fafc; font-family: inherit; font-size: 1rem;
+    }
+    input:focus, textarea:focus { outline: none; border-color: var(--primary); background: white; }
+
+    .contact-info { background: #eff6ff; padding: 25px; border-radius: 12px; height: fit-content; }
+    .contact-info h3 { margin-top: 0; color: var(--primary); }
+    .contact-info p { margin-bottom: 15px; color: var(--dark); font-size: 0.95rem; }
+
+    /* --- Unified Footer --- */
+    footer { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 0.9rem; background: var(--bg); margin-top: auto; }
+
+    /* Mobile Header Adjustments */
+    @media (max-width: 768px) {
+        header { flex-direction: column; gap: 15px; align-items: flex-start; }
+        nav { width: 100%; justify-content: space-between; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="logo">🎓 Campus Circle</a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="marketplace.html">Marketplace</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="students.html">For Students</a>
+      <a href="admin.html">For Admins</a>
+      <a href="#contact">Contact</a>
+      <a href="sign up.html" class="btn-join">Join Now</a>
+    </nav>
+  </header>
+
+  <div class="main-scroll-area">
+      
+      <section class="hero">
+        <h1>Building trust in student marketplaces</h1>
+        <p>Campus Circle connects verified students across universities to buy and sell safely — reducing fraud and stress.</p>
+        <div class="cta-group">
+            <a href="marketplace.html" class="btn btn-primary">Explore Marketplace</a>
+            <a href="how-it-works.html" class="btn btn-secondary">Learn More</a>
+        </div>
+      </section>
+
+      <section class="features">
+        <h2>Why Campus Circle?</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>🔐 Verified Students Only</h3>
+                <p>Every user verifies with their university email, ensuring a trusted environment.</p>
+            </div>
+            <div class="card">
+                <h3>📍 Campus-Based</h3>
+                <p>Trade within your campus community or explore nearby schools.</p>
+            </div>
+            <div class="card">
+                <h3>⭐ Reputation System</h3>
+                <p>Students rate each other after transactions, promoting reliability.</p>
+            </div>
+            <div class="card">
+                <h3>💸 Fair Pricing</h3>
+                <p>Compare listings with average student prices to avoid overpaying.</p>
+            </div>
+        </div>
+      </section>
+
+      <section class="contact-section" id="contact">
+        <div style="text-align:center; margin-bottom:40px;">
+            <h2 style="font-size:2rem; margin:0;">Contact Us</h2>
+            <p>We’re here to help — reach out to our support team.</p>
+        </div>
+
+        <div class="contact-wrapper">
+            <form>
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" placeholder="Your name" required>
+                </div>
+                <div class="form-group">
+                    <label for="university">University</label>
+                    <input type="text" id="university" placeholder="Your university" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="you@university.edu" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" rows="5" placeholder="How can we help?"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%; border:none; cursor:pointer;">Send Message</button>
+            </form>
+
+            <div class="contact-info">
+                <h3>Quick Info</h3>
+                <p>📧 <strong>Email:</strong><br>campuscircle@gmail.com</p>
+                <p>🏢 <strong>Office:</strong><br>Reach us via WhatsApp</p>
+                <p>🔗 <strong>Social:</strong><br>LinkedIn | Instagram | X</p>
+            </div>
+        </div>
+      </section>
+
+      <footer>
+        <p>© 2026 Campus Circle | Built for Students, by Students.</p>
+      </footer>
+  </div>
+
+  <script>
+    // Simple script to confirm message sent (Visual only)
+    document.querySelector('form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const btn = this.querySelector('button');
+        const original = btn.textContent;
+        btn.textContent = "Message Sent!";
+        btn.style.background = "#16a34a"; // Green
+        setTimeout(() => {
+            btn.textContent = original;
+            btn.style.background = ""; // Reset
+            this.reset();
+        }, 2000);
+    });
+  </script>
+</body>
+</html>

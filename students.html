@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>For Students | Campus Circle</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root { --primary: #2563eb; --dark: #0f172a; --bg: #f8fafc; --white: #ffffff; --text: #334155; }
+    
+    /* --- Full Screen App Layout Setup --- */
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    html, body { 
+        height: 100%; 
+        margin: 0; 
+        overflow: hidden; /* Prevents whole-page scrolling */
+    }
+
+    body { 
+        font-family: 'Roboto', sans-serif; 
+        background: var(--bg); 
+        color: var(--text); 
+        display: flex; 
+        flex-direction: column; 
+    }
+
+    /* --- Header (Fixed Top) --- */
+    header { 
+        background: var(--dark); 
+        padding: 15px 20px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+        flex-shrink: 0; /* Prevents header from shrinking */
+        z-index: 100;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .logo { color: var(--white); font-weight: 900; font-size: 20px; text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    
+    .desktop-nav { display: none; gap: 20px; }
+    .desktop-nav a { color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s; }
+    .desktop-nav a:hover, .desktop-nav a.active { color: var(--white); }
+    .desktop-nav .btn-join { background: var(--primary); color: white; padding: 8px 16px; border-radius: 6px; }
+
+    @media(min-width: 768px) { .desktop-nav { display: flex; align-items: center; } }
+
+    /* --- Scrollable Main Area --- */
+    .main-scroll-area {
+        flex: 1; /* Takes remaining height */
+        overflow-y: auto; /* Internal scroll */
+        -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+        padding-bottom: 20px; /* Reduced padding since nav is gone */
+        background: var(--bg);
+    }
+
+    /* --- Hero Section --- */
+    .hero { background: white; text-align: center; padding: 60px 20px; border-bottom: 1px solid #e2e8f0; width: 100%; }
+    .hero h1 { color: var(--dark); font-size: 2.5rem; margin: 0 0 15px 0; font-weight: 900; }
+    .hero p { font-size: 1.1rem; color: #64748b; max-width: 600px; margin: 0 auto; line-height: 1.6; }
+
+    /* --- Grid Content --- */
+    .content-container { max-width: 1000px; margin: 40px auto; padding: 0 20px; }
+    h2 { text-align: center; color: var(--dark); margin-bottom: 30px; font-size: 1.8rem; }
+
+    .grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    @media(min-width: 768px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+
+    .card { background: var(--white); padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); transition: transform 0.2s; border: 1px solid #f1f5f9; }
+    .card:hover { transform: translateY(-5px); border-color: var(--primary); }
+    .card h3 { color: var(--dark); margin-top: 0; display: flex; align-items: center; gap: 10px; font-size: 1.2rem; }
+    .card p { color: #64748b; line-height: 1.5; margin-bottom: 0; }
+
+    /* --- Safety Tools List --- */
+    .safety-section { background: #eff6ff; border-radius: 16px; padding: 40px 20px; margin-top: 50px; text-align: center; width: 100%; }
+    .safety-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 15px; margin: 20px 0; }
+    @media(min-width: 768px) { .safety-list { flex-direction: row; justify-content: center; gap: 30px; } }
+    
+    .safety-item { display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 500; color: var(--dark); background: white; padding: 10px 20px; border-radius: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+    /* --- CTA Button --- */
+    .cta-container { text-align: center; margin-top: 40px; }
+    .btn-primary { display: inline-block; background: var(--primary); color: white; text-decoration: none; padding: 15px 30px; border-radius: 8px; font-weight: 700; font-size: 1.1rem; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); transition: transform 0.2s; }
+    .btn-primary:active { transform: scale(0.95); }
+
+    /* --- Footer --- */
+    footer { text-align: center; padding: 40px 20px; color: #94a3b8; font-size: 0.9rem; border-top: 1px solid #e2e8f0; margin-top: 60px; background: var(--bg); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="marketplace.html" class="logo">🎓 Campus Circle</a>
+    <nav class="desktop-nav">
+      <a href="marketplace.html">Marketplace</a>
+      <a href="students.html" class="active">For Students</a>
+      <a href="post-item.html">Sell</a>
+      <a href="profile.html" class="btn-join" id="auth-btn">Profile</a>
+    </nav>
+  </header>
+
+  <div class="main-scroll-area">
+      <section class="hero">
+        <h1>Empowering Students</h1>
+        <p>Campus Circle helps you buy, sell, and connect safely — all within your verified academic community.</p>
+      </section>
+
+      <div class="content-container">
+        <h2>Why Students Love It</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>💰 Fair Deals</h3>
+            <p>Find affordable listings from verified students at your university. No middleman markups.</p>
+          </div>
+          <div class="card">
+            <h3>🔐 Safety First</h3>
+            <p>Every user is verified with an official university email. We keep the scammers out.</p>
+          </div>
+          <div class="card">
+            <h3>⭐ Reputation</h3>
+            <p>Build credibility through our rating system. Good sellers get noticed.</p>
+          </div>
+          <div class="card">
+            <h3>🤝 Community</h3>
+            <p>Connect with students across departments. It's more than just a marketplace.</p>
+          </div>
+        </div>
+
+        <div class="safety-section">
+          <h2>Built for Trust</h2>
+          <div class="safety-list">
+            <div class="safety-item">🚩 Easy Reporting</div>
+            <div class="safety-item">⚖️ Price Indicators</div>
+            <div class="safety-item">🛡️ 24/7 Monitoring</div>
+          </div>
+          
+          <div class="cta-container">
+            <a href="marketplace.html" class="btn-primary">Start Exploring Listings</a>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <p>© 2026 Campus Circle | Safe. Verified. Student-Driven.</p>
+      </footer>
+  </div>
+
+  <script>
+    const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; // Replace with your key
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function checkAuth() {
+        const { data: { user } } = await _supabase.auth.getUser();
+        const btn = document.getElementById('auth-btn');
+        
+        if (!user) {
+            btn.textContent = "Login / Join";
+            btn.href = "sign up.html";
+        }
+    }
+    checkAuth();
+  </script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Profile</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family:'Roboto', sans-serif; background:#f8fafc; margin:0; display:flex; flex-direction:column; height:100vh; }
+        
+        /* Header */
+        .header { background:#0f172a; padding:15px 20px; color:white; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header h2 { margin:0; font-size:18px; }
+        .btn-logout { background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.2); color:white; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:13px; font-weight: 500; }
+
+        /* Content Area */
+        .content { flex:1; overflow-y:auto; padding:20px; padding-bottom:90px; }
+
+        /* --- FIXED AVATAR CARD --- */
+        .user-card { 
+            background:white; 
+            padding:30px 20px; 
+            border-radius:16px; 
+            text-align:center; 
+            box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); 
+            margin-bottom:25px; 
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        /* This ensures the circle stays a circle */
+        .avatar-container { 
+            position:relative; 
+            width: 100px;      /* Fixed Width */
+            height: 100px;     /* Fixed Height (Must match width) */
+            margin: 0 auto 15px; 
+            cursor: pointer; 
+        }
+
+        .avatar, .avatar-placeholder { 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 50%; 
+            object-fit: cover; 
+            border: 4px solid #f1f5f9; /* Light border ring */
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
+        }
+
+        .avatar-placeholder { 
+            background: #2563eb; 
+            color: white; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 40px; 
+            font-weight: 700;
+        }
+        
+        .camera-icon { 
+            position:absolute; 
+            bottom: 5px; 
+            right: 0; 
+            background: #0f172a; 
+            color: white; 
+            width: 32px; 
+            height: 32px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 16px; 
+            border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        h2#display-name { margin: 10px 0 5px; font-size: 20px; color: #1e293b; }
+        p#display-email { margin: 0 0 20px; color: #64748b; font-size: 14px; }
+
+        .btn-edit { 
+            background: #eff6ff; 
+            color: #2563eb; 
+            border: none; 
+            padding: 10px 24px; 
+            border-radius: 30px; 
+            font-weight: 600; 
+            font-size: 13px; 
+            cursor: pointer; 
+            transition: background 0.2s;
+        }
+        .btn-edit:active { background: #dbeafe; }
+
+        /* Listings Section */
+        .section-header { 
+            font-weight: 700; 
+            color: #475569; 
+            margin-bottom: 15px; 
+            font-size: 13px; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+        }
+
+        .item { 
+            background: white; 
+            padding: 12px; 
+            border-radius: 12px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+            margin-bottom: 12px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .item img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: #f1f5f9; }
+        .item-info { flex: 1; }
+        .item-title { font-weight: 600; font-size: 15px; color: #1e293b; margin-bottom: 4px; }
+        .item-price { color: #2563eb; font-weight: 700; font-size: 14px; }
+        .btn-del { background: #fee2e2; color: #ef4444; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+        /* Modal */
+        .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:none; justify-content:center; align-items:center; z-index:2000; backdrop-filter: blur(2px); }
+        .modal { background:white; padding:25px; border-radius: 16px; width:85%; max-width:350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .inp-group { margin-bottom: 20px; }
+        .inp-group label { display: block; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 8px; text-transform: uppercase; }
+        .inp-group input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; box-sizing: border-box; outline: none; }
+        .inp-group input:focus { border-color: #2563eb; ring: 2px solid #bfdbfe; }
+        
+        .modal-actions { display: flex; gap: 10px; }
+        .btn-modal { flex: 1; padding: 14px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; }
+        .btn-cancel { background: #f1f5f9; color: #475569; }
+        .btn-save { background: #2563eb; color: white; }
+
+        /* Bottom Nav */
+        .nav { background:white; border-top:1px solid #f1f5f9; padding:12px 0; display:flex; justify-content:space-around; position:fixed; bottom:0; width:100%; z-index: 100; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+        .nav a { text-decoration:none; color:#94a3b8; font-size:11px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px; }
+        .nav a.active { color:#2563eb; font-weight: 500; }
+        .nav svg { width: 24px; height: 24px; fill: currentColor; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>My Profile</h2>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="content">
+        <div class="user-card">
+            <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadAvatar(event)">
+            
+            <div class="avatar-container" onclick="document.getElementById('avatarInput').click()">
+                <div id="avatar-wrapper" style="width:100%; height:100%;">
+                    <div class="avatar-placeholder" id="initials">?</div>
+                </div>
+                <div class="camera-icon">📷</div>
+            </div>
+
+            <h2 id="display-name">Loading...</h2>
+            <p id="display-email">...</p>
+            <button class="btn-edit" onclick="openModal()">Edit Profile</button>
+        </div>
+
+        <div class="section-header">MY ACTIVE LISTINGS</div>
+        <div id="listings-list"></div>
+    </div>
+
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <h3 style="margin: 0 0 20px 0; font-size: 18px;">Edit Details</h3>
+            <div class="inp-group">
+                <label>Full Name</label>
+                <input type="text" id="edit-name" placeholder="Enter your name">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn-modal btn-save" onclick="saveProfile()" id="saveBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a href="marketplace.html">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            Home
+        </a>
+        <a href="post-item.html">
+            <svg viewBox="0 0 24 24"><path d="M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg>
+            Sell
+        </a>
+        <a href="profile.html" class="active">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            Profile
+        </a>
+    </nav>
+
+    <script>
+        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; // REPLACE THIS!
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        let currentUser = null;
+
+        async function init() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if(!user) return window.location.href='login.html';
+            
+            currentUser = user;
+            renderUserProfile();
+            loadListings(user.id);
+        }
+
+        function renderUserProfile() {
+            const meta = currentUser.user_metadata || {};
+            document.getElementById('display-email').textContent = currentUser.email;
+            document.getElementById('display-name').textContent = meta.full_name || "Student Member";
+            document.getElementById('edit-name').value = meta.full_name || "";
+
+            const wrapper = document.getElementById('avatar-wrapper');
+            if (meta.avatar_url) {
+                wrapper.innerHTML = `<img src="${meta.avatar_url}" class="avatar">`;
+            } else {
+                const initial = currentUser.email ? currentUser.email[0].toUpperCase() : "?";
+                wrapper.innerHTML = `<div class="avatar-placeholder">${initial}</div>`;
+            }
+        }
+
+        async function uploadAvatar(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Show loading state directly in the circle
+            document.getElementById('avatar-wrapper').innerHTML = `<div class="avatar-placeholder" style="font-size:12px;">...</div>`;
+
+            try {
+                const fileName = `avatars/${currentUser.id}-${Date.now()}.png`;
+                const { error: upErr } = await _supabase.storage.from('listing-images').upload(fileName, file);
+                if (upErr) throw upErr;
+
+                const { data } = _supabase.storage.from('listing-images').getPublicUrl(fileName);
+                
+                const { data: updateData, error: updateErr } = await _supabase.auth.updateUser({
+                    data: { avatar_url: data.publicUrl }
+                });
+
+                if (updateErr) throw updateErr;
+
+                currentUser = updateData.user;
+                renderUserProfile();
+
+            } catch (err) {
+                alert("Upload failed: " + err.message);
+                renderUserProfile();
+            }
+        }
+
+        async function saveProfile() {
+            const btn = document.getElementById('saveBtn');
+            const newName = document.getElementById('edit-name').value;
+            
+            btn.textContent = "...";
+            btn.disabled = true;
+
+            const { data, error } = await _supabase.auth.updateUser({
+                data: { full_name: newName }
+            });
+
+            if (!error) {
+                currentUser = data.user;
+                renderUserProfile();
+                closeModal();
+            } else {
+                alert("Error: " + error.message);
+            }
+            btn.textContent = "Save";
+            btn.disabled = false;
+        }
+
+        async function loadListings(uid) {
+            const listDiv = document.getElementById('listings-list');
+            const { data } = await _supabase.from('listings').select('*').eq('user_id', uid).order('created_at', {ascending:false});
+            
+            if(!data || data.length === 0) {
+                listDiv.innerHTML = '<div style="text-align:center; color:#94a3b8; padding:30px; font-size:14px;">You haven\'t posted any items yet.</div>';
+                return;
+            }
+
+            listDiv.innerHTML = data.map(i => `
+                <div class="item">
+                    <img src="${i.image_url || 'https://via.placeholder.com/60'}" loading="lazy">
+                    <div class="item-info">
+                        <div class="item-title">${i.name}</div>
+                        <div class="item-price">₦ ${(i.price || 0).toLocaleString()}</div>
+                    </div>
+                    <button class="btn-del" onclick="delItem('${i.id}')">Delete</button>
+                </div>
+            `).join('');
+        }
+
+        async function delItem(id) {
+            if(confirm("Delete this listing?")) {
+                await _supabase.from('listings').delete().eq('id', id);
+                loadListings(currentUser.id);
+            }
+        }
+
+        function openModal() { document.getElementById('editModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+        
+       <!--  async function logout() {
+            await _supabase.auth.signOut();
+            window.location.href = 'login.html'; -->
+        }
+
+        init();
+    </script>
+</body>
+</html>
