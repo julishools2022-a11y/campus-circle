@@ -166,7 +166,7 @@
                 tbody.innerHTML = data.map(item => `
                     <tr>
                         <td><b>${item.name}</b><br><small style="color:#94a3b8;">${item.id}</small></td>
-                        <td>₦${item.price}</td>
+                        <td>₦${item.price.toLocaleString()}</td>
                         <td><button class="btn-action btn-del" onclick="deleteListing('${item.id}')">Remove</button></td>
                     </tr>
                 `).join('');
@@ -188,7 +188,7 @@
             // Join reports with listings to show item name
             const { data: reports } = await _supabase
                 .from('reports')
-                .select(`*, listings(name, image_url)`)
+                .select(`*, listings(name, image_url, id)`)
                 .order('created_at', {ascending:false});
 
             document.getElementById('stat-reports').innerText = reports ? reports.length : 0;
@@ -206,7 +206,7 @@
                         </td>
                         <td>
                             <button class="btn-action btn-dismiss" onclick="dismissReport('${r.id}')">Dismiss</button>
-                            ${r.listings ? `<button class="btn-action btn-del" onclick="deleteListing('${r.listing_id}')">Take Down</button>` : ''}
+                            ${r.listings ? `<button class="btn-action btn-del" onclick="deleteListing('${r.listings.id}')">Take Down</button>` : ''}
                         </td>
                     </tr>
                 `).join('');
@@ -241,7 +241,10 @@
         async function addAdmin() {
             const email = document.getElementById('new-admin-email').value;
             if(!email) return alert("Enter an email");
+            
+            // SECURITY NOTE: This will fail if you haven't run the SQL policy above!
             const { error } = await _supabase.from('admin_users').insert({ email: email });
+            
             if(error) alert("Error: " + error.message);
             else {
                 document.getElementById('new-admin-email').value = "";
@@ -253,7 +256,8 @@
         async function removeAdmin(email) {
             if(confirm("Remove this user from admin staff?")) {
                 const { error } = await _supabase.from('admin_users').delete().eq('email', email);
-                if(!error) loadTeam();
+                if(error) alert("Error: " + error.message);
+                else loadTeam();
             }
         }
 
@@ -269,4 +273,5 @@
         init();
     </script>
 </body>
-</html>
+                    </html>
+                    
