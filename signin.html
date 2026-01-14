@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sign Up | Campus Circle</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --primary-dark: #1d4ed8; --dark: #0f172a; --bg: #f8fafc; --text: #334155; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Roboto', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        .signup-container { background: white; padding: 2.5rem; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); width: 100%; max-width: 400px; border: 1px solid #e2e8f0; text-align: center; }
+        h2 { color: var(--dark); margin: 0 0 10px 0; font-size: 1.5rem; font-weight: 700; }
+        .form-group { margin-bottom: 1.2rem; text-align: left; }
+        label { display: block; margin-bottom: 0.5rem; color: var(--text); font-size: 0.85rem; font-weight: 600; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; color: var(--dark); background: #f8fafc; outline: none; }
+        input:focus, select:focus { border-color: var(--primary); background: white; }
+        button { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 1rem; }
+        button:disabled { background-color: #94a3b8; }
+        #message { margin-top: 1.5rem; font-size: 0.9rem; font-weight: 500; }
+        .footer-text { margin-top: 2rem; font-size: 0.9rem; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px; }
+        .footer-text a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    </style>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+</head>
+<body>
+    <div class="signup-container">
+        <h2>Create Account</h2>
+        <p style="color:#64748b; margin-top:0;">Join your student community</p>
+        
+        <form id="signup-form">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="fullName" placeholder="John Doe" required>
+            </div>
+            
+            <div style="display:flex; gap:10px;">
+                <div class="form-group" style="flex:1;">
+                    <label>Department / Business Type</label>
+                    <input type="text" id="dept" placeholder="e.g. Comp Sci, or 'Campus Vendor'" required>
+                </div>
+                <div class="form-group" style="width:120px;">
+                    <label>Level</label>
+                    <select id="level" required>
+                        <option value="" disabled selected>Select</option>
+                        <option value="100L">100L</option>
+                        <option value="200L">200L</option>
+                        <option value="300L">300L</option>
+                        <option value="400L">400L</option>
+                        <option value="500L">500L</option>
+                        <option value="PG">PG</option>
+                        <option value="Graduate">Alumni</option>
+                        <option value="Staff">Staff</option>
+                        <option value="Vendor">Vendor</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="signupEmail" placeholder="you@email.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="signupPassword" placeholder="Min. 6 characters" required>
+            </div>
+            
+            <button type="submit" id="submitBtn">Sign Up</button>
+        </form>
+
+        <div id="message"></div>
+        <div class="footer-text">Already have an account? <a href="index.html">Log In</a></div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        const signupForm = document.getElementById("signup-form");
+        const msg = document.getElementById("message");
+        const btn = document.getElementById("submitBtn");
+
+        signupForm.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById("fullName").value;
+            const dept = document.getElementById("dept").value;
+            const level = document.getElementById("level").value;
+            const email = document.getElementById("signupEmail").value;
+            const password = document.getElementById("signupPassword").value;
+
+            msg.textContent = "";
+            btn.disabled = true;
+            btn.textContent = "Creating Account...";
+
+            try {
+                // Sending Dept and Level to User Metadata
+                const { data, error } = await _supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: name,
+                            department: dept,
+                            level: level
+                        }
+                    }
+                });
+
+                if (error) {
+                    msg.textContent = error.message;
+                    msg.style.color = "#ef4444";
+                    btn.disabled = false;
+                    btn.textContent = "Sign Up";
+                } else {
+                    msg.textContent = "Success! Redirecting...";
+                    msg.style.color = "#16a34a";
+                    
+                    // NEW: Redirect to verify page with email parameter
+                    setTimeout(() => { 
+                        window.location.href = `verify-email.html?email=${encodeURIComponent(email)}`; 
+                    }, 1000);
+                }
+            } catch (err) {
+                msg.textContent = "Connection error. Try again.";
+                msg.style.color = "#ef4444";
+                btn.disabled = false;
+                btn.textContent = "Sign Up";
+            }
+        };
+    </script>
+</body>
+</html>

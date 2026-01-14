@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Edit Item | Campus Circle</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --dark: #0f172a; --bg: #f8fafc; --text: #334155; }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Roboto', sans-serif; background: var(--bg); margin: 0; padding-bottom: 90px; }
+
+        /* Header */
+        .header { background: var(--dark); padding: 15px 20px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; }
+        .header h2 { color: white; margin: 0; font-size: 18px; }
+        .cancel-btn { color: #94a3b8; text-decoration: none; font-size: 14px; }
+
+        /* Form Container */
+        .container { max-width: 600px; margin: 20px auto; padding: 0 20px; }
+        
+        /* Gallery Styles */
+        .gallery-label { font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px; text-transform: uppercase; display:block;}
+        .gallery-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
+        .thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1; flex-shrink: 0; background: white; }
+        
+        .upload-btn { background: white; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 15px; text-align: center; color: var(--primary); font-weight: 600; font-size: 14px; cursor: pointer; margin-bottom: 25px; }
+
+        /* Inputs */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 8px; text-transform: uppercase; }
+        
+        input, select, textarea { width: 100%; padding: 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px; background: white; outline: none; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); ring: 2px solid #bfdbfe; }
+        
+        .currency-input { position: relative; }
+        .currency-symbol { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-weight: bold; }
+        .currency-input input { padding-left: 35px; }
+
+        /* Submit Button */
+        .btn-submit { background: var(--primary); color: white; border: none; padding: 16px; width: 100%; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); }
+        .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        .loader { text-align: center; padding: 50px; color: #64748b; }
+
+        /* Hide Bottom Nav since we moved to Sidebar logic */
+        .nav { display: none; } 
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>Edit Item</h2>
+        <a href="profile.html" class="cancel-btn">Cancel</a>
+    </div>
+
+    <div id="loading" class="loader">Loading item details...</div>
+
+    <div class="container" id="edit-container" style="display:none;">
+        <form id="edit-form">
+            
+            <span class="gallery-label">Current Photos</span>
+            <div id="current-gallery" class="gallery-container"></div>
+
+            <div class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                📸 Tap to Change / Add Photos
+            </div>
+            <input type="file" id="fileInput" multiple accept="image/*" style="display: none;" onchange="previewNewImages(event)">
+            <div id="new-preview" class="gallery-container" style="display:none; border-top:1px dashed #ccc; padding-top:10px;"></div>
+
+            <div class="form-group">
+                <label>Item Name</label>
+                <input type="text" id="name" required>
+            </div>
+
+            <div class="form-group">
+                <label>Price (₦)</label>
+                <div class="currency-input">
+                    <span class="currency-symbol">₦</span>
+                    <input type="number" id="price" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Category</label>
+                <select id="category" required>
+                    <option value="" disabled selected>Select Category</option>
+                    <option value="Books">Books & Handouts</option>
+                    <option value="Electronics">Electronics & Gadgets</option>
+                    <option value="Fashion">Clothing & Fashion</option>
+                    <option value="Housing">Hostel & Appliances</option>
+                    <option value="Services">Services (Tutoring, etc.)</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Meeting Location / Landmark</label>
+                <input type="text" id="location" required>
+            </div>
+
+            <div class="form-group">
+                <label>Condition</label>
+                <select id="condition" required>
+                    <option value="Used">Used</option>
+                    <option value="New">Brand New</option>
+                    <option value="Refurbished">Refurbished</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="description" rows="4" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>WhatsApp Number</label>
+                <input type="tel" id="phone" required>
+            </div>
+
+            <button type="submit" id="submitBtn" class="btn-submit">Update Listing</button>
+        </form>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        let currentItemId = null;
+        let originalData = {};
+        let newFiles = [];
+
+        async function init() {
+            // 1. Check Auth (Fixed Logic)
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) return window.location.href = "sign up.html"; // Redirect if not logged in
+
+            const params = new URLSearchParams(window.location.search);
+            currentItemId = params.get('id');
+            if (!currentItemId) return window.location.href = "profile.html";
+
+            // 2. Fetch Item
+            const { data, error } = await _supabase.from('listings').select('*').eq('id', currentItemId).single();
+            if (error || !data) return alert("Item not found.");
+            
+            // 3. Verify Ownership
+            if (data.user_id !== user.id) return alert("Permission denied.");
+
+            originalData = data;
+
+            // 4. Populate Fields
+            document.getElementById('name').value = data.name;
+            document.getElementById('price').value = data.price;
+            document.getElementById('category').value = data.category || ""; // NEW
+            document.getElementById('location').value = data.location || ""; // NEW
+            document.getElementById('condition').value = data.condition || 'Used';
+            document.getElementById('description').value = data.description;
+            document.getElementById('phone').value = data.seller_phone || "";
+            
+            // 5. Populate Images
+            const galleryDiv = document.getElementById('current-gallery');
+            const images = (data.gallery && data.gallery.length > 0) ? data.gallery : [data.image_url];
+            galleryDiv.innerHTML = images.map(url => `<img src="${url}" class="thumb">`).join('');
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('edit-container').style.display = 'block';
+        }
+
+        function previewNewImages(event) {
+            newFiles = Array.from(event.target.files);
+            const container = document.getElementById('new-preview');
+            if (newFiles.length > 0) {
+                container.style.display = 'flex';
+                container.innerHTML = '';
+                newFiles.forEach(file => {
+                    const url = URL.createObjectURL(file);
+                    container.innerHTML += `<img src="${url}" class="thumb">`;
+                });
+                alert("Note: Saving will replace OLD photos with these NEW ones.");
+            }
+        }
+
+        document.getElementById('edit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = "Updating...";
+
+            try {
+                let finalGallery = originalData.gallery;
+                let finalMainImage = originalData.image_url;
+
+                if (newFiles.length > 0) {
+                    btn.textContent = "Uploading photos...";
+                    const uploadedUrls = [];
+                    for (const file of newFiles) {
+                        const fileName = `updated/${Date.now()}-${Math.random()}-${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+                        const { error: upError } = await _supabase.storage.from('listing-images').upload(fileName, file);
+                        if (upError) throw upError;
+                        const { data } = _supabase.storage.from('listing-images').getPublicUrl(fileName);
+                        uploadedUrls.push(data.publicUrl);
+                    }
+                    finalGallery = uploadedUrls;
+                    finalMainImage = uploadedUrls[0];
+                }
+
+                const { error: updateError } = await _supabase.from('listings').update({
+                    name: document.getElementById('name').value,
+                    price: document.getElementById('price').value,
+                    category: document.getElementById('category').value,
+                    location: document.getElementById('location').value, // Save Location
+                    condition: document.getElementById('condition').value,
+                    description: document.getElementById('description').value,
+                    seller_phone: document.getElementById('phone').value,
+                    image_url: finalMainImage,
+                    gallery: finalGallery
+                }).eq('id', currentItemId);
+
+                if (updateError) throw updateError;
+
+                alert("Item updated successfully!");
+                window.location.href = "profile.html";
+
+            } catch (err) {
+                alert("Error: " + err.message);
+                btn.disabled = false;
+                btn.textContent = "Update Listing";
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>

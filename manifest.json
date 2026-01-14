@@ -1,0 +1,21 @@
+{
+    "name": "Campus Circle",
+    "short_name": "CampusCircle",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#f8fafc",
+    "theme_color": "#2563eb",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/Image.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/Image.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Item Details</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Roboto', sans-serif; background: #f8fafc; margin: 0; padding-bottom: 100px; display: flex; flex-direction: column; min-height: 100vh; }
+        
+        /* Header */
+        .header { background: #0f172a; padding: 15px 20px; display: flex; align-items: center; gap: 15px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .back-btn { text-decoration: none; font-size: 20px; color: white; display: flex; align-items: center; cursor: pointer; }
+        .header h1 { margin: 0; color: white; font-size: 18px; font-weight: 500; }
+
+        /* Main Layout */
+        .container { max-width: 800px; margin: 20px auto; padding: 0 20px; width: 100%; box-sizing: border-box; }
+        
+        /* Cards */
+        .card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        /* Image */
+        .img-box { display: flex; justify-content: center; background: #fff; padding: 10px; }
+        .product-img { max-width: 100%; max-height: 350px; object-fit: contain; border-radius: 8px; }
+
+        /* Gallery Scroll */
+        .gallery-wrapper { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 10px; }
+        .gallery-wrapper img { scroll-snap-align: center; flex-shrink: 0; }
+
+        /* Info */
+        .badges { display: flex; gap: 10px; margin-bottom: 15px; }
+        .badge { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; }
+        .badge-cond { background: #e0f2fe; color: #0284c7; }
+        .badge-cat { background: #f1f5f9; color: #64748b; }
+        
+        h2 { margin: 0 0 10px 0; font-size: 24px; color: #1e293b; line-height: 1.3; }
+        .price-desktop { font-size: 26px; font-weight: 900; color: #0f172a; margin-bottom: 20px; display: none; }
+        @media(min-width: 768px) { .price-desktop { display: block; } }
+
+        .description { font-size: 15px; line-height: 1.6; color: #334155; white-space: pre-wrap; margin-top: 10px; }
+
+        /* --- NEW: SELLER CARD & LOCATION STYLES --- */
+        .meta-row { display: flex; align-items: center; gap: 8px; margin-top: 20px; color: #475569; font-size: 14px; border-top: 1px solid #f1f5f9; padding-top: 15px; }
+        .meta-icon { width: 18px; height: 18px; fill: #94a3b8; }
+        
+        .seller-card { background: #f8fafc; padding: 15px; border-radius: 12px; margin-top: 15px; display: flex; align-items: center; gap: 15px; border: 1px solid #e2e8f0; }
+        .seller-avatar { width: 45px; height: 45px; background: #e2e8f0; color: #64748b; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; }
+        .seller-info h4 { margin: 0; font-size: 15px; color: #0f172a; font-weight: 600; }
+        .seller-info p { margin: 2px 0 0; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; }
+        
+        .date-text { font-size: 12px; color: #94a3b8; margin-top: 15px; }
+
+        /* Safety Box */
+        .safety-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 15px; margin-top: 25px; }
+        .safety-content { display: flex; gap: 12px; align-items: start; margin-bottom: 10px; }
+        .safety-icon { font-size: 20px; }
+        .safety-text { font-size: 13px; color: #92400e; line-height: 1.5; }
+        .safety-text strong { display: block; margin-bottom: 2px; color: #78350f; }
+
+        .btn-report { background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 0; margin-top: 5px; text-decoration: underline; }
+
+        /* Reviews */
+        .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+        .rating-summary { font-size: 24px; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 5px; }
+        .star-gold { color: #fbbf24; }
+        .review-item { padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
+        .review-user { font-weight: 700; font-size: 13px; color: #1e293b; margin-bottom: 2px; }
+        .review-stars { color: #fbbf24; font-size: 12px; margin-bottom: 5px; }
+        .review-text { font-size: 14px; color: #475569; line-height: 1.4; margin: 0; }
+        
+        /* Add Review */
+        .add-review-box { background: #f8fafc; padding: 15px; border-radius: 8px; margin-top: 20px; }
+        .star-input { display: flex; gap: 5px; margin-bottom: 10px; cursor: pointer; }
+        .star-btn { font-size: 24px; color: #cbd5e1; transition: color 0.2s; }
+        .star-btn.active { color: #fbbf24; }
+        textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: inherit; margin-bottom: 10px; outline: none; box-sizing: border-box; }
+        .btn-post { background: #0f172a; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: 700; cursor: pointer; width: 100%; }
+
+        /* Footer (Buyer) */
+        .sticky-footer { position: fixed; bottom: 0; width: 100%; background: white; padding: 15px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; z-index: 900; box-sizing: border-box; padding-bottom: max(15px, env(safe-area-inset-bottom)); }
+        .price-mobile { font-size: 24px; font-weight: 900; color: #0f172a; }
+        .btn-whatsapp { background: #25d366; color: white; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .btn-whatsapp svg { width: 20px; height: 20px; fill: white; }
+
+        /* Footer (Owner) */
+        .owner-actions { position: fixed; bottom: 0; width: 100%; background: white; padding: 15px 20px; border-top: 1px solid #e2e8f0; z-index: 900; box-sizing: border-box; padding-bottom: max(15px, env(safe-area-inset-bottom)); display: none; flex-direction: column; gap: 10px; }
+        .btn-sold { background: #16a34a; color: white; width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
+        .btn-row { display: flex; gap: 10px; }
+        .btn-edit { background: #2563eb; color: white; flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-delete { background: #fee2e2; color: #ef4444; flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+    </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+</head>
+<body>
+
+    <div class="header">
+        <a onclick="history.back()" class="back-btn">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="white"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+        </a>
+        <h1>Details</h1>
+    </div>
+
+    <div id="loading" style="text-align:center; padding:50px; color:#64748b;">Loading...</div>
+
+    <div class="container" id="content" style="display: none;">
+        <div class="card img-box" id="img-container">
+            <img id="p-img" class="product-img" src="" alt="Item">
+        </div>
+
+        <div class="card">
+            <div class="badges">
+                <div class="badge badge-cond" id="p-cond">Used</div>
+                <div class="badge badge-cat" id="p-cat">General</div>
+            </div>
+            <h2 id="p-name">Loading...</h2>
+            <div class="price-desktop" id="p-price-desk">₦ 0</div>
+            <p class="description" id="p-desc">...</p>
+
+            <div class="meta-row">
+                <svg class="meta-icon" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                <span id="p-location">Location not specified</span>
+            </div>
+
+            <div class="seller-card">
+                <div class="seller-avatar" id="s-avatar">?</div>
+                <div class="seller-info">
+                    <p>Seller Information</p>
+                    <h4 id="s-name">Student Seller</h4>
+                </div>
+            </div>
+
+            <p class="date-text" id="p-date">Posted on...</p>
+
+            <div class="safety-box" id="safety-section">
+                <div class="safety-content">
+                    <div class="safety-icon">🛡️</div>
+                    <div class="safety-text">
+                        <strong>Stay Safe on Campus</strong>
+                        Meet in public places like the Library. Check item before paying.
+                    </div>
+                </div>
+                <button class="btn-report" onclick="reportItem()">
+                    🚩 Flag as Inappropriate / Scam
+                </button>
+            </div>
+        </div>
+
+        <div class="card" id="review-section">
+            <div class="review-header">
+                <h3>Reviews</h3>
+                <div class="rating-summary">
+                    <span class="star-gold">★</span> <span id="avg-rating">0.0</span>
+                </div>
+            </div>
+            <div id="reviews-list">
+                <p style="color:#94a3b8; font-style:italic;">No reviews yet.</p>
+            </div>
+            <div class="add-review-box" id="review-form-box">
+                <div style="font-size:13px; font-weight:700; color:#475569; margin-bottom:5px;">RATE THIS SELLER / ITEM</div>
+                <div class="star-input" id="star-input">
+                    <span class="star-btn" onclick="setRating(1)">★</span>
+                    <span class="star-btn" onclick="setRating(2)">★</span>
+                    <span class="star-btn" onclick="setRating(3)">★</span>
+                    <span class="star-btn" onclick="setRating(4)">★</span>
+                    <span class="star-btn" onclick="setRating(5)">★</span>
+                </div>
+                <textarea id="review-text" rows="2" placeholder="Write a comment..."></textarea>
+                <button class="btn-post" onclick="submitReview()">Post Review</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="sticky-footer" id="buyer-footer" style="display: none;">
+        <div class="price-mobile" id="p-price-mob">₦ 0</div>
+        <a href="#" id="wa-link" class="btn-whatsapp">
+            <svg viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+            Chat Seller
+        </a>
+    </div>
+
+    <div class="owner-actions" id="owner-footer">
+        <button class="btn-sold" onclick="markAsSold()">💰 Mark as Sold</button>
+        <div class="btn-row">
+            <button class="btn-edit" onclick="goToEdit()">Edit</button>
+            <button class="btn-delete" onclick="deleteItem()">Delete</button>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        let currentId = null;
+        let selectedRating = 0;
+        let itemData = null;
+
+        async function init() {
+            const params = new URLSearchParams(window.location.search);
+            currentId = params.get('id');
+            if (!currentId) return window.location.href = 'dashboard.html';
+
+            const { data: item } = await _supabase.from('listings').select('*').eq('id', currentId).single();
+            if (item) {
+                itemData = item;
+                renderItem(item);
+            }
+
+            loadReviews();
+
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (user && item && user.id === item.user_id) {
+                document.getElementById('owner-footer').style.display = 'flex';
+                document.getElementById('buyer-footer').style.display = 'none';
+                document.getElementById('safety-section').style.display = 'none';
+                document.getElementById('review-form-box').style.display = 'none';
+            } else {
+                document.getElementById('buyer-footer').style.display = 'flex';
+            }
+        }
+
+        function renderItem(item) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+            
+            const imgBox = document.getElementById('img-container');
+            if (item.gallery && item.gallery.length > 1) {
+                imgBox.classList.add('gallery-wrapper');
+                imgBox.classList.remove('img-box');
+                imgBox.innerHTML = item.gallery.map(url => `<img src="${url}" class="product-img" style="width:90%;">`).join('');
+            } else {
+                document.getElementById('p-img').src = item.image_url;
+            }
+
+            document.getElementById('p-name').textContent = item.name;
+            document.getElementById('p-cond').textContent = item.condition;
+            document.getElementById('p-cat').textContent = item.category || 'General';
+            document.getElementById('p-desc').textContent = item.description;
+            
+            const price = `₦ ${item.price.toLocaleString()}`;
+            document.getElementById('p-price-desk').textContent = price;
+            document.getElementById('p-price-mob').textContent = price;
+
+            // NEW: Render Location
+            document.getElementById('p-location').textContent = item.location || "Location not specified";
+
+            // NEW: Render Seller Info
+            const sName = item.seller_name || "Student Seller";
+            document.getElementById('s-name').textContent = sName;
+            document.getElementById('s-avatar').textContent = sName.charAt(0).toUpperCase();
+
+            // NEW: Render Date
+            if (item.created_at) {
+                const date = new Date(item.created_at);
+                document.getElementById('p-date').textContent = "Posted on " + date.toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' });
+            }
+
+            if(item.seller_phone) {
+                let p = item.seller_phone.replace(/\D/g,'');
+                if(p.startsWith('0')) p='234'+p.substring(1);
+                document.getElementById('wa-link').href=`https://wa.me/${p}`;
+            }
+        }
+
+        async function loadReviews() {
+            const { data: reviews } = await _supabase.from('reviews').select('*').eq('listing_id', currentId).order('created_at', {ascending: false});
+            const list = document.getElementById('reviews-list');
+            if (reviews && reviews.length > 0) {
+                const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+                document.getElementById('avg-rating').textContent = avg.toFixed(1);
+                list.innerHTML = '';
+                reviews.forEach(r => {
+                    const stars = '★'.repeat(r.rating) + '☆'.repeat(5-r.rating);
+                    list.innerHTML += `<div class="review-item"><div class="review-user">Student User</div><div class="review-stars">${stars}</div><div class="review-text">${r.comment || ''}</div></div>`;
+                });
+            } else {
+                list.innerHTML = '<p style="color:#94a3b8; font-style:italic;">No reviews yet.</p>';
+            }
+        }
+
+        function setRating(n) {
+            selectedRating = n;
+            const stars = document.querySelectorAll('.star-btn');
+            stars.forEach((s, index) => {
+                if (index < n) s.classList.add('active');
+                else s.classList.remove('active');
+            });
+        }
+
+        async function submitReview() {
+            if (selectedRating === 0) return alert("Please select a star rating.");
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) return alert("Please login to review.");
+            const comment = document.getElementById('review-text').value;
+            const { error } = await _supabase.from('reviews').insert({ listing_id: currentId, user_id: user.id, rating: selectedRating, comment: comment });
+            if (error) alert("Error: " + error.message);
+            else { document.getElementById('review-text').value = ""; setRating(0); loadReviews(); alert("Review submitted!"); }
+        }
+
+        async function reportItem() {
+            const reason = prompt("What is the issue? (e.g. Scammer, Fake Item)");
+            if(reason) {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if(!user) return alert("Please login to report.");
+                const { error } = await _supabase.from('reports').insert({ listing_id: currentId, user_id: user.id, reason: reason });
+                if(!error) alert("Report submitted.");
+            }
+        }
+
+        function goToEdit() { window.location.href = `edit-item.html?id=${currentId}`; }
+        async function markAsSold() { if (!confirm("Confirm Sale?")) return; await _supabase.from('sales_history').insert({ item_name: itemData.name, price: itemData.price, seller_email: itemData.seller_email }); deleteItemLogic(true); }
+        async function deleteItem() { if (!confirm("Permanently delete this item?")) return; deleteItemLogic(false); }
+        async function deleteItemLogic(isSold) {
+            let filesToDelete = [];
+            const getPath = (url) => url ? url.split('/listing-images/')[1] : null;
+            if (itemData.image_url) filesToDelete.push(getPath(itemData.image_url));
+            if (itemData.gallery) itemData.gallery.forEach(u => filesToDelete.push(getPath(u)));
+            filesToDelete = filesToDelete.filter(p => p);
+            if (filesToDelete.length > 0) await _supabase.storage.from('listing-images').remove(filesToDelete);
+            await _supabase.from('listings').delete().eq('id', currentId);
+            alert(isSold ? "🎉 Congratulations! Sale recorded." : "Item deleted.");
+            window.location.href = 'profile.html';
+        }
+        init();
+    </script>
+</body>
+</html>

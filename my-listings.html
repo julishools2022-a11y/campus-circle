@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Inventory | Campus Circle</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --white: #ffffff; --dark: #0f172a; --gray: #64748b; }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; padding-bottom: 80px; }
+
+        /* Header */
+        .header { 
+            background: white; padding: 15px 20px; border-bottom: 1px solid #e2e8f0; 
+            display: flex; align-items: center; position: sticky; top: 0; z-index: 100; 
+        }
+        .back-btn { 
+            text-decoration: none; font-size: 24px; color: var(--dark); 
+            margin-right: 15px; display: flex; align-items: center; cursor: pointer;
+        }
+        .page-title { font-weight: 800; font-size: 18px; color: var(--dark); margin: 0; }
+        
+        /* Container */
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
+        
+        /* Manage Card (Row Layout) */
+        .manage-card {
+            background: white; border-radius: 12px; padding: 12px; margin-bottom: 15px;
+            display: flex; gap: 15px; border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .thumb { 
+            width: 80px; height: 80px; border-radius: 8px; object-fit: cover; 
+            background: #f1f5f9; flex-shrink: 0; cursor: pointer;
+        }
+        
+        .info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .title { 
+            font-weight: 600; font-size: 15px; color: var(--dark); margin-bottom: 2px; 
+            display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; 
+        }
+        .price { font-weight: 700; color: var(--primary); font-size: 14px; }
+        .stats { font-size: 11px; color: var(--gray); margin-top: 2px; }
+
+        /* Action Buttons */
+        .actions { display: flex; gap: 8px; margin-top: 8px; }
+        .btn {
+            flex: 1; padding: 8px; font-size: 11px; font-weight: 700; 
+            border: none; border-radius: 6px; cursor: pointer; text-align: center;
+        }
+        .btn-sold { background: #dcfce7; color: #166534; }
+        .btn-edit { background: #eff6ff; color: #1e40af; }
+        .btn-delete { background: #fee2e2; color: #991b1b; }
+
+        /* Empty State */
+        .empty-state { text-align: center; padding: 50px 20px; color: var(--gray); }
+        .btn-create { 
+            display: inline-block; margin-top: 15px; background: var(--dark); 
+            color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; 
+        }
+        
+        /* Bottom Nav */
+        .nav { 
+            background: white; border-top: 1px solid #f1f5f9; padding: 10px 0; 
+            display: flex; justify-content: space-around; position: fixed; bottom: 0; 
+            width: 100%; z-index: 100; padding-bottom: max(10px, env(safe-area-inset-bottom)); 
+        }
+        .nav a { 
+            text-decoration: none; color: #94a3b8; font-size: 10px; font-weight: 500; 
+            text-align: center; display: flex; flex-direction: column; align-items: center; 
+            gap: 5px; transition: color 0.2s; flex: 1;
+        }
+        .nav a.active { color: var(--primary); font-weight: 700; }
+        .nav svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 2; fill: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="dashboard.html" class="back-btn">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </a>
+        <h1 class="page-title">My Listings</h1>
+    </div>
+
+    <div class="container" id="listings-container">
+        <p style="text-align:center; color:#64748b; margin-top:40px;">Loading your inventory...</p>
+    </div>
+
+    <nav class="nav">
+        <a href="dashboard.html">
+            <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Home
+        </a>
+        <a href="post-item.html">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            Sell
+        </a>
+        <a href="profile.html">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            Profile
+        </a>
+    </nav>
+
+    <script>
+        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function loadMyListings() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) return window.location.href = "sign up.html";
+
+            const { data: items, error } = await _supabase
+                .from('listings')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false });
+
+            const container = document.getElementById('listings-container');
+
+            if (!items || items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No Active Listings</h3>
+                        <p>You haven't posted anything for sale yet.</p>
+                        <a href="post-item.html" class="btn-create">+ Start Selling</a>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = items.map(item => `
+                <div class="manage-card">
+                    <img src="${item.image_url}" class="thumb" onclick="location.href='product-details.html?id=${item.id}'">
+                    <div class="info">
+                        <div>
+                            <div class="title">${item.name}</div>
+                            <div class="price">₦${item.price.toLocaleString()}</div>
+                            <div class="stats">${item.condition} • ${new Date(item.created_at).toLocaleDateString()}</div>
+                        </div>
+                        <div class="actions">
+                            <button class="btn btn-sold" onclick="markSold('${item.id}', '${item.name}', ${item.price}, '${item.seller_email}')">SOLD</button>
+                            <button class="btn btn-edit" onclick="location.href='edit-item.html?id=${item.id}'">EDIT</button>
+                            <button class="btn btn-delete" onclick="deleteItem('${item.id}')">TRASH</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function deleteItem(id) {
+            if(!confirm("Permanently delete this listing?")) return;
+            await deleteItemLogic(id, false);
+        }
+
+        async function markSold(id, name, price, email) {
+            if(!confirm(`Mark "${name}" as Sold?\nThis will remove it from the marketplace.`)) return;
+            
+            // Log sale to history table
+            await _supabase.from('sales_history').insert({
+                item_name: name,
+                price: price,
+                seller_email: email
+            });
+
+            await deleteItemLogic(id, true);
+        }
+
+        async function deleteItemLogic(id, isSold) {
+            // 1. Get image paths to delete from storage
+            const { data: item } = await _supabase.from('listings').select('image_url, gallery').eq('id', id).single();
+            if(item) {
+                 let filesToDelete = [];
+                 const getPath = (url) => url ? url.split('/listing-images/')[1] : null;
+                 if (item.image_url) filesToDelete.push(getPath(item.image_url));
+                 if (item.gallery) item.gallery.forEach(u => filesToDelete.push(getPath(u)));
+                 filesToDelete = filesToDelete.filter(p => p);
+                 if(filesToDelete.length > 0) await _supabase.storage.from('listing-images').remove(filesToDelete);
+            }
+
+            // 2. Delete Row
+            await _supabase.from('listings').delete().eq('id', id);
+            
+            alert(isSold ? "🎉 Marked as Sold!" : "Item Deleted.");
+            loadMyListings(); // Refresh UI
+        }
+
+        loadMyListings();
+    </script>
+</body>
+</html>

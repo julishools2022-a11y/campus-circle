@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Marketplace | Campus Circle</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --primary-dark: #1e40af; --bg: #f8fafc; --white: #ffffff; --dark: #0f172a; --gray: #64748b; }
+        
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; margin: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* --- ICONS (FIXED CUTTING ISSUE) --- */
+        .icon { 
+            width: 22px; height: 22px; 
+            stroke: currentColor; stroke-width: 2; fill: none; 
+            stroke-linecap: round; stroke-linejoin: round; 
+            overflow: visible; /* Critical fix for cut-off icons */
+        }
+
+        /* --- SIDEBAR MENU --- */
+        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; opacity: 0; visibility: hidden; transition: all 0.3s; }
+        .sidebar-overlay.active { opacity: 1; visibility: visible; }
+        
+        .sidebar { 
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%; 
+            background: white; z-index: 1000; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            display: flex; flex-direction: column; box-shadow: 2px 0 20px rgba(0,0,0,0.1); 
+        }
+        .sidebar.active { left: 0; }
+        
+        .sidebar-header { 
+            background: white; padding: 20px; border-bottom: 1px solid #f1f5f9; 
+            display: flex; align-items: center; justify-content: space-between; 
+        }
+        .brand-title { color: var(--primary); font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+        
+        .sidebar-menu { padding: 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+        .menu-item { 
+            display: flex; align-items: center; gap: 12px; padding: 12px 15px; 
+            color: #334155; text-decoration: none; font-size: 15px; font-weight: 500; 
+            border-radius: 8px; transition: background 0.2s; 
+        }
+        .menu-item:hover { background: #f8fafc; color: var(--primary); }
+        
+        .menu-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 15px; margin-bottom: 5px; padding-left: 15px; }
+
+        /* --- HEADER --- */
+        .header { 
+            background: var(--white); padding: 12px 20px; display: flex; 
+            align-items: center; gap: 15px; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
+        }
+        .menu-btn { background: none; border: none; cursor: pointer; color: var(--dark); padding: 0; display: flex; align-items: center;}
+        
+        .search-container { flex: 1; position: relative; }
+        .search-input { 
+            width: 100%; padding: 10px 15px 10px 40px; border-radius: 8px; 
+            border: 1px solid #e2e8f0; background: #f8fafc; color: var(--dark); 
+            outline: none; font-size: 14px; transition: border 0.2s; 
+        }
+        .search-input:focus { border-color: var(--primary); background: white; }
+        
+        /* FIXED SEARCH ICON */
+        .search-icon { 
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%); 
+            width: 18px; height: 18px; fill: none; stroke: var(--gray); stroke-width: 2; 
+            pointer-events: none; overflow: visible;
+        }
+
+        /* --- SCROLL AREA --- */
+        .scroll-area { flex: 1; overflow-y: auto; padding-bottom: 100px; }
+
+        /* --- HERO BANNER --- */
+        .hero { 
+            background: linear-gradient(135deg, #2563eb, #1e40af); color: white; 
+            padding: 25px 20px; border-radius: 0 0 20px 20px; margin-bottom: 15px; 
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2); 
+        }
+        .hero h1 { margin: 0; font-size: 22px; font-weight: 800; }
+        .hero p { margin: 5px 0 0; font-size: 13px; opacity: 0.9; }
+
+        /* --- FILTERS --- */
+        .filter-bar { 
+            padding: 0 15px 15px; display: flex; gap: 10px; overflow-x: auto; 
+            scrollbar-width: none; flex-shrink: 0; 
+        }
+        .filter-bar::-webkit-scrollbar { display: none; }
+        .chip { 
+            white-space: nowrap; padding: 8px 18px; border-radius: 30px; 
+            font-size: 13px; font-weight: 600; color: var(--gray); background: white; 
+            border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
+        }
+        .chip.active { background: var(--dark); color: white; border-color: var(--dark); }
+
+        /* --- GRID --- */
+        .grid { 
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; 
+            padding: 0 15px; max-width: 1000px; margin: 0 auto; 
+        }
+        @media(min-width: 768px) { .grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } }
+
+        /* --- CARD --- */
+        .card { 
+            background: var(--white); border-radius: 12px; overflow: hidden; 
+            display: flex; flex-direction: column; cursor: pointer; position: relative; 
+            border: 1px solid #e2e8f0; transition: transform 0.1s; 
+        }
+        .card:active { transform: scale(0.98); }
+        .card-img-box { position: relative; width: 100%; aspect-ratio: 1; background: #f1f5f9; }
+        .card-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .heart-btn { 
+            position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; 
+            background: rgba(255,255,255,0.95); border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 5; transition: transform 0.2s; 
+        }
+        .heart-btn:active { transform: scale(0.8); }
+        
+        /* FIXED HEART ICON */
+        .heart-icon { 
+            width: 16px; height: 16px; fill: none; stroke: var(--dark); 
+            stroke-width: 2; transition: all 0.2s; overflow: visible;
+        }
+        .heart-btn.liked .heart-icon { fill: #ef4444; stroke: #ef4444; }
+        
+        .card-info { padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
+        .card-price { font-weight: 800; font-size: 15px; color: var(--primary); }
+        .card-title { font-size: 13px; font-weight: 500; color: var(--dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .card-meta { font-size: 11px; color: var(--gray); display: flex; justify-content: space-between; margin-top: 4px; }
+
+        /* --- BOTTOM NAV --- */
+        .nav { 
+            background: white; border-top: 1px solid #f1f5f9; padding: 10px 0; 
+            display: flex; justify-content: space-around; position: fixed; bottom: 0; 
+            width: 100%; z-index: 100; padding-bottom: max(10px, env(safe-area-inset-bottom)); 
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.05); 
+        }
+        .nav a { 
+            text-decoration: none; color: #94a3b8; font-size: 10px; font-weight: 500; 
+            text-align: center; display: flex; flex-direction: column; align-items: center; 
+            gap: 5px; transition: color 0.2s; flex: 1;
+        }
+        .nav a.active { color: var(--primary); font-weight: 700; }
+        .nav svg { width: 24px; height: 24px; overflow: visible; }
+
+        /* Skeletons */
+        .skeleton { background: #e2e8f0; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+    </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+</head>
+<body>
+
+    <div class="sidebar-overlay" onclick="toggleMenu()"></div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="brand-title">
+                <span style="background:var(--primary); color:white; padding:4px 8px; border-radius:6px; font-size:14px;">CC</span>
+                Campus Circle
+            </div>
+            <button onclick="toggleMenu()" style="background:none; border:none; cursor:pointer;">
+                <svg class="icon" viewBox="0 0 24 24" style="color:#64748b;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+
+        <div class="sidebar-menu">
+            <div class="menu-label">My Account</div>
+            
+            <a href="my-listings.html" class="menu-item">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                My Listings
+            </a>
+
+            <a href="favorites.html" class="menu-item">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+                Saved Items
+            </a>
+
+            <a href="#" class="menu-item" onclick="alert('Campus Safety Tips:\n\n1. Meet in open places (Library, SUB).\n2. Don\'t pay before seeing the item.\n3. Check item condition carefully.')">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                Safety Tips
+            </a>
+
+            <div class="menu-label">Help & Legal</div>
+
+            <a href="contact.html" class="menu-item">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Contact Support
+            </a>
+
+            <div class="menu-item logout" onclick="logout()" style="color:#ef4444; margin-top:auto;">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Log Out
+            </div>
+        </div>
+    </div>
+
+    <div class="header">
+        <button class="menu-btn" onclick="toggleMenu()">
+            <svg class="icon" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        </button>
+        <div class="search-container">
+            <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" class="search-input" id="search" placeholder="What are you looking for?">
+        </div>
+    </div>
+
+    <div class="scroll-area">
+        <div class="hero">
+            <h1>Campus Circle</h1>
+            <p>The safest marketplace for students.</p>
+        </div>
+
+        <div class="filter-bar">
+            <div class="chip active" onclick="filterCat(null, this)">All</div>
+            <div class="chip" onclick="filterCat('Books', this)">📚 Books</div>
+            <div class="chip" onclick="filterCat('Electronics', this)">💻 Tech</div>
+            <div class="chip" onclick="filterCat('Fashion', this)">👕 Fashion</div>
+            <div class="chip" onclick="filterCat('Housing', this)">🏠 Housing</div>
+            <div class="chip" onclick="filterCat('Services', this)">🛠️ Services</div>
+        </div>
+
+        <div class="grid" id="grid">
+            <div class="card" style="height:220px;"><div class="card-img-box skeleton"></div><div class="card-info"><div class="skeleton" style="height:15px; width:40%; margin-bottom:5px;"></div><div class="skeleton" style="height:12px; width:80%;"></div></div></div>
+            <div class="card" style="height:220px;"><div class="card-img-box skeleton"></div><div class="card-info"><div class="skeleton" style="height:15px; width:40%; margin-bottom:5px;"></div><div class="skeleton" style="height:12px; width:80%;"></div></div></div>
+        </div>
+    </div>
+
+    <nav class="nav">
+        <a href="dashboard.html" class="active">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Home
+        </a>
+        
+        <a href="post-item.html">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            Sell
+        </a>
+
+        <a href="profile.html">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            Profile
+        </a>
+    </nav>
+
+    <script>
+        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        let allItems = [];
+        let userFavorites = new Set();
+        let currentUser = null;
+
+        // --- MENU LOGIC ---
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+
+        async function init() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            currentUser = user;
+
+            if (user) {
+                const { data: favs } = await _supabase.from('favorites').select('listing_id').eq('user_id', user.id);
+                if (favs) favs.forEach(f => userFavorites.add(f.listing_id));
+            }
+
+            const { data, error } = await _supabase.from('listings').select('*').order('created_at', { ascending: false });
+            if (data) {
+                allItems = data;
+                render(allItems);
+            }
+        }
+
+        function render(items) {
+            const grid = document.getElementById('grid');
+            if (items.length === 0) {
+                grid.innerHTML = '<div style="padding:40px 20px; text-align:center; grid-column:1/-1; color:#94a3b8;">No items found.</div>';
+                return;
+            }
+
+            grid.innerHTML = items.map(p => {
+                const isLiked = userFavorites.has(p.id);
+                const heartClass = isLiked ? 'liked' : '';
+                const price = "₦" + (p.price||0).toLocaleString();
+                
+                return `
+                <div class="card">
+                    <div class="card-img-box" onclick="location.href='product-details.html?id=${p.id}'">
+                        <img src="${p.image_url}" class="card-img" loading="lazy">
+                    </div>
+                    
+                    <div class="heart-btn ${heartClass}" onclick="toggleLike(event, '${p.id}', this)">
+                        <svg class="heart-icon" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    </div>
+
+                    <div class="card-info" onclick="location.href='product-details.html?id=${p.id}'">
+                        <div class="card-price">${price}</div>
+                        <div class="card-title">${p.name}</div>
+                        <div class="card-meta">
+                            <span>${p.category || 'Item'}</span>
+                            <span>${p.condition}</span>
+                        </div>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        async function toggleLike(e, itemId, btn) {
+            e.stopPropagation(); 
+            if (!currentUser) return alert("Please login to like items.");
+
+            if (userFavorites.has(parseInt(itemId))) {
+                userFavorites.delete(parseInt(itemId));
+                btn.classList.remove('liked');
+                await _supabase.from('favorites').delete().eq('listing_id', itemId).eq('user_id', currentUser.id);
+            } else {
+                userFavorites.add(parseInt(itemId));
+                btn.classList.add('liked');
+                btn.style.transform = "scale(1.2)";
+                setTimeout(() => btn.style.transform = "scale(1)", 200);
+                await _supabase.from('favorites').insert({ listing_id: itemId, user_id: currentUser.id });
+            }
+        }
+
+        function filterCat(cat, el) {
+            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+            render(cat ? allItems.filter(i => i.category === cat) : allItems);
+        }
+
+        document.getElementById('search').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            render(allItems.filter(i => i.name.toLowerCase().includes(term)));
+        });
+
+        async function logout() { await _supabase.auth.signOut(); window.location.href = 'index.html'; }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email | Campus Circle</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --dark: #0f172a; --bg: #f8fafc; }
+        body { font-family: 'Roboto', sans-serif; background: var(--bg); margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; padding: 20px; }
+        
+        .card {
+            background: white; max-width: 400px; width: 100%;
+            padding: 40px 30px; border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: left;
+        }
+
+        .logo { font-size: 24px; font-weight: 800; color: var(--primary); margin-bottom: 20px; display: inline-block; }
+        
+        h1 { color: var(--dark); font-size: 28px; margin: 0 0 15px 0; line-height: 1.2; }
+        
+        p { color: #64748b; font-size: 16px; line-height: 1.6; margin-bottom: 25px; }
+        
+        .email-highlight { color: var(--dark); font-weight: 600; }
+
+        .btn-resend {
+            background: var(--primary); color: white; border: none; padding: 14px;
+            width: 100%; border-radius: 8px; font-size: 16px; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: opacity 0.2s;
+        }
+        .btn-resend:hover { opacity: 0.9; }
+        .btn-resend:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        .help-link {
+            display: block; text-align: center; margin-top: 20px; 
+            color: #94a3b8; font-size: 13px; text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="logo">Campus Circle</div>
+        <h1>Email Confirmation Required</h1>
+        
+        <p>
+            We sent a confirmation link to <br>
+            <span id="user-email" class="email-highlight">...</span>.
+        </p>
+        
+        <p style="font-size:14px;">
+            Check your inbox to activate the account. If the email is not in your inbox, please check your Spam folder.
+        </p>
+
+        <button id="resend-btn" class="btn-resend" onclick="resendEmail()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                <path d="M21 2v6h-6"></path>
+                <path d="M21 12v-6"></path>
+            </svg>
+            Resend Email
+        </button>
+
+        <div id="status-msg" style="text-align:center; margin-top:15px; font-size:13px; display:none;"></div>
+        
+        <a href="sign up.html" class="help-link">← Back to Login</a>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // 1. Get Email from URL (e.g., verify-email.html?email=john@gmail.com)
+        const params = new URLSearchParams(window.location.search);
+        const email = params.get('email');
+
+        if (email) {
+            document.getElementById('user-email').textContent = email;
+        } else {
+            document.getElementById('user-email').textContent = "your email address";
+        }
+
+        // 2. Resend Function
+        async function resendEmail() {
+            if (!email) return alert("Error: No email address found.");
+            
+            const btn = document.getElementById('resend-btn');
+            const msg = document.getElementById('status-msg');
+            
+            btn.disabled = true;
+            btn.innerHTML = "Sending...";
+
+            const { error } = await _supabase.auth.resend({
+                type: 'signup',
+                email: email,
+                options: {
+                    emailRedirectTo: 'https://campus-circle-ten.vercel.app/sign%20up.html' // Replace with your URL
+                }
+            });
+
+            if (error) {
+                msg.style.display = 'block';
+                msg.style.color = '#ef4444';
+                msg.textContent = "Error: " + error.message;
+                btn.disabled = false;
+                btn.innerHTML = "Resend Email";
+            } else {
+                msg.style.display = 'block';
+                msg.style.color = '#10b981';
+                msg.textContent = "✅ Email sent! Check your inbox.";
+                btn.innerHTML = "Sent!";
+            }
+        }
+    </script>
+</body>
+</html>
