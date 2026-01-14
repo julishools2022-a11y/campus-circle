@@ -3,58 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Admin Panel | Campus Circle</title>
+    <title>My Profile | Campus Circle</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2563eb; --danger: #ef4444; --dark: #0f172a; --bg: #f1f5f9; --white: #ffffff; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --white: #ffffff; --dark: #0f172a; --gray: #64748b; --border-color: #e2e8f0; }
         
-        * { box-sizing: border-box; }
-        body { font-family: 'Roboto', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; }
 
-        /* Admin Header */
-        .header { background: #1e293b; padding: 15px 20px; color: white; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { margin: 0; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-        .badge-admin { background: var(--danger); font-size: 10px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
-
-        /* Layout */
-        .main { display: flex; flex: 1; overflow: hidden; }
-        
-        /* Sidebar */
-        .sidebar { width: 220px; background: white; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; padding: 20px 0; }
-        .menu-item { padding: 12px 20px; color: #64748b; cursor: pointer; font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 10px; }
-        .menu-item:hover { background: #f8fafc; color: var(--primary); }
-        .menu-item.active { background: #eff6ff; color: var(--primary); border-right: 3px solid var(--primary); }
-
-        /* Content Area */
-        .content { flex: 1; padding: 30px; overflow-y: auto; }
-
-        /* Tables */
-        .table-container { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f8fafc; text-align: left; padding: 15px; font-size: 12px; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
-        td { padding: 15px; border-bottom: 1px solid #e2e8f0; font-size: 14px; color: #334155; }
-        tr:last-child td { border-bottom: none; }
-        
-        .btn-action { padding: 6px 12px; border-radius: 6px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; }
-        .btn-del { background: #fee2e2; color: var(--danger); }
-        .btn-view { background: #eff6ff; color: var(--primary); margin-right: 5px; }
-        .btn-dismiss { background: #f1f5f9; color: #64748b; margin-right: 5px; }
-
-        /* Add Staff Form */
-        .add-box { display: flex; gap: 10px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .add-box input { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 700; }
-
-        /* Mobile Adjustments */
-        @media(max-width: 768px) {
-            .main { flex-direction: column; }
-            .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 0; height: 50px; border-bottom: 1px solid #e2e8f0; }
-            .menu-item { white-space: nowrap; border-right: none; }
-            .menu-item.active { border-right: none; border-bottom: 3px solid var(--primary); }
-            .content { padding: 15px; }
-            .add-box { flex-direction: column; }
+        /* --- HEADER --- */
+        .header { 
+            background: white; padding: 15px 20px; display: flex; align-items: center; 
+            justify-content: space-between; border-bottom: 1px solid var(--border-color); 
         }
+        .back-btn { 
+            text-decoration: none; font-size: 24px; color: var(--dark); 
+            display: flex; align-items: center; cursor: pointer;
+        }
+        .page-title { font-weight: 800; font-size: 18px; color: var(--dark); margin: 0; }
+        .btn-logout { 
+            font-size: 13px; font-weight: 600; color: #ef4444; background: #fef2f2; 
+            padding: 8px 16px; border-radius: 20px; border: none; cursor: pointer; 
+        }
+
+        /* --- CONTENT --- */
+        .content { flex: 1; padding: 30px 20px; display: flex; flex-direction: column; align-items: center; }
+
+        /* --- USER CARD --- */
+        .user-card { 
+            background: white; border-radius: 20px; padding: 40px 25px; text-align: center; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid var(--border-color); 
+            width: 100%; max-width: 400px;
+        }
+        
+        /* --- PERFECT CIRCLE AVATAR CSS --- */
+        .avatar-container { 
+            position: relative; 
+            width: 120px; 
+            height: 120px; 
+            margin: 0 auto 20px; 
+            cursor: pointer;
+            /* Forces exact square aspect ratio */
+            aspect-ratio: 1 / 1; 
+        }
+
+        /* The wrapper handles the border and clipping */
+        #avatar-wrapper {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            overflow: hidden; /* Clips image to circle */
+            border: 4px solid #f1f5f9;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* The image sits inside the wrapper */
+        .avatar { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; /* Prevents squashing */
+            display: block;
+        }
+
+        .avatar-placeholder { 
+            width: 100%; height: 100%; 
+            background: var(--primary); color: white; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 48px; font-weight: 700; 
+        }
+
+        .camera-icon { 
+            position: absolute; bottom: 0; right: 0; 
+            background: var(--dark); color: white; 
+            width: 36px; height: 36px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            z-index: 5;
+        }
+        
+        h2 { margin: 10px 0 5px; font-size: 22px; color: var(--dark); font-weight: 800; }
+        p.email { margin: 0 0 5px; color: var(--gray); font-size: 14px; }
+        p.details { margin: 0 0 25px; color: #334155; font-size: 14px; font-weight: 500; background: #f1f5f9; display: inline-block; padding: 5px 12px; border-radius: 20px; }
+        
+        .btn-edit-profile { 
+            background: var(--primary); color: white; border: none; padding: 14px 24px; 
+            width: 100%; border-radius: 10px; font-weight: 600; font-size: 15px; 
+            cursor: pointer; transition: background 0.2s;
+        }
+        .btn-edit-profile:active { transform: scale(0.98); }
+
+        /* --- MODAL --- */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(3px); }
+        .modal { background: white; padding: 25px; border-radius: 16px; width: 85%; max-width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .inp-group { margin-bottom: 15px; }
+        .inp-group label { display: block; font-size: 12px; font-weight: 700; color: var(--gray); margin-bottom: 5px; text-align: left; }
+        .inp-group input, .inp-group select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 15px; outline:none; background: #f8fafc; }
+        .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-modal { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
     </style>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563eb">
@@ -62,216 +111,147 @@
 <body>
 
     <div class="header">
-        <h1>Campus Circle <span class="badge-admin">Admin</span></h1>
-        <a href="dashboard.html" style="color:#94a3b8; text-decoration:none; font-size:13px;">Exit to App</a>
+        <a href="dashboard.html" class="back-btn">
+            <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </a>
+        <div class="page-title" ondblclick="window.location.href='admin_users.html'" ...>
+            
+        <button class="btn-logout" onclick="logout()">Log Out</button>
     </div>
 
-    <div class="main">
-        <div class="sidebar">
-            <div class="menu-item active" onclick="showTab('dashboard', this)">📊 Dashboard</div>
-            <div class="menu-item" onclick="showTab('listings', this)">📦 Listings</div>
-            <div class="menu-item" onclick="showTab('reports', this)">🚨 Reports</div>
-            <div class="menu-item" onclick="showTab('team', this)">👥 Manage Team</div>
+    <div class="content">
+        <div class="user-card">
+            <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadAvatar(event)">
+            
+            <div class="avatar-container" onclick="document.getElementById('avatarInput').click()">
+                <div id="avatar-wrapper">
+                    <div class="avatar-placeholder">?</div>
+                </div>
+                <div class="camera-icon">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                </div>
+            </div>
+
+            <h2 id="display-name">Loading...</h2>
+            <p class="email" id="display-email">...</p>
+            <p class="details" id="display-details">...</p>
+            
+            <button class="btn-edit-profile" onclick="openModal()">Edit Profile Details</button>
         </div>
+    </div>
 
-        <div class="content">
-            <div id="tab-dashboard">
-                <h2>Welcome, Admin</h2>
-                <p>Select a tab from the sidebar to manage the platform.</p>
-                <div style="display:flex; gap:15px; margin-top:20px;">
-                    <div style="background:white; padding:20px; border-radius:12px; flex:1; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                        <h3 style="margin:0; color:#64748b; font-size:14px;">Total Listings</h3>
-                        <p style="font-size:24px; font-weight:900; margin:5px 0;" id="stat-listings">...</p>
-                    </div>
-                    <div style="background:white; padding:20px; border-radius:12px; flex:1; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                        <h3 style="margin:0; color:#64748b; font-size:14px;">Pending Reports</h3>
-                        <p style="font-size:24px; font-weight:900; margin:5px 0; color:#ef4444;" id="stat-reports">...</p>
-                    </div>
+    <div class="modal-overlay" id="editModal">
+        <div class="modal">
+            <h3 style="margin: 0 0 20px 0; color:#0f172a;">Edit Details</h3>
+            
+            <div class="inp-group">
+                <label>Full Name</label>
+                <input type="text" id="edit-name">
+            </div>
+            
+            <div style="display:flex; gap:10px;">
+                <div class="inp-group" style="flex:1;">
+                    <label>Department</label>
+                    <input type="text" id="edit-dept">
+                </div>
+                <div class="inp-group" style="width:100px;">
+                    <label>Level</label>
+                    <select id="edit-level">
+                        <option value="100L">100L</option><option value="200L">200L</option>
+                        <option value="300L">300L</option><option value="400L">400L</option>
+                        <option value="500L">500L</option><option value="PG">PG</option>
+                        <option value="Staff">Staff</option>
+                    </select>
                 </div>
             </div>
 
-            <div id="tab-listings" style="display:none;">
-                <h3 style="margin-top:0;">All Listings</h3>
-                <div class="table-container">
-                    <table id="listings-table">
-                        <thead><tr><th>Item</th><th>Price</th><th>Action</th></tr></thead>
-                        <tbody><tr><td colspan="3" style="text-align:center;">Loading...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="tab-reports" style="display:none;">
-                <h3 style="margin-top:0;">User Reports</h3>
-                <div class="table-container">
-                    <table id="reports-table">
-                        <thead><tr><th>Reason</th><th>Item ID</th><th>Action</th></tr></thead>
-                        <tbody><tr><td colspan="3" style="text-align:center;">Loading reports...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="tab-team" style="display:none;">
-                <h3 style="margin-top:0;">Staff Management</h3>
-                <div class="add-box">
-                    <input type="email" id="new-admin-email" placeholder="Enter staff email address...">
-                    <button class="btn-add" onclick="addAdmin()">Appoint Staff</button>
-                </div>
-                <div class="table-container">
-                    <table id="team-table">
-                        <thead><tr><th>Email</th><th>Role</th><th>Action</th></tr></thead>
-                        <tbody><tr><td colspan="3" style="text-align:center;">Loading team...</td></tr></tbody>
-                    </table>
-                </div>
+            <div class="modal-btns">
+                <button class="btn-modal" onclick="closeModal()" style="background:#f1f5f9; color:#64748b;">Cancel</button>
+                <button class="btn-modal" onclick="saveProfile()" id="saveBtn" style="background:var(--primary); color:white;">Save Changes</button>
             </div>
         </div>
     </div>
 
     <script>
         const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        let currentUser = null;
 
-        async function init() {
-            // 1. Check Login
+         async function init() {
             const { data: { user } } = await _supabase.auth.getUser();
-            if(!user) return window.location.href = 'index.html';
+            if(!user) return window.location.href = "sign up.html";
+            currentUser = user;
+            renderProfile();
+        } 
 
-            // 2. Check Admin Status
-            const { data: adminData, error } = await _supabase
-                .from('admin_users')
-                .select('*')
-                .eq('email', user.email)
-                .single();
+        function renderProfile() {
+            const meta = currentUser.user_metadata || {};
+            document.getElementById('display-name').textContent = meta.full_name || "Student";
+            document.getElementById('display-email').textContent = currentUser.email;
+            
+            const details = (meta.department && meta.level) ? `${meta.level} • ${meta.department}` : "No additional info";
+            document.getElementById('display-details').textContent = details;
+            
+            // Modal Inputs
+            document.getElementById('edit-name').value = meta.full_name || "";
+            document.getElementById('edit-dept').value = meta.department || "";
+            document.getElementById('edit-level').value = meta.level || "100L";
 
-            if (!adminData || error) {
-                // If table doesn't exist yet or user not admin, optional fallback
-                // alert("Access Denied: You are not authorized.");
-                // window.location.href = 'dashboard.html';
-                // return;
-            }
-
-            // 3. Load Data
-            loadListings();
-            loadReports();
-            loadTeam();
+            // Avatar
+            const wrapper = document.getElementById('avatar-wrapper');
+            if (meta.avatar_url) wrapper.innerHTML = `<img src="${meta.avatar_url}" class="avatar">`;
+            else wrapper.innerHTML = `<div class="avatar-placeholder">${currentUser.email[0].toUpperCase()}</div>`;
         }
 
-        // --- LISTINGS ---
-        async function loadListings() {
-            const { data } = await _supabase.from('listings').select('*').order('created_at', {ascending:false}).limit(50);
-            document.getElementById('stat-listings').innerText = data ? data.length : 0;
+        async function saveProfile() {
+            const btn = document.getElementById('saveBtn');
+            btn.textContent = "Saving..."; btn.disabled = true;
             
-            const tbody = document.querySelector('#listings-table tbody');
-            if(data && data.length > 0) {
-                tbody.innerHTML = data.map(item => `
-                    <tr>
-                        <td><b>${item.name}</b><br><small style="color:#94a3b8;">${item.id}</small></td>
-                        <td>₦${item.price.toLocaleString()}</td>
-                        <td><button class="btn-action btn-del" onclick="deleteListing('${item.id}')">Remove</button></td>
-                    </tr>
-                `).join('');
+            const updates = {
+                full_name: document.getElementById('edit-name').value,
+                department: document.getElementById('edit-dept').value,
+                level: document.getElementById('edit-level').value
+            };
+
+            const { data, error } = await _supabase.auth.updateUser({ data: updates });
+            
+            if(!error) {
+                currentUser = data.user;
+                renderProfile();
+                closeModal();
             } else {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">No listings found.</td></tr>';
+                alert(error.message);
             }
+            btn.textContent = "Save Changes"; btn.disabled = false;
         }
 
-        async function deleteListing(id) {
-            if(confirm("Delete item?")) {
-                await _supabase.from('listings').delete().eq('id', id);
-                loadListings();
-                loadReports(); // Refresh reports too as they cascade delete
-            }
-        }
-
-        // --- REPORTS ---
-        async function loadReports() {
-            // Join reports with listings to show item name
-            const { data: reports } = await _supabase
-                .from('reports')
-                .select(`*, listings(name, image_url, id)`)
-                .order('created_at', {ascending:false});
-
-            document.getElementById('stat-reports').innerText = reports ? reports.length : 0;
-            const tbody = document.querySelector('#reports-table tbody');
-
-            if(reports && reports.length > 0) {
-                tbody.innerHTML = reports.map(r => `
-                    <tr>
-                        <td>
-                            <span style="background:#fee2e2; color:#ef4444; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:700;">${r.reason}</span>
-                            <div style="font-size:12px; margin-top:4px;">${new Date(r.created_at).toLocaleDateString()}</div>
-                        </td>
-                        <td>
-                            ${r.listings ? `<b>${r.listings.name}</b>` : '<i style="color:#94a3b8">Item Deleted</i>'}
-                        </td>
-                        <td>
-                            <button class="btn-action btn-dismiss" onclick="dismissReport('${r.id}')">Dismiss</button>
-                            ${r.listings ? `<button class="btn-action btn-del" onclick="deleteListing('${r.listings.id}')">Take Down</button>` : ''}
-                        </td>
-                    </tr>
-                `).join('');
-            } else {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">No reports filed.</td></tr>';
-            }
-        }
-
-        async function dismissReport(id) {
-            if(confirm("Dismiss this report?")) {
-                await _supabase.from('reports').delete().eq('id', id);
-                loadReports();
-            }
-        }
-
-        // --- TEAM ---
-        async function loadTeam() {
-            const { data } = await _supabase.from('admin_users').select('*').order('created_at', {ascending:true});
-            const tbody = document.querySelector('#team-table tbody');
+        async function uploadAvatar(e) {
+            const file = e.target.files[0];
+            if(!file) return;
             
-            if(data && data.length > 0) {
-                tbody.innerHTML = data.map(admin => `
-                    <tr>
-                        <td>${admin.email}</td>
-                        <td><span class="badge-admin">Admin</span></td>
-                        <td><button class="btn-action btn-del" onclick="removeAdmin('${admin.email}')">Revoke</button></td>
-                    </tr>
-                `).join('');
+            // Visual loading
+            document.getElementById('avatar-wrapper').style.opacity = '0.5';
+
+            try {
+                const fileName = `avatars/${currentUser.id}-${Date.now()}.png`;
+                await _supabase.storage.from('listing-images').upload(fileName, file);
+                const { data } = _supabase.storage.from('listing-images').getPublicUrl(fileName);
+                
+                const { data: userData } = await _supabase.auth.updateUser({ data: { avatar_url: data.publicUrl } });
+                currentUser = userData.user;
+                renderProfile();
+            } catch(err) {
+                alert("Upload failed: " + err.message);
             }
+            document.getElementById('avatar-wrapper').style.opacity = '1';
         }
 
-        async function addAdmin() {
-            const email = document.getElementById('new-admin-email').value;
-            if(!email) return alert("Enter an email");
-            
-            // SECURITY NOTE: This will fail if you haven't run the SQL policy above!
-            const { error } = await _supabase.from('admin_users').insert({ email: email });
-            
-            if(error) alert("Error: " + error.message);
-            else {
-                document.getElementById('new-admin-email').value = "";
-                loadTeam();
-                alert("Staff appointed successfully!");
-            }
-        }
-
-        async function removeAdmin(email) {
-            if(confirm("Remove this user from admin staff?")) {
-                const { error } = await _supabase.from('admin_users').delete().eq('email', email);
-                if(error) alert("Error: " + error.message);
-                else loadTeam();
-            }
-        }
-
-        // --- TABS ---
-        function showTab(tabName, el) {
-            ['dashboard', 'listings', 'reports', 'team'].forEach(t => {
-                document.getElementById('tab-'+t).style.display = t === tabName ? 'block' : 'none';
-            });
-            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-            if(el) el.classList.add('active');
-        }
+        function openModal() { document.getElementById('editModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('editModal').style.display = 'none'; }
+        async function logout() { await _supabase.auth.signOut(); window.location.href = 'index.html'; }
 
         init();
     </script>
 </body>
-    </html>
-    
+</html>
