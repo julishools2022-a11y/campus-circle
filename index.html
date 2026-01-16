@@ -251,70 +251,63 @@
 
   <script>
     let deferredPrompt;
-const installBtn = document.getElementById('installApp');
+    const installBtn = document.getElementById('installApp');
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevent Chrome 67 and earlier from automatically showing the prompt
-  e.preventDefault();
-  // Stash the event so it can be triggered later.
-  deferredPrompt = e;
-  // Update UI to notify the user they can add to home screen
-  installBtn.style.display = 'block';
-
-  installBtn.addEventListener('click', () => {
-    // Hide our custom install button
-    installBtn.style.display = 'none';
-    // Show the prompt
-    deferredPrompt.prompt();
-    // Wait for the user to respond to the prompt
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the A2HS prompt');
-      } else {
-        console.log('User dismissed the A2HS prompt');
-      }
-      deferredPrompt = null;
+    // 1. Handle the Install Prompt Logic
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // Prevent default browser prompt
+        e.preventDefault();
+        // Save the event
+        deferredPrompt = e;
+        // Show the custom button
+        installBtn.style.display = 'block';
     });
-  });
-});
-    if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('Service Worker registered', reg))
-      .catch(err => console.error('Service Worker failed', err));
-  });
-    }
-    
 
-// Optional: Log when the app is successfully installed
-window.addEventListener('appinstalled', (evt) => {
-  console.log('Campus Circle was installed.');
-});
-    
-    // Simple script to confirm message sent (Visual only)
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            // Show the browser install prompt
+            deferredPrompt.prompt();
+            // Wait for user choice
+            const { outcome } = await deferredPrompt.userChoice;
+            console.log(`User response to install: ${outcome}`);
+            // Reset the prompt variable
+            deferredPrompt = null;
+            // Hide the button
+            installBtn.style.display = 'none';
+        }
+    });
+
+    // 2. Register Service Worker (One clean block)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('SW Registered:', reg.scope))
+                .catch(err => console.error('SW Registration Failed:', err));
+        });
+    }
+
+    // 3. Form Handling Logic
     document.querySelector('form').addEventListener('submit', function(e) {
         e.preventDefault();
         const btn = this.querySelector('button');
         const original = btn.textContent;
         btn.textContent = "Message Sent!";
-        btn.style.background = "#16a34a"; // Green
+        btn.style.background = "#16a34a"; 
         setTimeout(() => {
             btn.textContent = original;
-            btn.style.background = ""; // Reset
+            btn.style.background = ""; 
             this.reset();
         }, 2000);
     });
-  </script>
-  <script>
-    // Register PWA Service Worker
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('Service Worker Registered!', reg))
-                .catch(err => console.log('Service Worker Failed:', err));
-        });
-    }
-</script>
+
+    // Hide button if already installed
+    window.addEventListener('appinstalled', () => {
+        installBtn.style.display = 'none';
+        deferredPrompt = null;
+        console.log('PWA installed successfully');
+    });
+                   </script>
+  
 
 </body>
 </html>
