@@ -1,10 +1,10 @@
 const CACHE_NAME = "campus-circle-v1";
 const ASSETS_TO_CACHE = [
     "./",
-    "./index.html",
-    "./signup.html",
+    "index.html",
+    "signup.html",
     "./dashboard.html",
-    "./profile.html",
+    "profile.html",
     "./my-listings.html",
     "./post-item.html",
     "./product-details.html",
@@ -54,3 +54,29 @@ self.addEventListener("fetch", (event) => {
         })
     );
 });
+const CACHE_NAME = 'campus-circle-v1';
+const ASSETS = [
+  '/',
+  'index.html',
+  'profile.html',
+  'manifest.json'
+];
+
+// Install Service Worker
+self.addEventListener('install', (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS);
+    })
+  );
+});
+
+// Fetch resources
+self.addEventListener('fetch', (e) => {
+  e.respondWith(
+    caches.match(e.request).then((response) => {
+      return response || fetch(e.request);
+    })
+  );
+});
+
