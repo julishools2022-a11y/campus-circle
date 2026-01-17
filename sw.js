@@ -1,18 +1,18 @@
-const CACHE_NAME = "campus-circle-v2"; // Incremented version to force update
+const CACHE_NAME = "campus-circle-v2"; // Fixed: lowercase 'const'
 const ASSETS_TO_CACHE = [
-    "/",
-    "/index.html",
-    "/signup.html",
-    "/dashboard.html",
-    "/profile.html",
-    "/my-listings.html",
-    "/post-item.html",
-    "/product-details.html",
-    "/favorites.html",
-    "/edit-item.html",
-    "/contact.html",
-    "/terms.html",
-    "/manifest.json"
+    "./",                 // Fixed: changed '/' to './' for safety
+    "./index.html",
+    "./signup.html",
+    "./dashboard.html",
+    "./profile.html",
+    "./my-listings.html",
+    "./post-item.html",
+    "./product-details.html",
+    "./favorites.html",
+    "./edit-item.html",
+    "./contact.html",
+    "./terms.html",
+    "./manifest.json"
 ];
 
 // 1. Install: Cache local assets
@@ -23,7 +23,7 @@ self.addEventListener("install", (event) => {
             return cache.addAll(ASSETS_TO_CACHE);
         })
     );
-    self.skipWaiting(); // Force the waiting service worker to become active
+    self.skipWaiting(); 
 });
 
 // 2. Activate: Clean up old versions
