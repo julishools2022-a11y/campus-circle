@@ -94,7 +94,7 @@
                 <h3 style="margin-top:0;">All Listings</h3>
                 <div class="table-container">
                     <table id="listings-table">
-                        <thead><tr><th>Item</th><th>Price</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Item Info</th><th>Price</th><th>Action</th></tr></thead>
                         <tbody><tr><td colspan="3" style="text-align:center;">Loading...</td></tr></tbody>
                     </table>
                 </div>
@@ -144,10 +144,9 @@
                 .single();
 
             if (!adminData || error) {
-                // If table doesn't exist yet or user not admin, optional fallback
-                // alert("Access Denied: You are not authorized.");
-                // window.location.href = 'dashboard.html';
-                // return;
+                alert("Access Denied: You are not authorized.");
+                window.location.href = 'dashboard.html';
+                return;
             }
 
             // 3. Load Data
@@ -156,8 +155,9 @@
             loadTeam();
         }
 
-        // --- LISTINGS ---
+        // --- LISTINGS (With Security IP Check) ---
         async function loadListings() {
+            // Selecting ip_address too (Requires the SQL alter command from previous steps)
             const { data } = await _supabase.from('listings').select('*').order('created_at', {ascending:false}).limit(50);
             document.getElementById('stat-listings').innerText = data ? data.length : 0;
             
@@ -165,7 +165,11 @@
             if(data && data.length > 0) {
                 tbody.innerHTML = data.map(item => `
                     <tr>
-                        <td><b>${item.name}</b><br><small style="color:#94a3b8;">${item.id}</small></td>
+                        <td>
+                            <b>${item.name}</b><br>
+                            <small style="color:#94a3b8;">${item.id}</small><br>
+                            <small style="color:#ef4444; font-weight:700;">IP: ${item.ip_address || 'Not Recorded'}</small>
+                        </td>
                         <td>₦${item.price.toLocaleString()}</td>
                         <td><button class="btn-action btn-del" onclick="deleteListing('${item.id}')">Remove</button></td>
                     </tr>
@@ -242,7 +246,6 @@
             const email = document.getElementById('new-admin-email').value;
             if(!email) return alert("Enter an email");
             
-            // SECURITY NOTE: This will fail if you haven't run the SQL policy above!
             const { error } = await _supabase.from('admin_users').insert({ email: email });
             
             if(error) alert("Error: " + error.message);
@@ -273,5 +276,4 @@
         init();
     </script>
 </body>
-                    </html>
-                    
+</html>
