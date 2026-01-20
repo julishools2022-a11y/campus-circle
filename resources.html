@@ -1,1 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: blob: 'unsafe-inline' 'unsafe-eval'; script-src * data: blob: 'unsafe-inline' 'unsafe-eval';">
+    
+    <title>Academic Resources | Campus Circle</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #2563eb; --bg: #f8fafc; --white: #ffffff; --dark: #0f172a; --gray: #64748b; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; }
+
+        .header { background: white; padding: 15px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; }
+        .back-btn { text-decoration: none; color: var(--dark); display: flex; align-items: center; }
+        .page-title { font-weight: 800; font-size: 18px; color: var(--dark); margin: 0; }
+
+        .container { padding: 20px; flex: 1; overflow-y: auto; }
+        .filter-section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        label { display: block; font-size: 12px; font-weight: 700; color: var(--gray); margin-bottom: 5px; }
+        select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #f8fafc; margin-bottom: 15px; }
+        
+        /* CARD STYLES */
+        .resource-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; }
+        .icon-box { width: 45px; height: 45px; background: #eff6ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--primary); }
+        .res-info { flex: 1; }
+        .res-title { font-weight: 600; font-size: 14px; color: var(--dark); }
+        .level-badge { font-size: 10px; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-right: 5px; }
+        
+        /* ACTION BUTTONS */
+        .btn-buy { 
+            background: #2563eb; color: white; padding: 8px 12px; border-radius: 6px; 
+            font-size: 12px; font-weight: 700; text-decoration: none; border: none; cursor: pointer;
+        }
+        .btn-download { 
+            background: #dcfce7; color: #166534; padding: 8px 12px; border-radius: 6px; 
+            font-size: 12px; font-weight: 700; text-decoration: none; border: 1px solid #bbf7d0; cursor: pointer;
+        }
+        .btn-delete { color: #ef4444; padding: 10px; cursor: pointer; display: none; } 
+        
+        .fab { position: fixed; bottom: 30px; right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(37,99,235,0.4); text-decoration: none; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="dashboard.html" class="back-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        </a>
+        <h1 class="page-title">Lecture Materials</h1>
+    </div>
+
+    <div class="container">
+        <div class="filter-section">
+            <label>Select Faculty</label>
+            <select id="faculty-select" onchange="loadDepartments()"><option value="">-- Choose Faculty --</option></select>
+            <label>Select Department</label>
+            <select id="dept-select" disabled onchange="checkSelections()"><option value="">-- Select Faculty First --</option></select>
+            <label>Select Level</label>
+            <select id="level-select" disabled onchange="loadResources()">
+                <option value="">-- All Levels --</option>
+                <option value="100L">100L</option>
+                <option value="200L">200L</option>
+                <option value="300L">300L</option>
+                <option value="400L">400L</option>
+                <option value="500L">500L</option>
+            </select>
+        </div>
+        <div id="resources-list"><p style="text-align:center;color:#94a3b8;">Select department & level to view materials.</p></div>
+    </div>
+
+    <a href="upload-material.html" class="fab" id="admin-fab">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    </a>
+
+    <script>
+        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // --- CONFIG ---
+        const PAYSTACK_KEY = 'pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5';
+        const MATERIAL_PRICE = 100; // ₦100
+        // --------------
+
+        let isAdmin = false;
+        let purchasedIds = new Set(); // Stores IDs of files user has bought
+
+        // 1. Initial Checks
+        async function init() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if(!user) return window.location.href='index.html';
+
+            // Check Admin
+            const { data: admin } = await _supabase.from('admin_users').select('*').eq('email', user.email).single();
+            if (admin) {
+                isAdmin = true;
+                document.getElementById('admin-fab').style.display = 'flex';
+            }
+
+            // Fetch My Purchased Items
+            const { data: payments } = await _supabase.from('resource_payments').select('resource_id').eq('user_id', user.id);
+            if(payments) {
+                payments.forEach(p => purchasedIds.add(p.resource_id));
+            }
+
+            loadFaculties();
+        }
+        init();
+
+        // 2. Loading Data (Same as before)
+        async function loadFaculties() {
+            const { data } = await _supabase.from('faculties').select('*');
+            const select = document.getElementById('faculty-select');
+            data.forEach(fac => { select.innerHTML += `<option value="${fac.id}">${fac.name}</option>`; });
+        }
+        async function loadDepartments() {
+            const facId = document.getElementById('faculty-select').value;
+            const deptSelect = document.getElementById('dept-select');
+            deptSelect.innerHTML = '<option value="">-- Choose Department --</option>';
+            deptSelect.disabled = true;
+            if(!facId) return;
+            const { data } = await _supabase.from('departments').select('*').eq('faculty_id', facId);
+            if(data) {
+                data.forEach(d => { deptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`; });
+                deptSelect.disabled = false;
+            }
+        }
+        function checkSelections() {
+            if(document.getElementById('dept-select').value) {
+                document.getElementById('level-select').disabled = false;
+                loadResources();
+            }
+        }
+
+        // 3. Load & Display Resources
+        async function loadResources() {
+            const deptId = document.getElementById('dept-select').value;
+            const level = document.getElementById('level-select').value;
+            const list = document.getElementById('resources-list');
+            list.innerHTML = '<p style="text-align:center;color:#94a3b8;">Loading...</p>';
+
+            // Use the Strict Access Policy we set up in SQL
+            let query = _supabase.from('academic_resources').select('*').eq('department_id', deptId);
+            if (level) query = query.eq('level', level); // Optional client-side filter
+
+            const { data } = await query;
+
+            if (!data || data.length === 0) {
+                list.innerHTML = '<p style="text-align:center;color:#94a3b8;">No materials found.</p>';
+                return;
+            }
+
+            list.innerHTML = data.map(res => {
+                // Logic: Does user own this? Or is user Admin?
+                const isOwned = purchasedIds.has(res.id) || isAdmin;
+
+                // If owned -> Show "Download"
+                // If not owned -> Show "Buy"
+                let actionBtn = isOwned 
+                    ? `<button class="btn-download" onclick="window.open('${res.file_url}', '_blank')">Download</button>`
+                    : `<button class="btn-buy" onclick="buyMaterial('${res.id}', '${res.title.replace(/'/g, "\\'")}')">Buy ₦${MATERIAL_PRICE}</button>`;
+
+                return `
+                <div class="resource-card">
+                    <div class="icon-box">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    </div>
+                    <div class="res-info">
+                        <div class="res-title">
+                            <span class="level-badge">${res.level || 'GEN'}</span> ${res.title}
+                        </div>
+                    </div>
+                    
+                    ${actionBtn}
+
+                    <div class="btn-delete" style="display: ${isAdmin ? 'block' : 'none'}" onclick="deleteResource('${res.id}')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // 4. Payment Logic
+        async function buyMaterial(resourceId, title) {
+            const { data: { user } } = await _supabase.auth.getUser();
+            
+            const handler = PaystackPop.setup({
+                key: PAYSTACK_KEY,
+                email: user.email,
+                amount: MATERIAL_PRICE * 100, // In Kobo
+                currency: 'NGN',
+                ref: '' + Math.floor((Math.random() * 1000000000) + 1),
+                metadata: { custom_fields: [{ display_name: "Resource", variable_name: "resource", value: title }] },
+                
+                callback: async function(response) {
+                    // Payment Success! Save to DB
+                    const { error } = await _supabase.from('resource_payments').insert({
+                        user_id: user.id,
+                        resource_id: resourceId,
+                        amount: MATERIAL_PRICE,
+                        payment_ref: response.reference
+                    });
+
+                    if(!error) {
+                        alert("Payment Successful! You can now download.");
+                        purchasedIds.add(parseInt(resourceId)); // Update local state
+                        loadResources(); // Refresh UI to show "Download" button
+                    } else {
+                        alert("Error saving payment info. Please contact support.");
+                    }
+                },
+                onClose: function() {
+                    alert('Transaction cancelled.');
+                }
+            });
+            handler.openIframe();
+        }
+
+        async function deleteResource(id) {
+            if(confirm("Delete this file?")) {
+                await _supabase.from('academic_resources').delete().eq('id', id);
+                loadResources();
+            }
+        }
+    </script>
+</body>
+</html>
 
