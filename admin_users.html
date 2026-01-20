@@ -127,6 +127,19 @@
     </div>
 
     <script>
+        // Check if user is legally allowed to be here
+const { data: adminCheck } = await _supabase
+    .from('admin_users')
+    .select('*')
+    .eq('email', user.email)
+    .single();
+
+// If SQL returned nothing (because of the lock), kick them out!
+if (!adminCheck) {
+    window.location.href = 'dashboard.html';
+    return;
+}
+        
         const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
