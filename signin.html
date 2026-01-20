@@ -23,10 +23,9 @@
         .footer-text a { color: var(--primary); text-decoration: none; font-weight: 600; }
     </style>
     <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2563eb">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
     <div class="signup-container">
@@ -70,6 +69,11 @@
                 <label>Password</label>
                 <input type="password" id="signupPassword" placeholder="Min. 6 characters" required>
             </div>
+
+            <div style="opacity: 0; position: absolute; top: 0; left: 0; height: 0; width: 0; z-index: -1;">
+                <label>Do not fill this field</label>
+                <input type="text" id="website_trap" name="website_trap" autocomplete="off">
+            </div>
             
             <button type="submit" id="submitBtn">Sign Up</button>
         </form>
@@ -89,6 +93,16 @@
 
         signupForm.onsubmit = async (e) => {
             e.preventDefault();
+
+            // --- 🛡️ 1. SECURITY CHECK (Honeypot) ---
+            const trap = document.getElementById("website_trap").value;
+            if (trap !== "") {
+                console.log("Bot detected! Stopping submission.");
+                // We return silently so the bot thinks it's waiting or done, 
+                // but we actually saved the database from spam.
+                return; 
+            }
+            // ----------------------------------------
             
             const name = document.getElementById("fullName").value;
             const dept = document.getElementById("dept").value;
@@ -123,7 +137,7 @@
                     msg.textContent = "Success! Redirecting...";
                     msg.style.color = "#16a34a";
                     
-                    // NEW: Redirect to verify page with email parameter
+                    // Redirect to verify page with email parameter
                     setTimeout(() => { 
                         window.location.href = `verify-email.html?email=${encodeURIComponent(email)}`; 
                     }, 1000);
@@ -137,4 +151,5 @@
         };
     </script>
 </body>
-</html>
+    </html>
+
