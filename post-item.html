@@ -97,8 +97,7 @@
             </div>
 
             <button type="submit" class="btn-post" id="submit-btn">
-                <span>PAY ₦500 TO PUBLISH</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                <span>PUBLISH LISTING</span>
             </button>
         </form>
         <p id="status" style="text-align:center; margin-top:15px; font-size:14px; font-weight:500;"></p>
@@ -145,27 +144,43 @@
         }
     }
 
+    // --- MAIN SUBMIT LOGIC ---
     document.getElementById('listing-form').onsubmit = async (e) => {
         e.preventDefault();
         
-        // Security Check
         if (document.getElementById("website_trap").value !== "") return;
         if (selectedFiles.length === 0) return alert("Please add at least one photo!");
 
         const btn = document.getElementById('submit-btn');
+        const originalText = btn.innerHTML;
         btn.disabled = true;
-        btn.textContent = "Checking User...";
+        btn.textContent = "Verifying Account...";
 
         try {
             const { data: { user } } = await _supabase.auth.getUser();
             if (!user) { alert("Please login first"); window.location.href='index.html'; return; }
 
-            // Trigger Payment
-            payWithPaystack(user.email);
+            // 1. CHECK IF USER IS ADMIN
+            const { data: adminData } = await _supabase
+                .from('admin_users')
+                .select('id')
+                .eq('email', user.email)
+                .single();
+
+            if (adminData) {
+                // -> ADMIN: Post for FREE
+                btn.textContent = "Admin Verified. Uploading...";
+                uploadListingData("ADMIN_FREE_POST"); 
+            } else {
+                // -> REGULAR USER: Pay Money
+                btn.textContent = "Initiating Payment...";
+                payWithPaystack(user.email);
+            }
 
         } catch (err) {
             console.error(err);
             btn.disabled = false;
+            btn.innerHTML = originalText;
         }
     };
 
@@ -173,7 +188,7 @@
         const handler = PaystackPop.setup({
             key: PAYSTACK_PUBLIC_KEY,
             email: email,
-            amount: PUBLISHING_FEE * 100, // Amount in Kobo
+            amount: PUBLISHING_FEE * 100, // Kobo
             currency: 'NGN',
             ref: '' + Math.floor((Math.random() * 1000000000) + 1),
             
@@ -187,7 +202,7 @@
                 alert('Transaction cancelled.');
                 const btn = document.getElementById('submit-btn');
                 btn.disabled = false;
-                btn.textContent = "PAY ₦" + PUBLISHING_FEE + " TO PUBLISH";
+                btn.innerHTML = '<span>PUBLISH LISTING</span>';
             }
         });
         handler.openIframe();
@@ -210,7 +225,7 @@
                 uploadedUrls.push(data.publicUrl);
             }
 
-            // Get IP (For Security)
+            // Get IP
             let userIP = "Unknown";
             try { const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json(); userIP = d.ip; } catch(e){}
 
@@ -246,5 +261,4 @@
     }
 </script>
 </body>
-    </html>
-                    
+</html>
