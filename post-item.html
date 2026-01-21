@@ -97,7 +97,7 @@
             </div>
 
             <button type="submit" class="btn-post" id="submit-btn">
-                <span>PAY ₦500 TO PUBLISH</span>
+                <span id="btn-text">PAY ₦500 TO PUBLISH</span>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
             </button>
         </form>
@@ -110,12 +110,27 @@
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    // --- YOUR LIVE PAYSTACK KEY ---
     const PAYSTACK_PUBLIC_KEY = 'pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5'; 
     const PUBLISHING_FEE = 500; 
-    // ------------------------------
 
     let selectedFiles = [];
+    let isAdmin = false; // Store status
+
+    // --- NEW: Check Admin Status on Page Load ---
+    async function checkAdminStatus() {
+        const { data: { user } } = await _supabase.auth.getUser();
+        if(user) {
+            // Check case-insensitive
+            const { data } = await _supabase.from('admin_users').select('id').ilike('email', user.email).maybeSingle();
+            if(data) {
+                isAdmin = true;
+                // Update Button Text immediately
+                document.getElementById('btn-text').innerText = "PUBLISH ITEM (FREE)";
+                document.getElementById('submit-btn').style.background = "#10b981"; // Green color for free
+            }
+        }
+    }
+    checkAdminStatus(); // Run immediately
 
     function handleFileSelect(event) {
         const files = Array.from(event.target.files);
@@ -149,35 +164,24 @@
     document.getElementById('listing-form').onsubmit = async (e) => {
         e.preventDefault();
         
-        // Security checks
         if (document.getElementById("website_trap").value !== "") return;
         if (selectedFiles.length === 0) return alert("Please add at least one photo!");
 
         const btn = document.getElementById('submit-btn');
         const originalText = btn.innerHTML;
         btn.disabled = true;
-        btn.textContent = "Verifying Admin Status...";
+        btn.textContent = "Processing...";
 
         try {
             const { data: { user } } = await _supabase.auth.getUser();
             if (!user) { alert("Please login first"); window.location.href='index.html'; return; }
 
-            // 1. CHECK IF USER IS ADMIN (Updated Logic)
-            // We use .ilike for case-insensitive matching (Admin@gmail.com == admin@gmail.com)
-            const { data: adminData, error: adminError } = await _supabase
-                .from('admin_users')
-                .select('id')
-                .ilike('email', user.email) 
-                .maybeSingle();
-
-            if (adminData) {
+            // Double check strict logic before paying
+            if (isAdmin) {
                 // -> IS ADMIN: Skip Paystack
-                btn.textContent = "Admin Verified! Uploading...";
-                // Pass a special flag so we know it was free
-                uploadListingData("ADMIN_FREE_POST"); 
+                uploadListingData("ADMIN_FREE_" + Date.now()); 
             } else {
-                // -> NOT ADMIN
-                console.log("Admin check failed:", adminError);
+                // -> NOT ADMIN: Pay
                 btn.textContent = "Initiating Payment...";
                 payWithPaystack(user.email);
             }
@@ -186,7 +190,6 @@
             console.error("Error during check:", err);
             btn.disabled = false;
             btn.innerHTML = originalText;
-            alert("Error verifying user. Please check console.");
         }
     };
 
@@ -194,13 +197,12 @@
         const handler = PaystackPop.setup({
             key: PAYSTACK_PUBLIC_KEY,
             email: email,
-            amount: PUBLISHING_FEE * 100, // Kobo
+            amount: PUBLISHING_FEE * 100, 
             currency: 'NGN',
             ref: '' + Math.floor((Math.random() * 1000000000) + 1),
             
             callback: function(response) {
-                const btn = document.getElementById('submit-btn');
-                btn.textContent = "Payment Verified! Uploading...";
+                document.getElementById('submit-btn').textContent = "Payment Verified! Uploading...";
                 uploadListingData(response.reference);
             },
             
@@ -208,7 +210,7 @@
                 alert('Transaction cancelled.');
                 const btn = document.getElementById('submit-btn');
                 btn.disabled = false;
-                btn.innerHTML = '<span>PUBLISH LISTING</span>';
+                btn.innerHTML = `<span>PAY ₦500 TO PUBLISH</span>`;
             }
         });
         handler.openIframe();
@@ -263,10 +265,12 @@
             status.style.color = "red";
             status.textContent = "Error: " + err.message;
             document.getElementById('submit-btn').disabled = false;
+            document.getElementById('submit-btn').innerHTML = `<span>TRY AGAIN</span>`;
         }
     }
 </script>
 
 </body>
-                </html>
+</html>
+
                 
