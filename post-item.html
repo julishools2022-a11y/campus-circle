@@ -97,7 +97,8 @@
             </div>
 
             <button type="submit" class="btn-post" id="submit-btn">
-                <span>PUBLISH LISTING</span>
+                <span>PAY ₦500 TO PUBLISH</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
             </button>
         </form>
         <p id="status" style="text-align:center; margin-top:15px; font-size:14px; font-weight:500;"></p>
@@ -148,39 +149,44 @@
     document.getElementById('listing-form').onsubmit = async (e) => {
         e.preventDefault();
         
+        // Security checks
         if (document.getElementById("website_trap").value !== "") return;
         if (selectedFiles.length === 0) return alert("Please add at least one photo!");
 
         const btn = document.getElementById('submit-btn');
         const originalText = btn.innerHTML;
         btn.disabled = true;
-        btn.textContent = "Verifying Account...";
+        btn.textContent = "Verifying Admin Status...";
 
         try {
             const { data: { user } } = await _supabase.auth.getUser();
             if (!user) { alert("Please login first"); window.location.href='index.html'; return; }
 
-            // 1. CHECK IF USER IS ADMIN
-            const { data: adminData } = await _supabase
+            // 1. CHECK IF USER IS ADMIN (Updated Logic)
+            // We use .ilike for case-insensitive matching (Admin@gmail.com == admin@gmail.com)
+            const { data: adminData, error: adminError } = await _supabase
                 .from('admin_users')
                 .select('id')
-                .eq('email', user.email)
-                .single();
+                .ilike('email', user.email) 
+                .maybeSingle();
 
             if (adminData) {
-                // -> ADMIN: Post for FREE
-                btn.textContent = "Admin Verified. Uploading...";
+                // -> IS ADMIN: Skip Paystack
+                btn.textContent = "Admin Verified! Uploading...";
+                // Pass a special flag so we know it was free
                 uploadListingData("ADMIN_FREE_POST"); 
             } else {
-                // -> REGULAR USER: Pay Money
+                // -> NOT ADMIN
+                console.log("Admin check failed:", adminError);
                 btn.textContent = "Initiating Payment...";
                 payWithPaystack(user.email);
             }
 
         } catch (err) {
-            console.error(err);
+            console.error("Error during check:", err);
             btn.disabled = false;
             btn.innerHTML = originalText;
+            alert("Error verifying user. Please check console.");
         }
     };
 
@@ -260,6 +266,7 @@
         }
     }
 </script>
+
 </body>
-    </html>
-    
+                </html>
+                
