@@ -3,44 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Admin Panel | Campus Circle</title>
+    <title>Admin Panel V2</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #2563eb; --danger: #ef4444; --dark: #0f172a; --bg: #f1f5f9; --white: #ffffff; }
         * { box-sizing: border-box; }
         body { font-family: 'Roboto', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; }
-
-        /* HEADER */
         .header { background: #1e293b; padding: 15px 20px; color: white; display: flex; justify-content: space-between; align-items: center; }
         .header h1 { margin: 0; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
         .badge-admin { background: var(--danger); font-size: 10px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; }
-
-        /* MAIN LAYOUT */
         .main { display: flex; flex: 1; overflow: hidden; }
-        
-        /* SIDEBAR */
         .sidebar { width: 220px; background: white; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; padding: 20px 0; }
         .menu-item { padding: 12px 20px; color: #64748b; cursor: pointer; font-weight: 500; font-size: 14px; display: flex; align-items: center; gap: 10px; }
         .menu-item:hover { background: #f8fafc; color: var(--primary); }
         .menu-item.active { background: #eff6ff; color: var(--primary); border-right: 3px solid var(--primary); }
-
-        /* CONTENT */
         .content { flex: 1; padding: 30px; overflow-y: auto; }
-
-        /* TABLES */
         .table-container { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; margin-top: 20px; }
         table { width: 100%; border-collapse: collapse; }
         th { background: #f8fafc; text-align: left; padding: 15px; font-size: 12px; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
         td { padding: 15px; border-bottom: 1px solid #e2e8f0; font-size: 14px; color: #334155; }
-        
         .btn-action { padding: 6px 12px; border-radius: 6px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; }
         .btn-del { background: #fee2e2; color: var(--danger); }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 700; }
-
         .add-box { display: flex; gap: 10px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .add-box input { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
-
+        .btn-add { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 700; }
         @media(max-width: 768px) {
             .main { flex-direction: column; }
             .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 0; height: 50px; border-bottom: 1px solid #e2e8f0; }
@@ -52,8 +39,8 @@
 <body>
 
     <div class="header">
-        <h1>Campus Circle <span class="badge-admin">Admin</span></h1>
-        <a href="dashboard.html" style="color:#94a3b8; text-decoration:none; font-size:13px;">Exit to App</a>
+        <h1>Campus Circle <span class="badge-admin">Admin V2</span></h1>
+        <a href="dashboard.html" style="color:#94a3b8; text-decoration:none; font-size:13px;">Exit</a>
     </div>
 
     <div class="main">
@@ -68,32 +55,32 @@
                 <h2>Welcome, Admin</h2>
                 <div style="display:flex; gap:15px; margin-top:20px;">
                     <div style="background:white; padding:20px; border-radius:12px; flex:1; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                        <h3 style="margin:0; color:#64748b; font-size:14px;">Total Listings</h3>
-                        <p style="font-size:24px; font-weight:900; margin:5px 0;" id="stat-listings">...</p>
+                        <h3>Total Listings</h3>
+                        <p style="font-size:24px; font-weight:900;" id="stat-listings">...</p>
                     </div>
                 </div>
             </div>
 
             <div id="tab-listings" style="display:none;">
-                <h3 style="margin-top:0;">All Listings</h3>
+                <h3>All Listings</h3>
                 <div class="table-container">
                     <table id="listings-table">
-                        <thead><tr><th>Item Info</th><th>Price</th><th>Action</th></tr></thead>
-                        <tbody><tr><td colspan="3" style="text-align:center;">Loading...</td></tr></tbody>
+                        <thead><tr><th>Item</th><th>Price</th><th>Action</th></tr></thead>
+                        <tbody><tr><td colspan="3">Loading...</td></tr></tbody>
                     </table>
                 </div>
             </div>
 
             <div id="tab-team" style="display:none;">
-                <h3 style="margin-top:0;">Staff Management</h3>
+                <h3>Staff Management</h3>
                 <div class="add-box">
-                    <input type="email" id="new-admin-email" placeholder="Enter staff email address...">
-                    <button class="btn-add" onclick="addAdmin()">Appoint Staff</button>
+                    <input type="email" id="new-admin-email" placeholder="Enter staff email...">
+                    <button class="btn-add" onclick="addAdmin()">Add</button>
                 </div>
                 <div class="table-container">
                     <table id="team-table">
                         <thead><tr><th>Email</th><th>Action</th></tr></thead>
-                        <tbody><tr><td colspan="2" style="text-align:center;">Loading...</td></tr></tbody>
+                        <tbody><tr><td colspan="2">Loading...</td></tr></tbody>
                     </table>
                 </div>
             </div>
@@ -105,7 +92,7 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // --- TAB NAVIGATION ---
+        // --- GLOBAL TABS ---
         window.showTab = function(tabName, el) {
             ['dashboard', 'listings', 'team'].forEach(t => {
                 const tab = document.getElementById('tab-'+t);
@@ -116,86 +103,71 @@
         }
 
         async function init() {
-            // 1. Check Login
             const { data: { user } } = await _supabase.auth.getUser();
             if(!user) return window.location.href = 'index.html';
 
-            // 2. Check Admin Status (Fix for Capital Letters)
-            // Using .ilike ensures "Ce.offor..." matches "ce.offor..."
+            // --- ADMIN CHECK (UPDATED) ---
+            // We search for the email using .ilike (Case Insensitive)
             const { data: adminData } = await _supabase
                 .from('admin_users')
                 .select('*')
-                .ilike('email', user.email) 
+                .ilike('email', user.email)
                 .maybeSingle();
 
             if (!adminData) {
-                // If this alert shows, the SQL insertion failed or email is wrong
-                alert("Access Denied: You are not listed as an admin.");
+                // Since we ran the SQL "disable row level security", 
+                // if this fails, it means the email is literally not in the table.
+                alert("Access Denied: Your email is not in the Admin List.");
                 window.location.href = 'dashboard.html';
                 return;
             }
 
-            // 3. Load Data
+            // Load Data
             loadListings();
             loadTeam();
         }
 
-        // --- LISTINGS ---
+        // --- DATA LOADERS ---
         async function loadListings() {
-            const { data } = await _supabase.from('listings').select('*').order('created_at', {ascending:false}).limit(50);
+            const { data } = await _supabase.from('listings').select('*').order('created_at', {ascending:false}).limit(20);
             document.getElementById('stat-listings').innerText = data ? data.length : 0;
-            
             const tbody = document.querySelector('#listings-table tbody');
-            if(data && data.length > 0) {
+            if(data && data.length) {
                 tbody.innerHTML = data.map(item => `
                     <tr>
-                        <td>
-                            <b>${item.name}</b><br>
-                            <small style="color:#ef4444;">IP: ${item.ip_address || 'N/A'}</small>
-                        </td>
+                        <td><b>${item.name}</b><br><small style="color:red">IP: ${item.ip_address || 'N/A'}</small></td>
                         <td>₦${item.price}</td>
-                        <td><button class="btn-action btn-del" onclick="deleteListing('${item.id}')">Remove</button></td>
-                    </tr>
-                `).join('');
-            } else {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">No listings found.</td></tr>';
+                        <td><button class="btn-action btn-del" onclick="deleteListing('${item.id}')">Del</button></td>
+                    </tr>`).join('');
             }
         }
 
         async function deleteListing(id) {
-            if(confirm("Delete item?")) {
+            if(confirm("Delete?")) {
                 await _supabase.from('listings').delete().eq('id', id);
                 loadListings();
             }
         }
 
-        // --- TEAM ---
         async function loadTeam() {
-            const { data } = await _supabase.from('admin_users').select('*').order('created_at', {ascending:true});
+            const { data } = await _supabase.from('admin_users').select('*');
             const tbody = document.querySelector('#team-table tbody');
-            if(data && data.length > 0) {
-                tbody.innerHTML = data.map(admin => `
+            if(data) {
+                tbody.innerHTML = data.map(u => `
                     <tr>
-                        <td>${admin.email}</td>
-                        <td><button class="btn-action btn-del" onclick="removeAdmin('${admin.email}')">Revoke</button></td>
-                    </tr>
-                `).join('');
+                        <td>${u.email}</td>
+                        <td><button class="btn-action btn-del" onclick="removeAdmin('${u.email}')">Revoke</button></td>
+                    </tr>`).join('');
             }
         }
 
         window.addAdmin = async function() {
-            const email = document.getElementById('new-admin-email').value;
-            if(!email) return alert("Enter email");
-            await _supabase.from('admin_users').insert({ email: email });
-            document.getElementById('new-admin-email').value = "";
-            loadTeam();
+            const em = document.getElementById('new-admin-email').value;
+            if(em) { await _supabase.from('admin_users').insert({email:em}); loadTeam(); }
         }
 
-        window.removeAdmin = async function(email) {
-            if(confirm("Remove admin?")) {
-                await _supabase.from('admin_users').delete().eq('email', email);
-                loadTeam();
-            }
+        window.removeAdmin = async function(em) {
+            if(confirm("Remove?")) { await _supabase.from('admin_users').delete().eq('email',em); loadTeam(); }
         }
 
         init();
