@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Material | Staff Portal</title>
+    <title>Upload Material | Admin Portal</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -23,18 +23,32 @@
         .btn-upload:disabled { background: #94a3b8; cursor: wait; }
         
         .back-link { display: block; text-align: center; margin-top: 15px; text-decoration: none; color: #64748b; font-size: 14px; }
+        .error-msg { color: red; text-align: center; margin-top: 10px; font-size: 14px; }
+        
+        #loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:white; display:flex; justify-content:center; align-items:center; z-index:999; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>Upload Material</h2>
+<div id="loading-overlay">
+    <div style="text-align:center;">
+        <h3>Verifying Admin Access...</h3>
+        <p>Please wait.</p>
+    </div>
+</div>
+
+<div class="container" id="main-content" style="display:none;">
+    <h2>Upload Study Material</h2>
     <form id="upload-form">
         <label>Faculty</label>
-        <select id="faculty" onchange="loadDepartments()" required></select>
+        <select id="faculty" onchange="loadDepartments()" required>
+            <option value="" disabled selected>Select Faculty</option>
+            </select>
 
         <label>Department</label>
-        <select id="dept" disabled required></select>
+        <select id="dept" disabled required>
+            <option value="" disabled selected>Select Department</option>
+        </select>
 
         <label>Level</label>
         <select id="level" required>
@@ -49,7 +63,7 @@
         <input type="text" id="title" placeholder="e.g. ECO 210 Past Questions" required>
 
         <label>Description</label>
-        <textarea id="desc" placeholder="Brief description..."></textarea>
+        <textarea id="desc" placeholder="Brief description (Optional)"></textarea>
 
         <div class="checkbox-group">
             <input type="checkbox" id="is_borrowed">
@@ -63,78 +77,163 @@
         <input type="file" id="file" accept=".pdf, .doc, .docx, .jpg, .png" required>
 
         <button type="submit" class="btn-upload" id="btn">UPLOAD MATERIAL</button>
+        <p id="status" class="error-msg"></p>
     </form>
-    <a href="resources.html" class="back-link">Back to Resources</a>
+    <a href="index.html" class="back-link">Back to Home</a>
 </div>
 
 <script>
+    // --- 1. CONFIGURATION ---
     const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    async function checkAdmin() {
-        const { data: { user } } = await _supabase.auth.getUser();
-        if (!user) return window.location.href = 'index.html';
-        const { data } = await _supabase.from('admin_users').select('*').eq('email', user.email).single();
-        if (!data) { alert("Access Denied"); window.location.href = 'resources.html'; }
-    }
-    checkAdmin();
+    // --- 2. FACULTY DATA ---
+    const facultyData = {
+        "Science": ["Computer Science", "Microbiology", "Physics", "Chemistry", "Biochemistry"],
+        "Arts": ["History", "English", "Performing Arts", "Linguistics"],
+        "Social Sciences": ["Economics", "Political Science", "Sociology", "Psychology"],
+        "Engineering": ["Civil", "Mechanical", "Electrical", "Chemical"]
+    };
 
-    async function loadFaculties() {
-        const { data } = await _supabase.from('faculties').select('*');
-        const select = document.getElementById('faculty');
-        data.forEach(f => { select.innerHTML += `<option value="${f.id}">${f.name}</option>`; });
-        loadDepartments(); 
-    }
-    loadFaculties();
-
-    async function loadDepartments() {
-        const facId = document.getElementById('faculty').value;
-        const deptSelect = document.getElementById('dept');
-        deptSelect.innerHTML = ''; deptSelect.disabled = true;
-        const { data } = await _supabase.from('departments').select('*').eq('faculty_id', facId);
-        if (data) {
-            data.forEach(d => { deptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`; });
-            deptSelect.disabled = false;
-        }
-    }
-
-    document.getElementById('upload-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btn');
-        btn.disabled = true; btn.textContent = "Uploading...";
-
+    // --- 3. SECURITY: CHECK ADMIN STATUS ---
+    async function init() {
         try {
-            const file = document.getElementById('file').files[0];
-            const fileName = `${Date.now()}_${file.name.replace(/\s/g, '')}`;
-            
-            const { error: upErr } = await _supabase.storage.from('materials').upload(fileName, file);
-            if (upErr) throw upErr;
+            const { data: { user } } = await _supabase.auth.getUser();
 
-            const { data: { publicUrl } } = _supabase.storage.from('materials').getPublicUrl(fileName);
+            if (!user) {
+                alert("Please login first.");
+                window.location.href = 'login.html'; // Redirect to login
+                return;
+            }
 
-            // Insert with Borrowed Status
-            const { error: dbErr } = await _supabase.from('academic_resources').insert({
-                department_id: document.getElementById('dept').value,
-                title: document.getElementById('title').value,
-                description: document.getElementById('desc').value,
-                level: document.getElementById('level').value,
-                is_borrowed: document.getElementById('is_borrowed').checked, // <--- New Field
-                type: 'File',
-                file_url: publicUrl
-            });
+            // Check 'admin_users' table
+            const { data: adminRecord, error } = await _supabase
+                .from('admin_users')
+                .select('*')
+                .eq('email', user.email)
+                .single();
 
-            if (dbErr) throw dbErr;
+            // If not found in admin table or error occurs
+            if (error || !adminRecord) {
+                alert("Access Denied: You do not have permission to upload materials.");
+                window.location.href = 'dashboard.html'; // Redirect non-admins
+                return;
+            }
 
-            alert("Uploaded Successfully!");
-            window.location.reload();
+            // If Valid Admin: Reveal the form
+            document.getElementById('loading-overlay').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            populateFaculties();
 
         } catch (err) {
-            alert("Error: " + err.message);
-            btn.disabled = false; btn.textContent = "UPLOAD MATERIAL";
+            console.error("Auth check failed:", err);
+            window.location.href = 'dashboard.html';
+        }
+    }
+
+    // --- 4. DROPDOWN LOGIC ---
+    function populateFaculties() {
+        const facSelect = document.getElementById('faculty');
+        for (const fac in facultyData) {
+            let opt = document.createElement('option');
+            opt.value = fac;
+            opt.textContent = fac;
+            facSelect.appendChild(opt);
+        }
+    }
+
+    function loadDepartments() {
+        const fac = document.getElementById('faculty').value;
+        const deptSelect = document.getElementById('dept');
+        deptSelect.innerHTML = '<option value="" disabled selected>Select Department</option>';
+        
+        if (fac && facultyData[fac]) {
+            facultyData[fac].forEach(dept => {
+                let opt = document.createElement('option');
+                opt.value = dept;
+                opt.textContent = dept;
+                deptSelect.appendChild(opt);
+            });
+            deptSelect.disabled = false;
+        } else {
+            deptSelect.disabled = true;
+        }
+    }
+    // Make function available to HTML
+    window.loadDepartments = loadDepartments; 
+
+    // --- 5. UPLOAD & SAVE LOGIC ---
+    document.getElementById('upload-form').onsubmit = async (e) => {
+        e.preventDefault();
+        
+        const btn = document.getElementById('btn');
+        const status = document.getElementById('status');
+        const fileInput = document.getElementById('file');
+        const file = fileInput.files[0];
+
+        if (!file) return alert("Please select a file.");
+
+        btn.disabled = true;
+        btn.textContent = "Uploading File...";
+        status.textContent = "";
+
+        try {
+            const { data: { user } } = await _supabase.auth.getUser();
+
+            // A. Upload File to Storage Bucket named 'materials'
+            // Sanitize filename
+            const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
+            const filePath = `${Date.now()}_${cleanName}`;
+            
+            const { error: uploadError } = await _supabase.storage
+                .from('materials') 
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            // Get Public URL
+            const { data: urlData } = _supabase.storage
+                .from('materials')
+                .getPublicUrl(filePath);
+
+            // B. Insert Record into Database
+            btn.textContent = "Saving Info...";
+
+            const { error: dbError } = await _supabase.from('materials').insert([{
+                title: document.getElementById('title').value,
+                description: document.getElementById('desc').value,
+                faculty: document.getElementById('faculty').value,
+                department: document.getElementById('dept').value,
+                level: document.getElementById('level').value,
+                is_borrowed: document.getElementById('is_borrowed').checked,
+                file_url: urlData.publicUrl,
+                uploaded_by: user.id
+            }]);
+
+            if (dbError) throw dbError;
+
+            status.style.color = "green";
+            status.textContent = "Upload Successful!";
+            
+            // Clear form
+            document.getElementById('upload-form').reset();
+            btn.textContent = "UPLOAD MATERIAL";
+            btn.disabled = false;
+            
+        } catch (err) {
+            console.error(err);
+            status.style.color = "red";
+            status.textContent = "Error: " + (err.message || "Upload failed");
+            btn.textContent = "UPLOAD MATERIAL";
+            btn.disabled = false;
         }
     };
-</script>
-</body>
-  </html>
 
+    // Run security check immediately
+    init();
+
+</script>
+
+</body>
+</html>
