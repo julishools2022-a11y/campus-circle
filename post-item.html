@@ -95,7 +95,7 @@
 
 <script>
     // --- CONFIGURATION ---
-    const PAYSTACK_PUBLIC_KEY = 'pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx'; // REPLACE THIS
+    const PAYSTACK_PUBLIC_KEY = 'sk_live_dcc0890ee0ac4c41b81967bedc6d37263b5c02e0'; // REPLACE THIS WITH YOUR KEY
     const LISTING_FEE = 500; // Naira
 
     const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
@@ -144,31 +144,40 @@
             btn.textContent = "Checking Account...";
             btn.disabled = true;
 
-            // 2. QUERY SUPABASE: Check if user is admin in 'profiles' table
-            const { data: profile, error } = await _supabase
-                .from('profiles')
-                .select('admin_user')
-                .eq('id', user.id)
-                .single();
+            // 2. QUERY 'admin_users' TABLE
+            // We check if the current user's email exists in the admin_users table
+            const { data: adminRecord, error } = await _supabase
+                .from('admin_users')
+                .select('*')
+                .eq('email', user.email) // Make sure your table has an 'email' column
+                .single(); // .single() returns data if found, or null/error if not found
 
-            // Handle cases where profile might not exist yet
-            const isAdmin = profile ? profile.is_admin : false;
+            // If we found a record, they are an Admin
+            const isAdmin = !!adminRecord; 
 
             if (isAdmin) {
                 // SKIP PAYMENT for Admins
-                console.log("Admin User detected. Skipping payment.");
+                console.log("Admin Found in database. Skipping payment.");
                 uploadAndSaveListing(user, 'ADMIN_BYPASS');
             } else {
                 // CHARGE REGULAR USERS
-                console.log("Regular User detected. Initializing Paystack.");
+                console.log("User not in admin_users table. Initializing Paystack.");
                 payWithPaystack(user);
             }
 
         } catch (err) {
-            console.error(err);
-            alert("Error checking user status: " + err.message);
-            btn.textContent = "PUBLISH LISTING";
-            btn.disabled = false;
+            // If .single() finds no rows, it throws an error code 'PGRST116'. 
+            // We can assume this means they are NOT an admin, so we charge them.
+            if (err.code === 'PGRST116' || !err.code) {
+                 console.log("User not found in admin table (Error expected). Charging user.");
+                 const { data: { user } } = await _supabase.auth.getUser();
+                 payWithPaystack(user);
+            } else {
+                console.error("Unexpected Error:", err);
+                alert("Error: " + err.message);
+                btn.textContent = "PUBLISH LISTING";
+                btn.disabled = false;
+            }
         }
     };
 
@@ -180,7 +189,7 @@
         const handler = PaystackPop.setup({
             key: PAYSTACK_PUBLIC_KEY, 
             email: user.email,
-            amount: LISTING_FEE * 100, // kobo
+            amount: LISTING_FEE * 100, // 500 Naira in kobo
             currency: 'NGN', 
             ref: ''+Math.floor((Math.random() * 1000000000) + 1), 
             callback: function(response) {
@@ -259,3 +268,4 @@
 </script>
 </body>
 </html>
+                                                                                      
