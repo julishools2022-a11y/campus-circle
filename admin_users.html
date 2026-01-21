@@ -38,7 +38,8 @@
         
         .btn-action { padding: 6px 12px; border-radius: 6px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; }
         .btn-del { background: #fee2e2; color: var(--danger); }
-        
+        .btn-view { background: #eff6ff; color: var(--primary); margin-right: 5px; }
+
         /* Add Staff Form */
         .add-box { display: flex; gap: 10px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .add-box input { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
@@ -54,6 +55,11 @@
             .add-box { flex-direction: column; }
         }
     </style>
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
 </head>
 <body>
 
@@ -64,54 +70,35 @@
 
     <div class="main">
         <div class="sidebar">
-            <div class="menu-item active" onclick="showTab('dashboard', this)">📊 Dashboard</div>
-            <div class="menu-item" onclick="showTab('listings', this)">📦 Listings</div>
-            <div class="menu-item" onclick="showTab('reports', this)">🚨 Reports</div>
-            <div class="menu-item" onclick="showTab('team', this)">👥 Manage Team</div>
+            <div class="menu-item active" onclick="showTab('dashboard')">📊 Dashboard</div>
+            <div class="menu-item" onclick="showTab('listings')">📦 Listings</div>
+            <div class="menu-item" onclick="showTab('team')">👥 Manage Team</div>
         </div>
 
         <div class="content">
             <div id="tab-dashboard">
                 <h2>Welcome, Admin</h2>
                 <p>Select a tab from the sidebar to manage the platform.</p>
-                <div style="display:flex; gap:15px; margin-top:20px;">
-                    <div style="background:white; padding:20px; border-radius:12px; flex:1; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                        <h3 style="margin:0; color:#64748b; font-size:14px;">Total Listings</h3>
-                        <p style="font-size:24px; font-weight:900; margin:5px 0;" id="stat-listings">...</p>
-                    </div>
-                    <div style="background:white; padding:20px; border-radius:12px; flex:1; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
-                        <h3 style="margin:0; color:#64748b; font-size:14px;">Pending Reports</h3>
-                        <p style="font-size:24px; font-weight:900; margin:5px 0; color:#ef4444;" id="stat-reports">...</p>
-                    </div>
-                </div>
             </div>
 
             <div id="tab-listings" style="display:none;">
                 <h3 style="margin-top:0;">All Listings</h3>
                 <div class="table-container">
                     <table id="listings-table">
-                        <thead><tr><th>Item Info</th><th>Price</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Item</th><th>Price</th><th>Action</th></tr></thead>
                         <tbody><tr><td colspan="3" style="text-align:center;">Loading...</td></tr></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div id="tab-reports" style="display:none;">
-                <h3 style="margin-top:0;">User Reports</h3>
-                <div class="table-container">
-                    <table id="reports-table">
-                        <thead><tr><th>Reason</th><th>Item ID</th><th>Action</th></tr></thead>
-                        <tbody><tr><td colspan="3" style="text-align:center;">Loading reports...</td></tr></tbody>
                     </table>
                 </div>
             </div>
 
             <div id="tab-team" style="display:none;">
                 <h3 style="margin-top:0;">Staff Management</h3>
+                
                 <div class="add-box">
                     <input type="email" id="new-admin-email" placeholder="Enter staff email address...">
                     <button class="btn-add" onclick="addAdmin()">Appoint Staff</button>
                 </div>
+
                 <div class="table-container">
                     <table id="team-table">
                         <thead><tr><th>Email</th><th>Role</th><th>Action</th></tr></thead>
@@ -121,117 +108,51 @@
             </div>
         </div>
     </div>
-
     <script>
         const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // --- 1. TAB NAVIGATION ---
-        // Defined globally so HTML onclick can find it
-        window.showTab = function(tabName, el) {
-            ['dashboard', 'listings', 'reports', 'team'].forEach(t => {
-                const tab = document.getElementById('tab-'+t);
-                if(tab) tab.style.display = t === tabName ? 'block' : 'none';
-            });
-            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-            if(el) el.classList.add('active');
-        }
-
         async function init() {
-            // 1. Check Login
+            // 1. Check if user is logged in
             const { data: { user } } = await _supabase.auth.getUser();
-            if(!user) return window.location.href = 'index.html';
+            if(!user) return window.location.href = 'index.html'; // Changed to index.html for safety
 
-            // 2. Check Admin Status (Fixing the Access Denied issue)
-            // Using .ilike ensures "Admin@gmail.com" matches "admin@gmail.com"
-            const { data: adminData } = await _supabase
+            // 2. Check if user is in 'admin_users' table
+            const { data: adminData, error } = await _supabase
                 .from('admin_users')
                 .select('*')
-                .ilike('email', user.email)
-                .maybeSingle();
+                .eq('email', user.email)
+                .single();
 
-            if (!adminData) {
-                alert("Access Denied: You are not listed as an admin.");
+            if (!adminData || error) {
+                alert("Access Denied: You are not authorized.");
                 window.location.href = 'dashboard.html';
                 return;
             }
 
-            // 3. Load Data
+            // Load Data
             loadListings();
-            loadReports();
             loadTeam();
         }
 
-        // --- LISTINGS ---
         async function loadListings() {
-            const { data } = await _supabase.from('listings').select('*').order('created_at', {ascending:false}).limit(50);
-            document.getElementById('stat-listings').innerText = data ? data.length : 0;
-            
+            const { data } = await _supabase.from('listings').select('*').order('created_at', {ascending:false}).limit(20);
             const tbody = document.querySelector('#listings-table tbody');
+            
             if(data && data.length > 0) {
                 tbody.innerHTML = data.map(item => `
                     <tr>
-                        <td>
-                            <b>${item.name}</b><br>
-                            <small style="color:#94a3b8;">${item.id}</small><br>
-                            <small style="color:#ef4444; font-weight:700;">IP: ${item.ip_address || 'N/A'}</small>
-                        </td>
+                        <td><b>${item.name}</b></td>
                         <td>₦${item.price}</td>
                         <td><button class="btn-action btn-del" onclick="deleteListing('${item.id}')">Remove</button></td>
                     </tr>
                 `).join('');
             } else {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">No listings found.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No listings found.</td></tr>';
             }
         }
 
-        async function deleteListing(id) {
-            if(confirm("Delete item?")) {
-                await _supabase.from('listings').delete().eq('id', id);
-                loadListings();
-                loadReports(); 
-            }
-        }
-
-        // --- REPORTS ---
-        async function loadReports() {
-            const { data: reports } = await _supabase
-                .from('reports')
-                .select(`*, listings(name, image_url, id)`)
-                .order('created_at', {ascending:false});
-
-            document.getElementById('stat-reports').innerText = reports ? reports.length : 0;
-            const tbody = document.querySelector('#reports-table tbody');
-
-            if(reports && reports.length > 0) {
-                tbody.innerHTML = reports.map(r => `
-                    <tr>
-                        <td>
-                            <span style="background:#fee2e2; color:#ef4444; padding:2px 6px; border-radius:4px; font-size:11px; font-weight:700;">${r.reason}</span>
-                            <div style="font-size:12px; margin-top:4px;">${new Date(r.created_at).toLocaleDateString()}</div>
-                        </td>
-                        <td>
-                            ${r.listings ? `<b>${r.listings.name}</b>` : '<i style="color:#94a3b8">Item Deleted</i>'}
-                        </td>
-                        <td>
-                            <button class="btn-action btn-del" onclick="dismissReport('${r.id}')">Dismiss</button>
-                        </td>
-                    </tr>
-                `).join('');
-            } else {
-                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; padding:20px;">No reports filed.</td></tr>';
-            }
-        }
-
-        async function dismissReport(id) {
-            if(confirm("Dismiss report?")) {
-                await _supabase.from('reports').delete().eq('id', id);
-                loadReports();
-            }
-        }
-
-        // --- TEAM ---
         async function loadTeam() {
             const { data } = await _supabase.from('admin_users').select('*').order('created_at', {ascending:true});
             const tbody = document.querySelector('#team-table tbody');
@@ -241,16 +162,18 @@
                     <tr>
                         <td>${admin.email}</td>
                         <td><span class="badge-admin">Admin</span></td>
-                        <td><button class="btn-action btn-del" onclick="removeAdmin('${admin.email}')">Revoke</button></td>
+                        <td>
+                            <button class="btn-action btn-del" onclick="removeAdmin('${admin.email}')">Revoke</button>
+                        </td>
                     </tr>
                 `).join('');
             }
         }
 
-        window.addAdmin = async function() {
+        async function addAdmin() {
             const email = document.getElementById('new-admin-email').value;
             if(!email) return alert("Enter an email");
-            
+
             const { error } = await _supabase.from('admin_users').insert({ email: email });
             
             if(error) alert("Error: " + error.message);
@@ -261,7 +184,7 @@
             }
         }
 
-        window.removeAdmin = async function(email) {
+        async function removeAdmin(email) {
             if(confirm("Remove this user from admin staff?")) {
                 const { error } = await _supabase.from('admin_users').delete().eq('email', email);
                 if(error) alert("Error: " + error.message);
@@ -269,7 +192,24 @@
             }
         }
 
+        // --- FIXED FUNCTION BELOW (Removed HTML comments) ---
+        async function deleteListing(id) {
+            if(confirm("Delete item?")) {
+                await _supabase.from('listings').delete().eq('id', id);
+                loadListings();
+            }
+        }
+
+        function showTab(tabName) {
+            ['dashboard', 'listings', 'team'].forEach(t => {
+                document.getElementById('tab-'+t).style.display = t === tabName ? 'block' : 'none';
+            });
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
         init();
     </script>
 </body>
-</html>
+    </html>
+    
