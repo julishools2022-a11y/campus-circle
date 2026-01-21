@@ -352,6 +352,54 @@
 
         init();
     </script>
+    <div id="popup-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
+    
+    <div style="background:white; width:90%; max-width:350px; border-radius:12px; overflow:hidden; position:relative; animation: popIn 0.3s ease-out;">
+        
+        <button onclick="closePopup()" style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); color:white; border:none; width:30px; height:30px; border-radius:50%; font-weight:bold; cursor:pointer;">&times;</button>
+        
+        <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/file_00000000290471f4a9d51001c52ba824.png" style="width:100%; display:block;">
+        
+        <div style="padding:15px; text-align:center;">
+            <h3 style="margin:0 0 5px 0; color:#0f172a;">Special Announcement!</h3>
+            <p style="margin:0 0 15px 0; font-size:13px; color:#64748b;">Join our premium student community today.</p>
+            <button onclick="closePopup()" style="width:100%; padding:10px; background:#2563eb; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Get Started</button>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    /* Animation for smooth entrance */
+    @keyframes popIn {
+        from { transform: scale(0.8); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+</style>
+
+<script>
+    // Run this when page loads
+    window.addEventListener('load', () => {
+        // 1. Check if user has already seen the ad in this session
+        const hasSeenAd = sessionStorage.getItem('campus_ad_seen');
+        
+        // 2. If NOT seen yet, show it
+        if (!hasSeenAd) {
+            // Small delay so it feels natural (500ms)
+            setTimeout(() => {
+                document.getElementById('popup-overlay').style.display = 'flex';
+            }, 500);
+        }
+    });
+
+    function closePopup() {
+        // 3. Hide the ad
+        document.getElementById('popup-overlay').style.display = 'none';
+        
+        // 4. Mark as "Seen" so it doesn't appear again until browser closes
+        sessionStorage.setItem('campus_ad_seen', 'true');
+    }
+</script>
 </body>
 </html>
                                                                                                                                                                                                             </html>
