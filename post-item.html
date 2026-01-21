@@ -3,15 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <meta http-equiv="Content-Security-Policy" content="default-src * data: blob: 'unsafe-inline' 'unsafe-eval'; script-src * data: blob: 'unsafe-inline' 'unsafe-eval'; connect-src * data: blob: 'unsafe-inline'; img-src * data: blob: 'unsafe-inline'; frame-src * data: blob: 'unsafe-inline'; style-src * data: blob: 'unsafe-inline';">
-
     <title>Sell an Item | Campus Circle</title>
-    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://js.paystack.co/v1/inline.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    
     <style>
         :root { --primary: #2563eb; --dark: #0c1a32; --bg: #f1f1f2; }
         body { font-family: 'Roboto', sans-serif; margin: 0; background: var(--bg); padding-bottom: 50px; }
@@ -37,10 +31,12 @@
         .btn-post { 
             width: 100%; padding: 16px; background: var(--primary); 
             color: white; border: none; border-radius: 8px; 
-            font-weight: 700; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+            font-weight: 700; font-size: 16px; cursor: pointer;
         }
         .btn-post:disabled { background: #94a3b8; cursor: not-allowed; }
     </style>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
 </head>
 <body>
 
@@ -63,7 +59,7 @@
             <input type="text" id="title" placeholder="e.g. iPhone 12 Pro" required>
 
             <label>Price (₦)</label>
-            <input type="number" id="price" placeholder="Price" min="0" required>
+            <input type="number" id="price" placeholder="Price" required>
 
             <label>Category</label>
             <select id="category" required>
@@ -84,7 +80,7 @@
             </select>
 
             <label>Location / Landmark</label>
-            <input type="text" id="location" placeholder="e.g. Science Block, Hostel A" required>
+            <input type="text" id="location" placeholder="e.g. Science Block, Hostel A, Library" required>
 
             <label>WhatsApp Number</label>
             <input type="tel" id="whatsapp" placeholder="e.g. 08012345678" required>
@@ -92,16 +88,9 @@
             <label>Description</label>
             <textarea id="description" rows="3" placeholder="Tell buyers more..."></textarea>
 
-            <div style="opacity: 0; position: absolute; top: 0; left: 0; height: 0; width: 0; z-index: -1;">
-                <input type="text" id="website_trap" name="website_trap" autocomplete="off">
-            </div>
-
-            <button type="submit" class="btn-post" id="submit-btn">
-                <span id="btn-text">PAY ₦500 TO PUBLISH</span>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
-            </button>
+            <button type="submit" class="btn-post" id="submit-btn">PUBLISH LISTING</button>
         </form>
-        <p id="status" style="text-align:center; margin-top:15px; font-size:14px; font-weight:500;"></p>
+        <p id="status" style="text-align:center; margin-top:15px; font-size:14px;"></p>
     </div>
 </div>
 
@@ -110,36 +99,11 @@
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    const PAYSTACK_PUBLIC_KEY = 'pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5'; 
-    const PUBLISHING_FEE = 500; 
-
     let selectedFiles = [];
-    let isAdmin = false; // Store status
-
-    // --- NEW: Check Admin Status on Page Load ---
-    async function checkAdminStatus() {
-        const { data: { user } } = await _supabase.auth.getUser();
-        if(user) {
-            // Check case-insensitive
-            const { data } = await _supabase.from('admin_users').select('id').ilike('email', user.email).maybeSingle();
-            if(data) {
-                isAdmin = true;
-                // Update Button Text immediately
-                document.getElementById('btn-text').innerText = "PUBLISH ITEM (FREE)";
-                document.getElementById('submit-btn').style.background = "#10b981"; // Green color for free
-            }
-        }
-    }
-    checkAdminStatus(); // Run immediately
 
     function handleFileSelect(event) {
         const files = Array.from(event.target.files);
         if (files.length > 4) return alert("Maximum 4 images allowed");
-        
-        const MAX_SIZE = 2 * 1024 * 1024; // 2MB
-        for (let file of files) {
-            if (file.size > MAX_SIZE) return alert(`File "${file.name}" is too large! Max 2MB.`);
-        }
         
         selectedFiles = files;
         const container = document.getElementById('preview-container');
@@ -157,120 +121,82 @@
                 };
                 reader.readAsDataURL(file);
             });
+        } else {
+            container.style.justifyContent = 'center';
+            container.innerHTML = '<span id="placeholder-text" style="color:#64748b; font-size:14px; align-self:center;">📸 Tap to select photos</span>';
         }
     }
 
-    // --- MAIN SUBMIT LOGIC ---
     document.getElementById('listing-form').onsubmit = async (e) => {
         e.preventDefault();
-        
-        if (document.getElementById("website_trap").value !== "") return;
+        const btn = document.getElementById('submit-btn');
+        const status = document.getElementById('status');
+
         if (selectedFiles.length === 0) return alert("Please add at least one photo!");
 
-        const btn = document.getElementById('submit-btn');
-        const originalText = btn.innerHTML;
         btn.disabled = true;
-        btn.textContent = "Processing...";
+        btn.textContent = "Uploading Images...";
 
         try {
             const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) { alert("Please login first"); window.location.href='index.html'; return; }
+            if (!user) throw new Error("Please login first");
 
-            // Double check strict logic before paying
-            if (isAdmin) {
-                // -> IS ADMIN: Skip Paystack
-                uploadListingData("ADMIN_FREE_" + Date.now()); 
-            } else {
-                // -> NOT ADMIN: Pay
-                btn.textContent = "Initiating Payment...";
-                payWithPaystack(user.email);
-            }
-
-        } catch (err) {
-            console.error("Error during check:", err);
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-        }
-    };
-
-    function payWithPaystack(email) {
-        const handler = PaystackPop.setup({
-            key: PAYSTACK_PUBLIC_KEY,
-            email: email,
-            amount: PUBLISHING_FEE * 100, 
-            currency: 'NGN',
-            ref: '' + Math.floor((Math.random() * 1000000000) + 1),
-            
-            callback: function(response) {
-                document.getElementById('submit-btn').textContent = "Payment Verified! Uploading...";
-                uploadListingData(response.reference);
-            },
-            
-            onClose: function() {
-                alert('Transaction cancelled.');
-                const btn = document.getElementById('submit-btn');
-                btn.disabled = false;
-                btn.innerHTML = `<span>PAY ₦500 TO PUBLISH</span>`;
-            }
-        });
-        handler.openIframe();
-    }
-
-    async function uploadListingData(paymentRef) {
-        const status = document.getElementById('status');
-        try {
-            const { data: { user } } = await _supabase.auth.getUser();
+            // 1. Get User's Name Automatically
             const sellerName = user.user_metadata.full_name || "Student Seller";
-            
-            // Upload Images
+
             const uploadedUrls = [];
+
+            // 2. Upload Images
             for (const file of selectedFiles) {
+                // Sanitize filename to prevent errors
                 const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
                 const fileName = `${Date.now()}-${Math.floor(Math.random() * 1000)}-${cleanName}`;
-                const { error: uploadError } = await _supabase.storage.from('listing-images').upload(fileName, file);
+                
+                const { error: uploadError } = await _supabase.storage
+                    .from('listing-images')
+                    .upload(fileName, file);
+                
                 if (uploadError) throw uploadError;
+
                 const { data } = _supabase.storage.from('listing-images').getPublicUrl(fileName);
                 uploadedUrls.push(data.publicUrl);
             }
 
-            // Get IP
-            let userIP = "Unknown";
-            try { const r = await fetch('https://api.ipify.org?format=json'); const d = await r.json(); userIP = d.ip; } catch(e){}
+            btn.textContent = "Saving Details...";
 
-            // Insert to Supabase
+            // 3. Save Data (Including New Fields: seller_name, location, category)
             const { error: dbError } = await _supabase.from('listings').insert([{
                 name: document.getElementById('title').value,
                 price: parseInt(document.getElementById('price').value),
+                
+                // New Fields
                 category: document.getElementById('category').value,
                 location: document.getElementById('location').value,
                 seller_name: sellerName,
+                
                 condition: document.getElementById('condition').value,
                 seller_phone: document.getElementById('whatsapp').value,
                 description: document.getElementById('description').value,
                 image_url: uploadedUrls[0],
                 gallery: uploadedUrls,
                 user_id: user.id,
-                seller_email: user.email,
-                ip_address: userIP,
-                payment_ref: paymentRef
+                seller_email: user.email
             }]);
 
             if (dbError) throw dbError;
 
             status.style.color = "green";
-            status.textContent = "Success! Published.";
-            setTimeout(() => window.location.href = 'dashboard.html', 1500);
+            status.textContent = "Success! Redirecting...";
+            setTimeout(() => window.location.href = 'index.html', 1500);
 
         } catch (err) {
+            console.error(err);
             status.style.color = "red";
-            status.textContent = "Error: " + err.message;
-            document.getElementById('submit-btn').disabled = false;
-            document.getElementById('submit-btn').innerHTML = `<span>TRY AGAIN</span>`;
+            status.textContent = "Error: " + (err.message || "Upload failed");
+            btn.disabled = false;
+            btn.textContent = "PUBLISH LISTING";
         }
-    }
+    };
 </script>
-
 </body>
 </html>
-                                                                                                                                                                                                                                                                                </html>
-                                                                                                                                                                                                                                                                                
