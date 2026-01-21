@@ -104,6 +104,18 @@
 
     let selectedFiles = [];
 
+    // Helper: Fetch IP Address
+    async function getIpAddress() {
+        try {
+            const response = await fetch('https://ipapi.co/json/');
+            const data = await response.json();
+            return data.ip || 'Unknown';
+        } catch (error) {
+            console.error("Failed to fetch IP:", error);
+            return 'Unknown';
+        }
+    }
+
     // Image Preview Logic
     function handleFileSelect(event) {
         const files = Array.from(event.target.files);
@@ -145,31 +157,25 @@
             btn.disabled = true;
 
             // 2. QUERY 'admin_users' TABLE
-            // We check if the current user's email exists in the admin_users table
             const { data: adminRecord, error } = await _supabase
                 .from('admin_users')
                 .select('*')
-                .eq('email', user.email) // Make sure your table has an 'email' column
-                .single(); // .single() returns data if found, or null/error if not found
+                .eq('email', user.email)
+                .single();
 
-            // If we found a record, they are an Admin
             const isAdmin = !!adminRecord; 
 
             if (isAdmin) {
-                // SKIP PAYMENT for Admins
-                console.log("Admin Found in database. Skipping payment.");
+                console.log("Admin Found. Skipping payment.");
                 uploadAndSaveListing(user, 'ADMIN_BYPASS');
             } else {
-                // CHARGE REGULAR USERS
-                console.log("User not in admin_users table. Initializing Paystack.");
+                console.log("Regular User. Initializing Paystack.");
                 payWithPaystack(user);
             }
 
         } catch (err) {
-            // If .single() finds no rows, it throws an error code 'PGRST116'. 
-            // We can assume this means they are NOT an admin, so we charge them.
             if (err.code === 'PGRST116' || !err.code) {
-                 console.log("User not found in admin table (Error expected). Charging user.");
+                 // Not found in admin table -> Charge them
                  const { data: { user } } = await _supabase.auth.getUser();
                  payWithPaystack(user);
             } else {
@@ -181,7 +187,6 @@
         }
     };
 
-    // Paystack Trigger Function
     function payWithPaystack(user) {
         const btn = document.getElementById('submit-btn');
         btn.textContent = "Processing Payment...";
@@ -189,7 +194,7 @@
         const handler = PaystackPop.setup({
             key: PAYSTACK_PUBLIC_KEY, 
             email: user.email,
-            amount: LISTING_FEE * 100, // 500 Naira in kobo
+            amount: LISTING_FEE * 100,
             currency: 'NGN', 
             ref: ''+Math.floor((Math.random() * 1000000000) + 1), 
             callback: function(response) {
@@ -210,13 +215,18 @@
         const status = document.getElementById('status');
         
         btn.disabled = true;
-        btn.textContent = "Uploading Images...";
+        btn.textContent = "Fetching Location...";
 
         try {
+            // A. Fetch IP Address
+            const userIp = await getIpAddress();
+            
+            btn.textContent = "Uploading Images...";
+
             const sellerName = user.user_metadata.full_name || "Student Seller";
             const uploadedUrls = [];
 
-            // A. Upload Images
+            // B. Upload Images
             for (const file of selectedFiles) {
                 const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
                 const fileName = `${Date.now()}-${Math.floor(Math.random() * 1000)}-${cleanName}`;
@@ -233,7 +243,7 @@
 
             btn.textContent = "Saving Details...";
 
-            // B. Save Data
+            // C. Save Data (INCLUDING IP ADDRESS)
             const { error: dbError } = await _supabase.from('listings').insert([{
                 name: document.getElementById('title').value,
                 price: parseInt(document.getElementById('price').value),
@@ -248,7 +258,8 @@
                 user_id: user.id,
                 seller_email: user.email,
                 payment_ref: paymentRef,
-                
+                is_paid: true,
+                ip_address: userIp // <--- NEW FIELD ADDED HERE
             }]);
 
             if (dbError) throw dbError;
@@ -268,4 +279,3 @@
 </script>
 </body>
 </html>
-                                                                                      
