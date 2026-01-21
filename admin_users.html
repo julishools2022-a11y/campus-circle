@@ -38,8 +38,7 @@
         
         .btn-action { padding: 6px 12px; border-radius: 6px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; }
         .btn-del { background: #fee2e2; color: var(--danger); }
-        .btn-view { background: #eff6ff; color: var(--primary); margin-right: 5px; }
-
+        
         /* Add Staff Form */
         .add-box { display: flex; gap: 10px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .add-box input { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; }
@@ -144,11 +143,12 @@
             const { data: { user } } = await _supabase.auth.getUser();
             if(!user) return window.location.href = 'index.html';
 
-            // 2. Check Admin Status (With Case-Insensitive Fix)
+            // 2. Check Admin Status (Fixing the Access Denied issue)
+            // Using .ilike ensures "Admin@gmail.com" matches "admin@gmail.com"
             const { data: adminData } = await _supabase
                 .from('admin_users')
                 .select('*')
-                .ilike('email', user.email) // <--- THIS FIXES THE ACCESS DENIED
+                .ilike('email', user.email)
                 .maybeSingle();
 
             if (!adminData) {
