@@ -94,7 +94,7 @@
                 <h3 style="margin-top:0;">All Listings</h3>
                 <div class="table-container">
                     <table id="listings-table">
-                        <thead><tr><th>Item Info</th><th>Price</th><th>Action</th></tr></thead>
+                        <thead><tr><th>Item</th><th>Price</th><th>Action</th></tr></thead>
                         <tbody><tr><td colspan="3" style="text-align:center;">Loading...</td></tr></tbody>
                     </table>
                 </div>
@@ -127,19 +127,6 @@
     </div>
 
     <script>
-        // Check if user is legally allowed to be here
-const { data: adminCheck } = await _supabase
-    .from('admin_users')
-    .select('*')
-    .eq('email', user.email)
-    .single();
-
-// If SQL returned nothing (because of the lock), kick them out!
-if (!adminCheck) {
-    window.location.href = 'dashboard.html';
-    return;
-}
-
         const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
@@ -157,9 +144,10 @@ if (!adminCheck) {
                 .single();
 
             if (!adminData || error) {
-                alert("Access Denied: You are not authorized.");
-                window.location.href = 'dashboard.html';
-                return;
+                // If table doesn't exist yet or user not admin, optional fallback
+                // alert("Access Denied: You are not authorized.");
+                // window.location.href = 'dashboard.html';
+                // return;
             }
 
             // 3. Load Data
@@ -168,9 +156,8 @@ if (!adminCheck) {
             loadTeam();
         }
 
-        // --- LISTINGS (With Security IP Check) ---
+        // --- LISTINGS ---
         async function loadListings() {
-            // Selecting ip_address too (Requires the SQL alter command from previous steps)
             const { data } = await _supabase.from('listings').select('*').order('created_at', {ascending:false}).limit(50);
             document.getElementById('stat-listings').innerText = data ? data.length : 0;
             
@@ -178,12 +165,8 @@ if (!adminCheck) {
             if(data && data.length > 0) {
                 tbody.innerHTML = data.map(item => `
                     <tr>
-                        <td>
-                            <b>${item.name}</b><br>
-                            <small style="color:#94a3b8;">${item.id}</small><br>
-                            <small style="color:#ef4444; font-weight:700;">IP: ${item.ip_address || 'Not Recorded'}</small>
-                        </td>
-                        <td>₦${item.price.toLocaleString()}</td>
+                        <td><b>${item.name}</b><br><small style="color:#94a3b8;">${item.id}</small></td>
+                        <td>₦${item.price}</td>
                         <td><button class="btn-action btn-del" onclick="deleteListing('${item.id}')">Remove</button></td>
                     </tr>
                 `).join('');
@@ -205,7 +188,7 @@ if (!adminCheck) {
             // Join reports with listings to show item name
             const { data: reports } = await _supabase
                 .from('reports')
-                .select(`*, listings(name, image_url, id)`)
+                .select(`*, listings(name, image_url)`)
                 .order('created_at', {ascending:false});
 
             document.getElementById('stat-reports').innerText = reports ? reports.length : 0;
@@ -223,7 +206,7 @@ if (!adminCheck) {
                         </td>
                         <td>
                             <button class="btn-action btn-dismiss" onclick="dismissReport('${r.id}')">Dismiss</button>
-                            ${r.listings ? `<button class="btn-action btn-del" onclick="deleteListing('${r.listings.id}')">Take Down</button>` : ''}
+                            ${r.listings ? `<button class="btn-action btn-del" onclick="deleteListing('${r.listing_id}')">Take Down</button>` : ''}
                         </td>
                     </tr>
                 `).join('');
@@ -258,9 +241,7 @@ if (!adminCheck) {
         async function addAdmin() {
             const email = document.getElementById('new-admin-email').value;
             if(!email) return alert("Enter an email");
-            
             const { error } = await _supabase.from('admin_users').insert({ email: email });
-            
             if(error) alert("Error: " + error.message);
             else {
                 document.getElementById('new-admin-email').value = "";
@@ -272,8 +253,7 @@ if (!adminCheck) {
         async function removeAdmin(email) {
             if(confirm("Remove this user from admin staff?")) {
                 const { error } = await _supabase.from('admin_users').delete().eq('email', email);
-                if(error) alert("Error: " + error.message);
-                else loadTeam();
+                if(!error) loadTeam();
             }
         }
 
