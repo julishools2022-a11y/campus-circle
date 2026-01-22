@@ -86,28 +86,48 @@
         let purchasedIds = new Set(); 
 
         async function init() {
-            const { data: { user } } = await _supabase.auth.getUser();
-            if(!user) return window.location.href='index.html';
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if(!user) return window.location.href='index.html';
 
-            const { data: admin } = await _supabase.from('admin_users').select('*').eq('email', user.email).single();
-            if (admin) {
-                isAdmin = true;
-                document.getElementById('admin-fab').style.display = 'flex';
+                // CRITICAL FIX: Use .maybeSingle() instead of .single()
+                // This prevents the script from crashing if the user is NOT an admin
+                const { data: admin } = await _supabase
+                    .from('admin_users')
+                    .select('*')
+                    .eq('email', user.email)
+                    .maybeSingle();
+
+                if (admin) {
+                    isAdmin = true;
+                    document.getElementById('admin-fab').style.display = 'flex';
+                }
+
+                // Fetch Purchased Items
+                const { data: payments } = await _supabase
+                    .from('resource_payments')
+                    .select('resource_id')
+                    .eq('user_id', user.id);
+                
+                if(payments) {
+                    payments.forEach(p => purchasedIds.add(p.resource_id.toString()));
+                }
+
+                loadFaculties();
+            } catch (error) {
+                console.error("Init Error:", error);
+                // Even if admin check fails, try to load the menu
+                loadFaculties();
             }
-
-            const { data: payments } = await _supabase.from('resource_payments').select('resource_id').eq('user_id', user.id);
-            if(payments) {
-                payments.forEach(p => purchasedIds.add(p.resource_id.toString()));
-            }
-
-            loadFaculties();
         }
         init();
 
         async function loadFaculties() {
             const { data } = await _supabase.from('faculties').select('*');
             const select = document.getElementById('faculty-select');
-            data?.forEach(fac => { select.innerHTML += `<option value="${fac.id}">${fac.name}</option>`; });
+            if (data) {
+                data.forEach(fac => { select.innerHTML += `<option value="${fac.id}">${fac.name}</option>`; });
+            }
         }
 
         async function loadDepartments() {
@@ -149,7 +169,7 @@
             list.innerHTML = data.map(res => {
                 const isOwned = purchasedIds.has(res.id.toString()) || isAdmin;
 
-                // Download fix: Using <a> with download attribute for better mobile support
+                // Download Link for Owners / Buy Button for Others
                 let actionBtn = isOwned 
                     ? `<a href="${res.file_url}" target="_blank" download="${res.title}" class="btn-download">Download</a>`
                     : `<button class="btn-buy" onclick="buyMaterial('${res.id}', '${res.title.replace(/'/g, "\\'")}')">Buy ₦${MATERIAL_PRICE}</button>`;
@@ -192,7 +212,7 @@
                     if(!error) {
                         alert("Payment Successful!");
                         purchasedIds.add(resourceId.toString());
-                        loadResources(); 
+                        loadResources(); // Refresh UI instantly
                     } else {
                         alert("Error updating purchase record.");
                     }
