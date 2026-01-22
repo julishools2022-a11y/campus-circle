@@ -140,6 +140,11 @@
 
             alert("Uploaded Successfully!");
             window.location.reload();
+    
+
+            status.style.color = "green";
+            status.textContent = "Success! Redirecting...";
+            setTimeout(() => window.location.href = 'academic_resources.html', 1500);
 
         } catch (err) {
             alert("Error: " + err.message);
