@@ -66,8 +66,7 @@
     </form>
     <a href="resources.html" class="back-link">Back to Resources</a>
 </div>
-
-<script>
+            <script>
     const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
@@ -76,11 +75,10 @@
         const { data: { user } } = await _supabase.auth.getUser();
         if (!user) return window.location.href = 'index.html';
 
-        // --- CRITICAL FIX: Case Insensitive Check ---
         const { data } = await _supabase
             .from('admin_users')
             .select('*')
-            .ilike('email', user.email) // This allows 'Ce.offor' to match 'ce.offor'
+            .ilike('email', user.email)
             .maybeSingle();
 
         if (!data) { 
@@ -95,7 +93,8 @@
         const select = document.getElementById('faculty');
         if (data) {
             data.forEach(f => { select.innerHTML += `<option value="${f.id}">${f.name}</option>`; });
-            loadDepartments(); 
+            // Load departments for the first faculty automatically if needed
+             // loadDepartments(); 
         }
     }
     loadFaculties();
@@ -115,10 +114,15 @@
     document.getElementById('upload-form').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn');
-        btn.disabled = true; btn.textContent = "Uploading...";
+        const status = document.getElementById('status'); // FIX 1: Defined status here
+        
+        btn.disabled = true; 
+        btn.textContent = "Uploading...";
 
         try {
             const file = document.getElementById('file').files[0];
+            if (!file) throw new Error("Please select a file.");
+
             const fileName = `${Date.now()}_${file.name.replace(/\s/g, '')}`;
             
             const { error: upErr } = await _supabase.storage.from('materials').upload(fileName, file);
@@ -132,25 +136,36 @@
                 description: document.getElementById('desc').value,
                 level: document.getElementById('level').value,
                 is_borrowed: document.getElementById('is_borrowed').checked,
-                
                 file_url: publicUrl
             });
 
             if (dbErr) throw dbErr;
 
-            alert("Uploaded Successfully!");
-            window.location.reload();
-    
+            // FIX 2: Removed window.location.reload() so the success message shows
+            
+            if (status) {
+                status.style.color = "green";
+                status.textContent = "Success! Redirecting...";
+            } else {
+                alert("Uploaded Successfully!");
+            }
 
-            status.style.color = "green";
-            status.textContent = "Success! Redirecting...";
-            setTimeout(() => window.location.href = 'academic_resources.html', 1500);
+            // Redirect after 1.5 seconds
+            setTimeout(() => window.location.href = 'lecture-materials.html', 1500);
 
         } catch (err) {
-            alert("Error: " + err.message);
-            btn.disabled = false; btn.textContent = "UPLOAD MATERIAL";
+            console.error(err);
+            if (status) {
+                status.style.color = "red";
+                status.textContent = "Error: " + err.message;
+            } else {
+                alert("Error: " + err.message);
+            }
+            btn.disabled = false; 
+            btn.textContent = "UPLOAD MATERIAL";
         }
     };
-</script>
+            </script>
+    
 </body>
 </html>
