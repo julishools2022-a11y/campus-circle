@@ -192,34 +192,79 @@
             }).join('');
         }
 
-        async function buyMaterial(resourceId, title) {
-            const { data: { user } } = await _supabase.auth.getUser();
-            
-            const handler = PaystackPop.setup({
-                key: PAYSTACK_KEY,
-                email: user.email,
-                amount: MATERIAL_PRICE * 100, 
-                currency: 'NGN',
-                ref: 'CC-' + Date.now(),
-                callback: async function(response) {
-                    const { error } = await _supabase.from('resource_payments').insert({
-                        user_id: user.id,
-                        resource_id: resourceId,
-                        amount: MATERIAL_PRICE,
-                        payment_ref: response.reference
-                    });
+                async function buyMaterial(resourceId, title) {
+            // 1. Check if Paystack script is loaded
+            if (typeof PaystackPop === 'undefined') {
+                alert("Paystack is still loading or blocked. Please refresh the page or check your internet.");
+                return;
+            }
 
-                    if(!error) {
-                        alert("Payment Successful!");
-                        purchasedIds.add(resourceId.toString());
-                        loadResources(); // Refresh UI instantly
-                    } else {
-                        alert("Error updating purchase record.");
-                    }
+            // 2. Give immediate feedback to the user
+            const btn = event.target; // Get the button that was clicked
+            const originalText = btn.innerText;
+            btn.innerText = "Processing...";
+            btn.disabled = true;
+
+            try {
+                // 3. Verify User Session
+                const { data: { user }, error } = await _supabase.auth.getUser();
+                
+                if (error || !user) {
+                    alert("User session not found. Please log in again.");
+                    window.location.href = 'index.html'; // Redirect to login
+                    return;
                 }
-            });
-            handler.openIframe();
-        }
+
+                console.log("Initializing Paystack for:", user.email);
+
+                // 4. Setup Paystack
+                const handler = PaystackPop.setup({
+                    key: PAYSTACK_KEY,
+                    email: user.email,
+                    amount: MATERIAL_PRICE * 100, // Amount in kobo
+                    currency: 'NGN',
+                    ref: 'CC-' + Date.now() + '-' + Math.floor(Math.random() * 1000), // Unique Reference
+                    
+                    callback: async function(response) {
+                        btn.innerText = "Verifying...";
+                        // Payment Successful! Save to DB
+                        const { error: dbError } = await _supabase.from('resource_payments').insert({
+                            user_id: user.id,
+                            resource_id: resourceId,
+                            amount: MATERIAL_PRICE,
+                            payment_ref: response.reference
+                        });
+
+                        if(!dbError) {
+                            alert("Payment Successful! The page will now refresh.");
+                            purchasedIds.add(resourceId.toString());
+                            loadResources(); // Refresh the list to show "Download"
+                        } else {
+                            alert("Payment successful, but error saving to database: " + dbError.message);
+                            console.error(dbError);
+                        }
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                    },
+                    
+                    onClose: function() {
+                        alert('Transaction cancelled.');
+                        btn.innerText = originalText;
+                        btn.disabled = false;
+                    }
+                });
+
+                // 5. Open the iframe
+                handler.openIframe();
+
+            } catch (err) {
+                console.error("Buy Error:", err);
+                alert("An unexpected error occurred: " + err.message);
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+                }
+                
 
         async function deleteResource(id) {
             if(confirm("Permanently delete this resource?")) {
