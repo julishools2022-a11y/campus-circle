@@ -22,14 +22,12 @@
         label { display: block; font-size: 12px; font-weight: 700; color: var(--gray); margin-bottom: 5px; }
         select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #f8fafc; margin-bottom: 15px; }
         
-        /* CARD STYLES */
         .resource-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; }
         .icon-box { width: 45px; height: 45px; background: #eff6ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--primary); }
         .res-info { flex: 1; }
         .res-title { font-weight: 600; font-size: 14px; color: var(--dark); }
         .level-badge { font-size: 10px; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-right: 5px; }
         
-        /* ACTION BUTTONS */
         .btn-buy { 
             background: #2563eb; color: white; padding: 8px 12px; border-radius: 6px; 
             font-size: 12px; font-weight: 700; text-decoration: none; border: none; cursor: pointer;
@@ -37,10 +35,11 @@
         .btn-download { 
             background: #dcfce7; color: #166534; padding: 8px 12px; border-radius: 6px; 
             font-size: 12px; font-weight: 700; text-decoration: none; border: 1px solid #bbf7d0; cursor: pointer;
+            display: inline-block; text-align: center;
         }
         .btn-delete { color: #ef4444; padding: 10px; cursor: pointer; display: none; } 
         
-        .fab { position: fixed; bottom: 30px; right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(37,99,235,0.4); text-decoration: none; display: none; }
+        .fab { position: fixed; bottom: 30px; right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 50%; color: white; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(37,99,235,0.4); text-decoration: none; }
     </style>
 </head>
 <body>
@@ -80,42 +79,37 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // --- CONFIG ---
         const PAYSTACK_KEY = 'pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5';
-        const MATERIAL_PRICE = 100; // ₦100
-        // --------------
+        const MATERIAL_PRICE = 100;
 
         let isAdmin = false;
-        let purchasedIds = new Set(); // Stores IDs of files user has bought
+        let purchasedIds = new Set(); 
 
-        // 1. Initial Checks
         async function init() {
             const { data: { user } } = await _supabase.auth.getUser();
             if(!user) return window.location.href='index.html';
 
-            // Check Admin
             const { data: admin } = await _supabase.from('admin_users').select('*').eq('email', user.email).single();
             if (admin) {
                 isAdmin = true;
                 document.getElementById('admin-fab').style.display = 'flex';
             }
 
-            // Fetch My Purchased Items
             const { data: payments } = await _supabase.from('resource_payments').select('resource_id').eq('user_id', user.id);
             if(payments) {
-                payments.forEach(p => purchasedIds.add(p.resource_id));
+                payments.forEach(p => purchasedIds.add(p.resource_id.toString()));
             }
 
             loadFaculties();
         }
         init();
 
-        // 2. Loading Data (Same as before)
         async function loadFaculties() {
             const { data } = await _supabase.from('faculties').select('*');
             const select = document.getElementById('faculty-select');
-            data.forEach(fac => { select.innerHTML += `<option value="${fac.id}">${fac.name}</option>`; });
+            data?.forEach(fac => { select.innerHTML += `<option value="${fac.id}">${fac.name}</option>`; });
         }
+
         async function loadDepartments() {
             const facId = document.getElementById('faculty-select').value;
             const deptSelect = document.getElementById('dept-select');
@@ -128,6 +122,7 @@
                 deptSelect.disabled = false;
             }
         }
+
         function checkSelections() {
             if(document.getElementById('dept-select').value) {
                 document.getElementById('level-select').disabled = false;
@@ -135,32 +130,28 @@
             }
         }
 
-        // 3. Load & Display Resources
         async function loadResources() {
             const deptId = document.getElementById('dept-select').value;
             const level = document.getElementById('level-select').value;
             const list = document.getElementById('resources-list');
             list.innerHTML = '<p style="text-align:center;color:#94a3b8;">Loading...</p>';
 
-            // Use the Strict Access Policy we set up in SQL
             let query = _supabase.from('academic_resources').select('*').eq('department_id', deptId);
-            if (level) query = query.eq('level', level); // Optional client-side filter
+            if (level) query = query.eq('level', level);
 
-            const { data } = await query;
+            const { data, error } = await query;
 
-            if (!data || data.length === 0) {
+            if (error || !data || data.length === 0) {
                 list.innerHTML = '<p style="text-align:center;color:#94a3b8;">No materials found.</p>';
                 return;
             }
 
             list.innerHTML = data.map(res => {
-                // Logic: Does user own this? Or is user Admin?
-                const isOwned = purchasedIds.has(res.id) || isAdmin;
+                const isOwned = purchasedIds.has(res.id.toString()) || isAdmin;
 
-                // If owned -> Show "Download"
-                // If not owned -> Show "Buy"
+                // Download fix: Using <a> with download attribute for better mobile support
                 let actionBtn = isOwned 
-                    ? `<button class="btn-download" onclick="window.open('${res.file_url}', '_blank')">Download</button>`
+                    ? `<a href="${res.file_url}" target="_blank" download="${res.title}" class="btn-download">Download</a>`
                     : `<button class="btn-buy" onclick="buyMaterial('${res.id}', '${res.title.replace(/'/g, "\\'")}')">Buy ₦${MATERIAL_PRICE}</button>`;
 
                 return `
@@ -173,30 +164,24 @@
                             <span class="level-badge">${res.level || 'GEN'}</span> ${res.title}
                         </div>
                     </div>
-                    
                     ${actionBtn}
-
                     <div class="btn-delete" style="display: ${isAdmin ? 'block' : 'none'}" onclick="deleteResource('${res.id}')">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                     </div>
-                </div>
-            `}).join('');
+                </div>`;
+            }).join('');
         }
 
-        // 4. Payment Logic
         async function buyMaterial(resourceId, title) {
             const { data: { user } } = await _supabase.auth.getUser();
             
             const handler = PaystackPop.setup({
                 key: PAYSTACK_KEY,
                 email: user.email,
-                amount: MATERIAL_PRICE * 100, // In Kobo
+                amount: MATERIAL_PRICE * 100, 
                 currency: 'NGN',
-                ref: '' + Math.floor((Math.random() * 1000000000) + 1),
-                metadata: { custom_fields: [{ display_name: "Resource", variable_name: "resource", value: title }] },
-                
+                ref: 'CC-' + Date.now(),
                 callback: async function(response) {
-                    // Payment Success! Save to DB
                     const { error } = await _supabase.from('resource_payments').insert({
                         user_id: user.id,
                         resource_id: resourceId,
@@ -205,27 +190,32 @@
                     });
 
                     if(!error) {
-                        alert("Payment Successful! You can now download.");
-                        purchasedIds.add(parseInt(resourceId)); // Update local state
-                        loadResources(); // Refresh UI to show "Download" button
+                        alert("Payment Successful!");
+                        purchasedIds.add(resourceId.toString());
+                        loadResources(); 
                     } else {
-                        alert("Error saving payment info. Please contact support.");
+                        alert("Error updating purchase record.");
                     }
-                },
-                onClose: function() {
-                    alert('Transaction cancelled.');
                 }
             });
             handler.openIframe();
         }
 
         async function deleteResource(id) {
-            if(confirm("Delete this file?")) {
-                await _supabase.from('academic_resources').delete().eq('id', id);
-                loadResources();
+            if(confirm("Permanently delete this resource?")) {
+                const { error } = await _supabase
+                    .from('academic_resources')
+                    .delete()
+                    .eq('id', id);
+                
+                if(error) {
+                    alert("Delete failed: " + error.message);
+                } else {
+                    alert("Deleted successfully.");
+                    loadResources(); 
+                }
             }
         }
     </script>
 </body>
 </html>
-
