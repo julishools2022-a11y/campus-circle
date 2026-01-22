@@ -3,291 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Material</title>
+    <title>Upload Material | Staff Portal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* --- 1. CSS STYLING --- */
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f3f4f6;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start; /* Aligns to top for better scrolling on mobile */
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+        body { font-family: 'Roboto', sans-serif; background: #f1f5f9; padding: 20px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #0f172a; margin-top: 0; }
+        
+        label { display: block; margin: 15px 0 5px; font-weight: 700; font-size: 14px; color: #334155; }
+        select, input, textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; box-sizing: border-box; }
+        
+        /* Checkbox Style */
+        .checkbox-group { display: flex; align-items: center; gap: 10px; background: #eff6ff; padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid #bfdbfe; }
+        .checkbox-group input { width: 20px; height: 20px; margin: 0; }
+        .checkbox-group label { margin: 0; color: #1e40af; }
 
-        .upload-card {
-            background-color: white;
-            width: 100%;
-            max-width: 400px; /* Looks good on phone, doesn't stretch on PC */
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        h2 {
-            text-align: center;
-            font-size: 18px;
-            color: #111827;
-            margin-top: 0;
-            margin-bottom: 24px;
-        }
-
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 6px;
-            color: #374151;
-        }
-
-        input[type="text"], 
-        select, 
-        textarea,
-        input[type="file"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #e5e7eb;
-            border-radius: 6px;
-            font-size: 14px;
-            box-sizing: border-box;
-            background: #fff;
-            color: #1f2937;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: 2px solid #2563eb;
-            border-color: transparent;
-        }
-
-        textarea {
-            resize: vertical;
-            height: 80px;
-            font-family: inherit;
-        }
-
-        /* The Special Blue Checkbox Box */
-        .info-box {
-            background-color: #eff6ff; /* Light blue bg */
-            border: 1px solid #dbeafe;
-            border-radius: 6px;
-            padding: 12px;
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .info-box input[type="checkbox"] {
-            margin-top: 4px;
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-        }
-
-        .info-text h4 {
-            margin: 0;
-            font-size: 13px;
-            color: #1e40af; /* Darker blue text */
-            font-weight: 600;
-        }
-
-        .info-text p {
-            margin: 2px 0 0 0;
-            font-size: 11px;
-            color: #6b7280;
-            line-height: 1.4;
-        }
-
-        /* Upload Button */
-        .btn-submit {
-            width: 100%;
-            background-color: #2563eb; /* Royal Blue */
-            color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: background 0.2s;
-        }
-
-        .btn-submit:hover {
-            background-color: #1d4ed8;
-        }
-
-        .btn-submit:disabled {
-            background-color: #93c5fd;
-            cursor: not-allowed;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 16px;
-        }
-
-        .footer a {
-            color: #6b7280;
-            text-decoration: none;
-            font-size: 12px;
-        }
+        .btn-upload { width: 100%; padding: 15px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 700; margin-top: 20px; cursor: pointer; }
+        .btn-upload:disabled { background: #94a3b8; cursor: wait; }
+        
+        .back-link { display: block; text-align: center; margin-top: 15px; text-decoration: none; color: #64748b; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div class="upload-card">
+<div class="container">
     <h2>Upload Material</h2>
-    
-    <form id="uploadForm">
-        <div class="form-group">
-            <label>Faculty</label>
-            <select id="faculty" required>
-                <option value="">Select Faculty</option>
-                <option value="Agriculture">Agriculture</option>
-                <option value="Engineering">Engineering</option>
-                <option value="Science">Social sciences</option>
-            </select>
-        </div>
+    <form id="upload-form">
+        <label>Faculty</label>
+        <select id="faculty" onchange="loadDepartments()" required></select>
 
-        <div class="form-group">
-            <label>Department</label>
-            <select id="department" required>
-                <option value="">Select Department</option>
-                <option value="Agric Econ">Agricultural Economics</option>
-                <option value="Computer Sci">sociology</option>
-            </select>
-        </div>
+        <label>Department</label>
+        <select id="dept" disabled required></select>
 
-        <div class="form-group">
-            <label>Level</label>
-            <select id="level" required>
-                <option value="100L">100L</option>
-                <option value="200L">200L</option>
-                <option value="300L">300L</option>
-                <option value="400L">400L</option>
-            </select>
-        </div>
+        <label>Level</label>
+        <select id="level" required>
+            <option value="100L">100L</option>
+            <option value="200L">200L</option>
+            <option value="300L">300L</option>
+            <option value="400L">400L</option>
+            <option value="500L">500L</option>
+        </select>
 
-        <div class="form-group">
-            <label>Material Title</label>
-            <input type="text" id="title" placeholder="e.g. ECO 210 Past Questions" required>
-        </div>
+        <label>Material Title</label>
+        <input type="text" id="title" placeholder="e.g. ECO 210 Past Questions" required>
 
-        <div class="form-group">
-            <label>Description</label>
-            <textarea id="description" placeholder="Brief description..."></textarea>
-        </div>
+        <label>Description</label>
+        <textarea id="desc" placeholder="Brief description..."></textarea>
 
-        <div class="info-box">
-            <input type="checkbox" id="isBorrowed">
-            <div class="info-text">
-                <h4>Is this a Borrowed / General Course?</h4>
-                <p>Check this if students from OTHER departments need to see this.</p>
+        <div class="checkbox-group">
+            <input type="checkbox" id="is_borrowed">
+            <div>
+                <label for="is_borrowed">Is this a Borrowed / General Course?</label>
+                <small style="display:block; color:#64748b; font-weight:400; font-size:12px;">Check this if students from OTHER departments need to see this.</small>
             </div>
         </div>
 
-        <div class="form-group">
-            <label>Select File (PDF/Image)</label>
-            <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.jpg,.png" required>
-        </div>
+        <label>Select File (PDF/Image)</label>
+        <input type="file" id="file" accept=".pdf, .doc, .docx, .jpg, .png" required>
 
-        <button type="submit" class="btn-submit" id="submitBtn">UPLOAD MATERIAL</button>
+        <button type="submit" class="btn-upload" id="btn">UPLOAD MATERIAL</button>
     </form>
-
-    <div class="footer">
-        <a href="index.html">Back to Resources</a>
-    </div>
+    <a href="resources.html" class="back-link">Back to Resources</a>
 </div>
 
-<script type="module">
-    // Import Supabase from CDN
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+<script>
+    const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    // TODO: Paste your credentials here
-    const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co'; 
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    async function checkAdmin() {
+        const { data: { user } } = await _supabase.auth.getUser();
+        if (!user) return window.location.href = 'index.html';
 
-    const form = document.getElementById('uploadForm');
-    const submitBtn = document.getElementById('submitBtn');
+        // --- CRITICAL FIX: Case Insensitive Check ---
+        const { data } = await _supabase
+            .from('admin_users')
+            .select('*')
+            .ilike('email', user.email) // This allows 'Ce.offor' to match 'ce.offor'
+            .maybeSingle();
 
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        // 1. UI Loading State
-        submitBtn.disabled = true;
-        submitBtn.innerText = "Uploading...";
-
-        // 2. Gather Data
-        const faculty = document.getElementById('faculty').value;
-        const dept = document.getElementById('department').value;
-        const level = document.getElementById('level').value;
-        const title = document.getElementById('title').value;
-        const desc = document.getElementById('description').value;
-        const isBorrowed = document.getElementById('isBorrowed').checked;
-        const file = document.getElementById('fileInput').files[0];
-
-        if (!file) {
-            alert("Please select a file");
-            submitBtn.disabled = false;
-            return;
+        if (!data) { 
+            alert("Access Denied: You are not an Admin."); 
+            window.location.href = 'resources.html'; 
         }
+    }
+    checkAdmin();
+
+    async function loadFaculties() {
+        const { data } = await _supabase.from('faculties').select('*');
+        const select = document.getElementById('faculty');
+        if (data) {
+            data.forEach(f => { select.innerHTML += `<option value="${f.id}">${f.name}</option>`; });
+            loadDepartments(); 
+        }
+    }
+    loadFaculties();
+
+    window.loadDepartments = async function() {
+        const facId = document.getElementById('faculty').value;
+        const deptSelect = document.getElementById('dept');
+        deptSelect.innerHTML = ''; deptSelect.disabled = true;
+        
+        const { data } = await _supabase.from('departments').select('*').eq('faculty_id', facId);
+        if (data && data.length > 0) {
+            data.forEach(d => { deptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`; });
+            deptSelect.disabled = false;
+        }
+    }
+
+    document.getElementById('upload-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn');
+        btn.disabled = true; btn.textContent = "Uploading...";
 
         try {
-            // 3. Upload File to Storage Bucket
-            // Note: Ensure you have a bucket named 'materials' in Supabase Storage
-            const fileName = `${Date.now()}-${file.name.replace(/\s/g, '_')}`;
+            const file = document.getElementById('file').files[0];
+            const fileName = `${Date.now()}_${file.name.replace(/\s/g, '')}`;
             
-            const { data: fileData, error: uploadError } = await supabase
-                .storage
-                .from('materials') 
-                .upload(fileName, file);
+            const { error: upErr } = await _supabase.storage.from('materials').upload(fileName, file);
+            if (upErr) throw upErr;
 
-            if (uploadError) throw uploadError;
+            const { data: { publicUrl } } = _supabase.storage.from('materials').getPublicUrl(fileName);
 
-            // 4. Get Public URL
-            const { data: { publicUrl } } = supabase
-                .storage
-                .from('materials')
-                .getPublicUrl(fileName);
+            const { error: dbErr } = await _supabase.from('academic_resources').insert({
+                department_id: document.getElementById('dept').value,
+                title: document.getElementById('title').value,
+                description: document.getElementById('desc').value,
+                level: document.getElementById('level').value,
+                is_borrowed: document.getElementById('is_borrowed').checked,
+                type: 'File',
+                file_url: publicUrl
+            });
 
-            // 5. Insert Info into Database
-            // Note: Ensure you have a table named 'uploads'
-            const { error: dbError } = await supabase
-                .from('uploads')
-                .insert([{
-                    faculty: faculty,
-                    department: dept,
-                    level: level,
-                    title: title,
-                    description: desc,
-                    is_borrowed: isBorrowed,
-                    file_url: publicUrl
-                }]);
+            if (dbErr) throw dbErr;
 
-            if (dbError) throw dbError;
+            alert("Uploaded Successfully!");
+            window.location.reload();
 
-            alert("Upload successful!");
-            form.reset();
-
-        } catch (error) {
-            console.error(error);
-            alert("Error uploading: " + error.message);
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerText = "UPLOAD MATERIAL";
+        } catch (err) {
+            alert("Error: " + err.message);
+            btn.disabled = false; btn.textContent = "UPLOAD MATERIAL";
         }
-    });
+    };
 </script>
-
 </body>
 </html>
