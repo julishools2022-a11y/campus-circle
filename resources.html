@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Content-Security-Policy" content="default-src * data: blob: 'unsafe-inline' 'unsafe-eval'; script-src * data: blob: 'unsafe-inline' 'unsafe-eval';">
     <title>Academic Resources</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <script src="https://js.paystack.co/v1/inline.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; --dark: #0f172a; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; user-select: none; /* Prevent text selection */ }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; user-select: none; }
         
         .header { background: white; padding: 15px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; }
         .back-btn { text-decoration: none; color: var(--dark); font-weight: 700; font-size: 20px; }
@@ -28,19 +30,17 @@
         .actions { display: flex; gap: 10px; margin-top: 10px; }
         .btn { flex: 1; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; text-align: center; text-decoration: none; }
         
+        /* Button Colors */
         .btn-pdf { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
         .btn-hard { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
-        .btn-dl { background: #10b981; color: white; border: none; } /* Read Button */
+        .btn-read { background: #10b981; color: white; border: none; } 
 
-        /* --- VIEWER MODAL (FULL SCREEN) --- */
+        /* --- SECURE VIEWER MODAL --- */
         .viewer-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 2000; flex-direction: column; }
         .viewer-header { background: #111; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .close-viewer { background: #333; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
         .viewer-body { flex: 1; width: 100%; height: 100%; background: #333; display: flex; align-items: center; justify-content: center; position: relative; }
-        
-        /* The Actual File Frame */
-        iframe { width: 100%; height: 100%; border: none; }
-        /* Image Viewer */
+        iframe { width: 100%; height: 100%; border: none; background: white; }
         .view-img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
         /* --- ORDER MODAL --- */
@@ -48,7 +48,8 @@
         .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
         .modal input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         
-        .fab { position: fixed; bottom: 30px; right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(37,99,235,0.4); text-decoration: none; display: none; }
+        /* Admin Upload Button */
+        .fab { position: fixed; bottom: 30px; right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(37,99,235,0.4); text-decoration: none; display: none; z-index: 500; font-size: 24px; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -81,8 +82,7 @@
             <span id="view-title">Reading Mode</span>
             <button class="close-viewer" onclick="closeViewer()">Close</button>
         </div>
-        <div class="viewer-body" id="viewer-container">
-            </div>
+        <div class="viewer-body" id="viewer-container"></div>
     </div>
 
     <div id="orderModal" class="modal">
@@ -102,15 +102,17 @@
         const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // PAYSTACK KEY
         const PAYSTACK_KEY = 'pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5';
 
         let isAdmin = false;
         let purchasedIds = new Set();
         let currentOrder = null;
 
-        // --- DISABLE KEYBOARD SHORTCUTS (Ctrl+P, Ctrl+S) ---
+        // Prevent Downloading Keys
         document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && (e.key === 's' || e.key === 'p' || e.key === 'u')) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'p' || e.key === 'u')) {
                 e.preventDefault();
                 alert("Downloading and printing are disabled.");
             }
@@ -132,7 +134,7 @@
         async function loadFaculties() {
             const { data } = await _supabase.from('faculties').select('*');
             const select = document.getElementById('faculty-select');
-            data.forEach(fac => { select.innerHTML += `<option value="${fac.id}">${fac.name}</option>`; });
+            if(data) data.forEach(fac => { select.innerHTML += `<option value="${fac.id}">${fac.name}</option>`; });
         }
 
         async function loadDepartments() {
@@ -160,16 +162,15 @@
             const { data } = await query;
             const list = document.getElementById('resources-list');
             
-            if (!data || data.length === 0) { list.innerHTML = '<p style="text-align:center;">No materials found.</p>'; return; }
+            if (!data || data.length === 0) { list.innerHTML = '<p style="text-align:center; margin-top:20px;">No materials found.</p>'; return; }
 
             list.innerHTML = data.map(res => {
                 const isOwned = purchasedIds.has(res.id) || isAdmin;
-                const pdfPrice = res.softcopy_price || 100; 
+                const pdfPrice = res.softcopy_price || 100;
 
-                // --- CHANGED: "Download" -> "Read Online" ---
                 let softBtn = isOwned 
-                    ? `<button class="btn btn-dl" onclick="openReader('${res.file_url}', '${res.title.replace(/'/g, "\\'")}')">Read Online</button>`
-                    : `<button class="btn btn-pdf" onclick="buyAccess('${res.id}', '${pdfPrice}')">Buy Access (₦${pdfPrice})</button>`;
+                    ? `<button class="btn btn-read" onclick="openReader('${res.file_url}', '${res.title.replace(/'/g, "\\'")}')">Read Online</button>`
+                    : `<button class="btn btn-pdf" onclick="buyAccess('${res.id}', '${pdfPrice}')">Buy PDF (₦${pdfPrice})</button>`;
 
                 let hardBtn = res.is_hardcopy_available 
                     ? `<button class="btn btn-hard" onclick="openOrderModal('${res.id}', '${res.title}', '${res.hardcopy_price}')">Order Book (₦${res.hardcopy_price})</button>`
@@ -181,44 +182,28 @@
                         <span class="res-title">${res.title}</span>
                         <span class="badge">${res.level}</span>
                     </div>
-                    <div class="actions">
-                        ${softBtn}
-                        ${hardBtn}
-                    </div>
+                    <div class="actions">${softBtn}${hardBtn}</div>
                 </div>`;
             }).join('');
         }
 
-        // --- NEW: SECURE READER ---
-        function openReader(url, title) {
-            document.getElementById('view-title').innerText = title;
-            const container = document.getElementById('viewer-container');
-            
-            // Check file type
-            if (url.toLowerCase().includes('.jpg') || url.toLowerCase().includes('.png') || url.toLowerCase().includes('.jpeg')) {
-                // Image Mode (Disable Right Click)
-                container.innerHTML = `<img src="${url}" class="view-img" oncontextmenu="return false;">`;
-            } else {
-                // PDF Mode (Hide Toolbar)
-                // #toolbar=0&navpanes=0 hides the download button in standard browsers
-                container.innerHTML = `<iframe src="${url}#toolbar=0&navpanes=0&scrollbar=0" oncontextmenu="return false;"></iframe>`;
-            }
-            
-            document.getElementById('fileViewer').style.display = 'flex';
-        }
-
-        function closeViewer() {
-            document.getElementById('fileViewer').style.display = 'none';
-            document.getElementById('viewer-container').innerHTML = ''; // Stop loading
-        }
-
-        // --- PAYMENT LOGIC ---
+        // --- FIXED PAYSTACK FUNCTION ---
         async function buyAccess(id, price) {
+            // 1. Check if Paystack loaded
+            if (typeof PaystackPop === 'undefined') {
+                alert("Paystack payment system is still loading. Please check your internet.");
+                return;
+            }
+
             const { data: { user } } = await _supabase.auth.getUser();
+            
+            // 2. Safe Price Calculation (Convert to Kobo)
+            const amountKobo = Math.ceil(parseFloat(price) * 100);
+            
             const handler = PaystackPop.setup({
-                key:pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5,
+                key: PAYSTACK_KEY,
                 email: user.email,
-                amount: price * 100,
+                amount: amountKobo, 
                 ref: ''+Math.floor((Math.random() * 1000000000) + 1),
                 callback: async function(resp) {
                     await _supabase.from('resource_payments').insert({
@@ -226,31 +211,38 @@
                     });
                     purchasedIds.add(parseInt(id));
                     loadResources();
-                    alert("Access Granted! Click 'Read Online' to view.");
+                    alert("Access Granted!");
                 },
                 onClose: function() { alert('Transaction cancelled'); }
             });
             handler.openIframe();
         }
 
+        // --- HARDCOPY LOGIC ---
         function openOrderModal(id, title, price) {
             currentOrder = { id, title, price };
             document.getElementById('modal-book-title').innerText = title;
             document.getElementById('orderModal').style.display = 'flex';
         }
-
         function closeModal() { document.getElementById('orderModal').style.display = 'none'; }
 
         async function processHardcopyPayment() {
+            if (typeof PaystackPop === 'undefined') {
+                alert("Paystack is loading... please wait.");
+                return;
+            }
+
             const address = document.getElementById('order-address').value;
             const phone = document.getElementById('order-phone').value;
-            if(!address || !phone) return alert("Please fill in address and phone number.");
+            if(!address || !phone) return alert("Please fill in all details.");
 
             const { data: { user } } = await _supabase.auth.getUser();
+            const amountKobo = Math.ceil(parseFloat(currentOrder.price) * 100);
+
             const handler = PaystackPop.setup({
-                key: pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5,
+                key: PAYSTACK_KEY,
                 email: user.email,
-                amount: currentOrder.price * 100,
+                amount: amountKobo,
                 ref: ''+Math.floor((Math.random() * 1000000000) + 1),
                 callback: async function(resp) {
                     const { error } = await _supabase.from('hardcopy_orders').insert({
@@ -259,15 +251,31 @@
                         delivery_address: address, phone_number: phone, payment_ref: resp.reference
                     });
                     if(error) alert("Error saving order.");
-                    else { alert("Order Placed Successfully!"); closeModal(); }
+                    else { alert("Order Placed!"); closeModal(); }
                 },
                 onClose: function() { alert('Transaction cancelled'); }
             });
             handler.openIframe();
         }
 
+        function openReader(url, title) {
+            document.getElementById('view-title').innerText = title;
+            const container = document.getElementById('viewer-container');
+            if (url.match(/\.(jpeg|jpg|png)$/i)) {
+                container.innerHTML = `<img src="${url}" class="view-img" oncontextmenu="return false;">`;
+            } else {
+                container.innerHTML = `<iframe src="${url}#toolbar=0&navpanes=0&scrollbar=0" oncontextmenu="return false;"></iframe>`;
+            }
+            document.getElementById('fileViewer').style.display = 'flex';
+        }
+
+        function closeViewer() {
+            document.getElementById('fileViewer').style.display = 'none';
+            document.getElementById('viewer-container').innerHTML = '';
+        }
+
         init();
     </script>
 </body>
-        </html>
-                    
+                                                     </html>
+        
