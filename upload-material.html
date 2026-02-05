@@ -2,170 +2,271 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Material | Staff Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Content-Security-Policy" content="default-src * data: blob: 'unsafe-inline' 'unsafe-eval'; script-src * data: blob: 'unsafe-inline' 'unsafe-eval';">
+    <title>Academic Resources</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Roboto', sans-serif; background: #f1f5f9; padding: 20px; }
-        .container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #0f172a; margin-top: 0; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --dark: #0f172a; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; user-select: none; /* Prevent text selection */ }
         
-        label { display: block; margin: 15px 0 5px; font-weight: 700; font-size: 14px; color: #334155; }
-        select, input, textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; box-sizing: border-box; }
+        .header { background: white; padding: 15px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; }
+        .back-btn { text-decoration: none; color: var(--dark); font-weight: 700; font-size: 20px; }
+        .page-title { font-weight: 800; font-size: 18px; color: var(--dark); margin: 0; }
         
-        /* Checkbox Style */
-        .checkbox-group { display: flex; align-items: center; gap: 10px; background: #eff6ff; padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid #bfdbfe; }
-        .checkbox-group input { width: 20px; height: 20px; margin: 0; }
-        .checkbox-group label { margin: 0; color: #1e40af; }
+        .container { padding: 20px; flex: 1; overflow-y: auto; }
+        .filter-section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 10px; background: #f8fafc; }
+        
+        .resource-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
+        .res-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .res-title { font-weight: 600; font-size: 14px; color: var(--dark); }
+        .badge { font-size: 10px; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+        
+        .actions { display: flex; gap: 10px; margin-top: 10px; }
+        .btn { flex: 1; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; text-align: center; text-decoration: none; }
+        
+        .btn-pdf { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .btn-hard { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+        .btn-dl { background: #10b981; color: white; border: none; } /* Read Button */
 
-        .btn-upload { width: 100%; padding: 15px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 700; margin-top: 20px; cursor: pointer; }
-        .btn-upload:disabled { background: #94a3b8; cursor: wait; }
+        /* --- VIEWER MODAL (FULL SCREEN) --- */
+        .viewer-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 2000; flex-direction: column; }
+        .viewer-header { background: #111; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .close-viewer { background: #333; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
+        .viewer-body { flex: 1; width: 100%; height: 100%; background: #333; display: flex; align-items: center; justify-content: center; position: relative; }
         
-        .back-link { display: block; text-align: center; margin-top: 15px; text-decoration: none; color: #64748b; font-size: 14px; }
+        /* The Actual File Frame */
+        iframe { width: 100%; height: 100%; border: none; }
+        /* Image Viewer */
+        .view-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        /* --- ORDER MODAL --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
+        .modal input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        
+        .fab { position: fixed; bottom: 30px; right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(37,99,235,0.4); text-decoration: none; display: none; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-<div class="container">
-    <h2>Upload Material</h2>
-    <form id="upload-form">
-        <label>Faculty</label>
-        <select id="faculty" onchange="loadDepartments()" required></select>
+    <div class="header">
+        <a href="dashboard.html" class="back-btn">&larr;</a>
+        <h1 class="page-title">Resources</h1>
+    </div>
 
-        <label>Department</label>
-        <select id="dept" disabled required></select>
+    <div class="container">
+        <div class="filter-section">
+            <select id="faculty-select" onchange="loadDepartments()"><option value="">-- Faculty --</option></select>
+            <select id="dept-select" disabled onchange="checkSelections()"><option value="">-- Department --</option></select>
+            <select id="level-select" disabled onchange="loadResources()">
+                <option value="">-- All Levels --</option>
+                <option value="100L">100L</option>
+                <option value="200L">200L</option>
+                <option value="300L">300L</option>
+                <option value="400L">400L</option>
+                <option value="500L">500L</option>
+            </select>
+        </div>
+        <div id="resources-list"><p style="text-align:center;color:#94a3b8;">Select department to view materials.</p></div>
+    </div>
 
-        <label>Level</label>
-        <select id="level" required>
-            <option value="100L">100L</option>
-            <option value="200L">200L</option>
-            <option value="300L">300L</option>
-            <option value="400L">400L</option>
-            <option value="500L">500L</option>
-        </select>
+    <a href="upload-material.html" class="fab" id="admin-fab">+</a>
 
-        <label>Material Title</label>
-        <input type="text" id="title" placeholder="e.g. ECO 210 Past Questions" required>
+    <div id="fileViewer" class="viewer-modal">
+        <div class="viewer-header">
+            <span id="view-title">Reading Mode</span>
+            <button class="close-viewer" onclick="closeViewer()">Close</button>
+        </div>
+        <div class="viewer-body" id="viewer-container">
+            </div>
+    </div>
 
-        <label>Description</label>
-        <textarea id="desc" placeholder="Brief description..."></textarea>
-
-        <div class="checkbox-group">
-            <input type="checkbox" id="is_borrowed">
-            <div>
-                <label for="is_borrowed">Is this a Borrowed / General Course?</label>
-                <small style="display:block; color:#64748b; font-weight:400; font-size:12px;">Check this if students from OTHER departments need to see this.</small>
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <h3>Order Hardcopy</h3>
+            <p>Enter delivery details for <b id="modal-book-title"></b></p>
+            <input type="text" id="order-address" placeholder="Delivery Address (e.g. Hostel A)">
+            <input type="tel" id="order-phone" placeholder="Phone Number">
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn" style="background:#eee;" onclick="closeModal()">Cancel</button>
+                <button class="btn" style="background:#2563eb; color:white;" onclick="processHardcopyPayment()">Pay & Order</button>
             </div>
         </div>
+    </div>
 
-        <label>Select File (PDF/Image)</label>
-        <input type="file" id="file" accept=".pdf, .doc, .docx, .jpg, .png" required>
+    <script>
+        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const PAYSTACK_KEY = 'pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5';
 
-        <button type="submit" class="btn-upload" id="btn">UPLOAD MATERIAL</button>
-    </form>
-    <a href="resources.html" class="back-link">Back to Resources</a>
-</div>
-            <script>
-    const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        let isAdmin = false;
+        let purchasedIds = new Set();
+        let currentOrder = null;
 
-    async function checkAdmin() {
-        const { data: { user } } = await _supabase.auth.getUser();
-        if (!user) return window.location.href = 'index.html';
+        // --- DISABLE KEYBOARD SHORTCUTS (Ctrl+P, Ctrl+S) ---
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && (e.key === 's' || e.key === 'p' || e.key === 'u')) {
+                e.preventDefault();
+                alert("Downloading and printing are disabled.");
+            }
+        });
 
-        const { data } = await _supabase
-            .from('admin_users')
-            .select('*')
-            .ilike('email', user.email)
-            .maybeSingle();
+        async function init() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if(!user) return window.location.href='index.html';
 
-        if (!data) { 
-            alert("Access Denied: You are not an Admin."); 
-            window.location.href = 'resources.html'; 
+            const { data: admin } = await _supabase.from('admin_users').select('id').ilike('email', user.email).maybeSingle();
+            if (admin) { isAdmin = true; document.getElementById('admin-fab').style.display = 'flex'; }
+
+            const { data: payments } = await _supabase.from('resource_payments').select('resource_id').eq('user_id', user.id);
+            if(payments) payments.forEach(p => purchasedIds.add(p.resource_id));
+
+            loadFaculties();
         }
-    }
-    checkAdmin();
 
-    async function loadFaculties() {
-        const { data } = await _supabase.from('faculties').select('*');
-        const select = document.getElementById('faculty');
-        if (data) {
-            data.forEach(f => { select.innerHTML += `<option value="${f.id}">${f.name}</option>`; });
-            // Load departments for the first faculty automatically if needed
-             // loadDepartments(); 
+        async function loadFaculties() {
+            const { data } = await _supabase.from('faculties').select('*');
+            const select = document.getElementById('faculty-select');
+            data.forEach(fac => { select.innerHTML += `<option value="${fac.id}">${fac.name}</option>`; });
         }
-    }
-    loadFaculties();
 
-    window.loadDepartments = async function() {
-        const facId = document.getElementById('faculty').value;
-        const deptSelect = document.getElementById('dept');
-        deptSelect.innerHTML = ''; deptSelect.disabled = true;
-        
-        const { data } = await _supabase.from('departments').select('*').eq('faculty_id', facId);
-        if (data && data.length > 0) {
-            data.forEach(d => { deptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`; });
-            deptSelect.disabled = false;
+        async function loadDepartments() {
+            const facId = document.getElementById('faculty-select').value;
+            const deptSelect = document.getElementById('dept-select');
+            deptSelect.innerHTML = '<option value="">-- Department --</option>'; deptSelect.disabled = true;
+            const { data } = await _supabase.from('departments').select('*').eq('faculty_id', facId);
+            if(data) {
+                data.forEach(d => { deptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`; });
+                deptSelect.disabled = false;
+            }
         }
-    }
 
-    document.getElementById('upload-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btn');
-        const status = document.getElementById('status'); // FIX 1: Defined status here
-        
-        btn.disabled = true; 
-        btn.textContent = "Uploading...";
+        function checkSelections() {
+            document.getElementById('level-select').disabled = false;
+            loadResources();
+        }
 
-        try {
-            const file = document.getElementById('file').files[0];
-            if (!file) throw new Error("Please select a file.");
+        async function loadResources() {
+            const deptId = document.getElementById('dept-select').value;
+            const level = document.getElementById('level-select').value;
+            let query = _supabase.from('academic_resources').select('*').eq('department_id', deptId);
+            if (level) query = query.eq('level', level);
 
-            const fileName = `${Date.now()}_${file.name.replace(/\s/g, '')}`;
+            const { data } = await query;
+            const list = document.getElementById('resources-list');
             
-            const { error: upErr } = await _supabase.storage.from('materials').upload(fileName, file);
-            if (upErr) throw upErr;
+            if (!data || data.length === 0) { list.innerHTML = '<p style="text-align:center;">No materials found.</p>'; return; }
 
-            const { data: { publicUrl } } = _supabase.storage.from('materials').getPublicUrl(fileName);
+            list.innerHTML = data.map(res => {
+                const isOwned = purchasedIds.has(res.id) || isAdmin;
+                const pdfPrice = res.softcopy_price || 100; 
 
-            const { error: dbErr } = await _supabase.from('academic_resources').insert({
-                department_id: document.getElementById('dept').value,
-                title: document.getElementById('title').value,
-                description: document.getElementById('desc').value,
-                level: document.getElementById('level').value,
-                is_borrowed: document.getElementById('is_borrowed').checked,
-                file_url: publicUrl
+                // --- CHANGED: "Download" -> "Read Online" ---
+                let softBtn = isOwned 
+                    ? `<button class="btn btn-dl" onclick="openReader('${res.file_url}', '${res.title.replace(/'/g, "\\'")}')">Read Online</button>`
+                    : `<button class="btn btn-pdf" onclick="buyAccess('${res.id}', '${pdfPrice}')">Buy Access (₦${pdfPrice})</button>`;
+
+                let hardBtn = res.is_hardcopy_available 
+                    ? `<button class="btn btn-hard" onclick="openOrderModal('${res.id}', '${res.title}', '${res.hardcopy_price}')">Order Book (₦${res.hardcopy_price})</button>`
+                    : ``;
+
+                return `
+                <div class="resource-card">
+                    <div class="res-header">
+                        <span class="res-title">${res.title}</span>
+                        <span class="badge">${res.level}</span>
+                    </div>
+                    <div class="actions">
+                        ${softBtn}
+                        ${hardBtn}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // --- NEW: SECURE READER ---
+        function openReader(url, title) {
+            document.getElementById('view-title').innerText = title;
+            const container = document.getElementById('viewer-container');
+            
+            // Check file type
+            if (url.toLowerCase().includes('.jpg') || url.toLowerCase().includes('.png') || url.toLowerCase().includes('.jpeg')) {
+                // Image Mode (Disable Right Click)
+                container.innerHTML = `<img src="${url}" class="view-img" oncontextmenu="return false;">`;
+            } else {
+                // PDF Mode (Hide Toolbar)
+                // #toolbar=0&navpanes=0 hides the download button in standard browsers
+                container.innerHTML = `<iframe src="${url}#toolbar=0&navpanes=0&scrollbar=0" oncontextmenu="return false;"></iframe>`;
+            }
+            
+            document.getElementById('fileViewer').style.display = 'flex';
+        }
+
+        function closeViewer() {
+            document.getElementById('fileViewer').style.display = 'none';
+            document.getElementById('viewer-container').innerHTML = ''; // Stop loading
+        }
+
+        // --- PAYMENT LOGIC ---
+        async function buyAccess(id, price) {
+            const { data: { user } } = await _supabase.auth.getUser();
+            const handler = PaystackPop.setup({
+                key: PAYSTACK_KEY,
+                email: user.email,
+                amount: price * 100,
+                ref: ''+Math.floor((Math.random() * 1000000000) + 1),
+                callback: async function(resp) {
+                    await _supabase.from('resource_payments').insert({
+                        user_id: user.id, resource_id: id, amount: price, payment_ref: resp.reference
+                    });
+                    purchasedIds.add(parseInt(id));
+                    loadResources();
+                    alert("Access Granted! Click 'Read Online' to view.");
+                },
+                onClose: function() { alert('Transaction cancelled'); }
             });
-
-            if (dbErr) throw dbErr;
-
-            // FIX 2: Removed window.location.reload() so the success message shows
-            
-            if (status) {
-                status.style.color = "green";
-                status.textContent = "Success! Redirecting...";
-            } else {
-                alert("Uploaded Successfully!");
-            }
-
-            // Redirect after 1.5 seconds
-            setTimeout(() => window.location.href = 'resources.html', 1500);
-
-        } catch (err) {
-            console.error(err);
-            if (status) {
-                status.style.color = "red";
-                status.textContent = "Error: " + err.message;
-            } else {
-                alert("Error: " + err.message);
-            }
-            btn.disabled = false; 
-            btn.textContent = "UPLOAD MATERIAL";
+            handler.openIframe();
         }
-    };
-            </script>
-    
+
+        function openOrderModal(id, title, price) {
+            currentOrder = { id, title, price };
+            document.getElementById('modal-book-title').innerText = title;
+            document.getElementById('orderModal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('orderModal').style.display = 'none'; }
+
+        async function processHardcopyPayment() {
+            const address = document.getElementById('order-address').value;
+            const phone = document.getElementById('order-phone').value;
+            if(!address || !phone) return alert("Please fill in address and phone number.");
+
+            const { data: { user } } = await _supabase.auth.getUser();
+            const handler = PaystackPop.setup({
+                key: PAYSTACK_KEY,
+                email: user.email,
+                amount: currentOrder.price * 100,
+                ref: ''+Math.floor((Math.random() * 1000000000) + 1),
+                callback: async function(resp) {
+                    const { error } = await _supabase.from('hardcopy_orders').insert({
+                        user_id: user.id, resource_id: currentOrder.id, amount: currentOrder.price,
+                        full_name: user.user_metadata.full_name || 'Student',
+                        delivery_address: address, phone_number: phone, payment_ref: resp.reference
+                    });
+                    if(error) alert("Error saving order.");
+                    else { alert("Order Placed Successfully!"); closeModal(); }
+                },
+                onClose: function() { alert('Transaction cancelled'); }
+            });
+            handler.openIframe();
+        }
+
+        init();
+    </script>
 </body>
 </html>
