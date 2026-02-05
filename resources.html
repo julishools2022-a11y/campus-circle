@@ -216,7 +216,7 @@
         async function buyAccess(id, price) {
             const { data: { user } } = await _supabase.auth.getUser();
             const handler = PaystackPop.setup({
-                key: PAYSTACK_KEY,
+                key:pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5,
                 email: user.email,
                 amount: price * 100,
                 ref: ''+Math.floor((Math.random() * 1000000000) + 1),
@@ -248,7 +248,7 @@
 
             const { data: { user } } = await _supabase.auth.getUser();
             const handler = PaystackPop.setup({
-                key: PAYSTACK_KEY,
+                key: pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5,
                 email: user.email,
                 amount: currentOrder.price * 100,
                 ref: ''+Math.floor((Math.random() * 1000000000) + 1),
