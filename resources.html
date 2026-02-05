@@ -4,60 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Content-Security-Policy" content="default-src * data: blob: 'unsafe-inline' 'unsafe-eval'; script-src * data: blob: 'unsafe-inline' 'unsafe-eval';">
-    
-    <title>Academic Resources | Campus Circle</title>
+    <title>Academic Resources</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://js.paystack.co/v1/inline.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --white: #ffffff; --dark: #0f172a; --gray: #64748b; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; }
-
+        :root { --primary: #2563eb; --bg: #f8fafc; --dark: #0f172a; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; user-select: none; /* Prevent text selection */ }
+        
         .header { background: white; padding: 15px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; }
-        .back-btn { text-decoration: none; color: var(--dark); display: flex; align-items: center; }
+        .back-btn { text-decoration: none; color: var(--dark); font-weight: 700; font-size: 20px; }
         .page-title { font-weight: 800; font-size: 18px; color: var(--dark); margin: 0; }
-
+        
         .container { padding: 20px; flex: 1; overflow-y: auto; }
         .filter-section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        label { display: block; font-size: 12px; font-weight: 700; color: var(--gray); margin-bottom: 5px; }
-        select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #f8fafc; margin-bottom: 15px; }
+        select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 10px; background: #f8fafc; }
         
-        .resource-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; }
-        .icon-box { width: 45px; height: 45px; background: #eff6ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--primary); }
-        .res-info { flex: 1; }
+        .resource-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
+        .res-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .res-title { font-weight: 600; font-size: 14px; color: var(--dark); }
-        .level-badge { font-size: 10px; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-right: 5px; }
+        .badge { font-size: 10px; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
         
-        .btn-buy { 
-            background: #2563eb; color: white; padding: 8px 12px; border-radius: 6px; 
-            font-size: 12px; font-weight: 700; text-decoration: none; border: none; cursor: pointer;
-        }
-        .btn-download { 
-            background: #dcfce7; color: #166534; padding: 8px 12px; border-radius: 6px; 
-            font-size: 12px; font-weight: 700; text-decoration: none; border: 1px solid #bbf7d0; cursor: pointer;
-            display: inline-block; text-align: center;
-        }
-        .btn-delete { color: #ef4444; padding: 10px; cursor: pointer; display: none; } 
+        .actions { display: flex; gap: 10px; margin-top: 10px; }
+        .btn { flex: 1; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: 700; border: none; cursor: pointer; text-align: center; text-decoration: none; }
         
-        .fab { position: fixed; bottom: 30px; right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 50%; color: white; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(37,99,235,0.4); text-decoration: none; }
+        .btn-pdf { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+        .btn-hard { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+        .btn-dl { background: #10b981; color: white; border: none; } /* Read Button */
+
+        /* --- VIEWER MODAL (FULL SCREEN) --- */
+        .viewer-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 2000; flex-direction: column; }
+        .viewer-header { background: #111; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .close-viewer { background: #333; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; }
+        .viewer-body { flex: 1; width: 100%; height: 100%; background: #333; display: flex; align-items: center; justify-content: center; position: relative; }
+        
+        /* The Actual File Frame */
+        iframe { width: 100%; height: 100%; border: none; }
+        /* Image Viewer */
+        .view-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        /* --- ORDER MODAL --- */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
+        .modal input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        
+        .fab { position: fixed; bottom: 30px; right: 20px; width: 56px; height: 56px; background: var(--primary); border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(37,99,235,0.4); text-decoration: none; display: none; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <div class="header">
-        <a href="dashboard.html" class="back-btn">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-        </a>
-        <h1 class="page-title">Lecture Materials</h1>
+        <a href="dashboard.html" class="back-btn">&larr;</a>
+        <h1 class="page-title">Resources</h1>
     </div>
 
     <div class="container">
         <div class="filter-section">
-            <label>Select Faculty</label>
-            <select id="faculty-select" onchange="loadDepartments()"><option value="">-- Choose Faculty --</option></select>
-            <label>Select Department</label>
-            <select id="dept-select" disabled onchange="checkSelections()"><option value="">-- Select Faculty First --</option></select>
-            <label>Select Level</label>
+            <select id="faculty-select" onchange="loadDepartments()"><option value="">-- Faculty --</option></select>
+            <select id="dept-select" disabled onchange="checkSelections()"><option value="">-- Department --</option></select>
             <select id="level-select" disabled onchange="loadResources()">
                 <option value="">-- All Levels --</option>
                 <option value="100L">100L</option>
@@ -67,75 +71,74 @@
                 <option value="500L">500L</option>
             </select>
         </div>
-        <div id="resources-list"><p style="text-align:center;color:#94a3b8;">Select department & level to view materials.</p></div>
+        <div id="resources-list"><p style="text-align:center;color:#94a3b8;">Select department to view materials.</p></div>
     </div>
 
-    <a href="upload-material.html" class="fab" id="admin-fab">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-    </a>
+    <a href="upload-material.html" class="fab" id="admin-fab">+</a>
+
+    <div id="fileViewer" class="viewer-modal">
+        <div class="viewer-header">
+            <span id="view-title">Reading Mode</span>
+            <button class="close-viewer" onclick="closeViewer()">Close</button>
+        </div>
+        <div class="viewer-body" id="viewer-container">
+            </div>
+    </div>
+
+    <div id="orderModal" class="modal">
+        <div class="modal-content">
+            <h3>Order Hardcopy</h3>
+            <p>Enter delivery details for <b id="modal-book-title"></b></p>
+            <input type="text" id="order-address" placeholder="Delivery Address (e.g. Hostel A)">
+            <input type="tel" id="order-phone" placeholder="Phone Number">
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn" style="background:#eee;" onclick="closeModal()">Cancel</button>
+                <button class="btn" style="background:#2563eb; color:white;" onclick="processHardcopyPayment()">Pay & Order</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
         const PAYSTACK_KEY = 'pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5';
-        const MATERIAL_PRICE = 100;
 
         let isAdmin = false;
-        let purchasedIds = new Set(); 
+        let purchasedIds = new Set();
+        let currentOrder = null;
+
+        // --- DISABLE KEYBOARD SHORTCUTS (Ctrl+P, Ctrl+S) ---
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && (e.key === 's' || e.key === 'p' || e.key === 'u')) {
+                e.preventDefault();
+                alert("Downloading and printing are disabled.");
+            }
+        });
 
         async function init() {
-            try {
-                const { data: { user } } = await _supabase.auth.getUser();
-                if(!user) return window.location.href='index.html';
+            const { data: { user } } = await _supabase.auth.getUser();
+            if(!user) return window.location.href='index.html';
 
-                // CRITICAL FIX: Use .maybeSingle() instead of .single()
-                // This prevents the script from crashing if the user is NOT an admin
-                const { data: admin } = await _supabase
-                    .from('admin_users')
-                    .select('*')
-                    .eq('email', user.email)
-                    .maybeSingle();
+            const { data: admin } = await _supabase.from('admin_users').select('id').ilike('email', user.email).maybeSingle();
+            if (admin) { isAdmin = true; document.getElementById('admin-fab').style.display = 'flex'; }
 
-                if (admin) {
-                    isAdmin = true;
-                    document.getElementById('admin-fab').style.display = 'flex';
-                }
+            const { data: payments } = await _supabase.from('resource_payments').select('resource_id').eq('user_id', user.id);
+            if(payments) payments.forEach(p => purchasedIds.add(p.resource_id));
 
-                // Fetch Purchased Items
-                const { data: payments } = await _supabase
-                    .from('resource_payments')
-                    .select('resource_id')
-                    .eq('user_id', user.id);
-                
-                if(payments) {
-                    payments.forEach(p => purchasedIds.add(p.resource_id.toString()));
-                }
-
-                loadFaculties();
-            } catch (error) {
-                console.error("Init Error:", error);
-                // Even if admin check fails, try to load the menu
-                loadFaculties();
-            }
+            loadFaculties();
         }
-        init();
 
         async function loadFaculties() {
             const { data } = await _supabase.from('faculties').select('*');
             const select = document.getElementById('faculty-select');
-            if (data) {
-                data.forEach(fac => { select.innerHTML += `<option value="${fac.id}">${fac.name}</option>`; });
-            }
+            data.forEach(fac => { select.innerHTML += `<option value="${fac.id}">${fac.name}</option>`; });
         }
 
         async function loadDepartments() {
             const facId = document.getElementById('faculty-select').value;
             const deptSelect = document.getElementById('dept-select');
-            deptSelect.innerHTML = '<option value="">-- Choose Department --</option>';
-            deptSelect.disabled = true;
-            if(!facId) return;
+            deptSelect.innerHTML = '<option value="">-- Department --</option>'; deptSelect.disabled = true;
             const { data } = await _supabase.from('departments').select('*').eq('faculty_id', facId);
             if(data) {
                 data.forEach(d => { deptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`; });
@@ -144,137 +147,127 @@
         }
 
         function checkSelections() {
-            if(document.getElementById('dept-select').value) {
-                document.getElementById('level-select').disabled = false;
-                loadResources();
-            }
+            document.getElementById('level-select').disabled = false;
+            loadResources();
         }
 
         async function loadResources() {
             const deptId = document.getElementById('dept-select').value;
             const level = document.getElementById('level-select').value;
-            const list = document.getElementById('resources-list');
-            list.innerHTML = '<p style="text-align:center;color:#94a3b8;">Loading...</p>';
-
             let query = _supabase.from('academic_resources').select('*').eq('department_id', deptId);
             if (level) query = query.eq('level', level);
 
-            const { data, error } = await query;
-
-            if (error || !data || data.length === 0) {
-                list.innerHTML = '<p style="text-align:center;color:#94a3b8;">No materials found.</p>';
-                return;
-            }
+            const { data } = await query;
+            const list = document.getElementById('resources-list');
+            
+            if (!data || data.length === 0) { list.innerHTML = '<p style="text-align:center;">No materials found.</p>'; return; }
 
             list.innerHTML = data.map(res => {
-                const isOwned = purchasedIds.has(res.id.toString()) || isAdmin;
+                const isOwned = purchasedIds.has(res.id) || isAdmin;
+                const pdfPrice = res.softcopy_price || 100; 
 
-                // Download Link for Owners / Buy Button for Others
-                let actionBtn = isOwned 
-                    ? `<a href="${res.file_url}" target="_blank" download="${res.title}" class="btn-download">Download</a>`
-                    : `<button class="btn-buy" onclick="buyMaterial('${res.id}', '${res.title.replace(/'/g, "\\'")}')">Buy ₦${MATERIAL_PRICE}</button>`;
+                // --- CHANGED: "Download" -> "Read Online" ---
+                let softBtn = isOwned 
+                    ? `<button class="btn btn-dl" onclick="openReader('${res.file_url}', '${res.title.replace(/'/g, "\\'")}')">Read Online</button>`
+                    : `<button class="btn btn-pdf" onclick="buyAccess('${res.id}', '${pdfPrice}')">Buy Access (₦${pdfPrice})</button>`;
+
+                let hardBtn = res.is_hardcopy_available 
+                    ? `<button class="btn btn-hard" onclick="openOrderModal('${res.id}', '${res.title}', '${res.hardcopy_price}')">Order Book (₦${res.hardcopy_price})</button>`
+                    : ``;
 
                 return `
                 <div class="resource-card">
-                    <div class="icon-box">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <div class="res-header">
+                        <span class="res-title">${res.title}</span>
+                        <span class="badge">${res.level}</span>
                     </div>
-                    <div class="res-info">
-                        <div class="res-title">
-                            <span class="level-badge">${res.level || 'GEN'}</span> ${res.title}
-                        </div>
-                    </div>
-                    ${actionBtn}
-                    <div class="btn-delete" style="display: ${isAdmin ? 'block' : 'none'}" onclick="deleteResource('${res.id}')">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    <div class="actions">
+                        ${softBtn}
+                        ${hardBtn}
                     </div>
                 </div>`;
             }).join('');
         }
 
-                        async function buyMaterial(resourceId, title) {
-            if (typeof PaystackPop === 'undefined') {
-                alert("Paystack not loaded. Check internet connection.");
-                return;
+        // --- NEW: SECURE READER ---
+        function openReader(url, title) {
+            document.getElementById('view-title').innerText = title;
+            const container = document.getElementById('viewer-container');
+            
+            // Check file type
+            if (url.toLowerCase().includes('.jpg') || url.toLowerCase().includes('.png') || url.toLowerCase().includes('.jpeg')) {
+                // Image Mode (Disable Right Click)
+                container.innerHTML = `<img src="${url}" class="view-img" oncontextmenu="return false;">`;
+            } else {
+                // PDF Mode (Hide Toolbar)
+                // #toolbar=0&navpanes=0 hides the download button in standard browsers
+                container.innerHTML = `<iframe src="${url}#toolbar=0&navpanes=0&scrollbar=0" oncontextmenu="return false;"></iframe>`;
             }
-
-            const btn = event.target || event.currentTarget;
-            const originalText = btn.innerText;
-            btn.innerText = "Processing...";
-            btn.disabled = true;
-
-            try {
-                const { data: { user }, error } = await _supabase.auth.getUser();
-                if (error || !user) {
-                    alert("Please log in again.");
-                    window.location.href = 'index.html'; 
-                    return;
-                }
-
-                const handler = PaystackPop.setup({
-                    key: PAYSTACK_KEY,
-                    email: user.email,
-                    amount: MATERIAL_PRICE * 100,
-                    currency: 'NGN',
-                    ref: 'CC-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-                    
-                    // FIX IS HERE: Removed 'async' keyword from this line
-                    callback: function(response) {
-                        btn.innerText = "Verifying...";
-                        
-                        // We run the async code manually inside here
-                        _supabase.from('resource_payments').insert({
-                            user_id: user.id,
-                            resource_id: resourceId,
-                            amount: MATERIAL_PRICE,
-                            payment_ref: response.reference
-                        }).then(({ error: dbError }) => {
-                            if(!dbError) {
-                                alert("Payment Successful!");
-                                purchasedIds.add(resourceId.toString());
-                                loadResources(); 
-                            } else {
-                                alert("Database Error: " + dbError.message);
-                            }
-                            btn.innerText = originalText;
-                            btn.disabled = false;
-                        });
-                    },
-                    
-                    onClose: function() {
-                        alert('Transaction cancelled.');
-                        btn.innerText = originalText;
-                        btn.disabled = false;
-                    }
-                });
-
-                handler.openIframe();
-
-            } catch (err) {
-                console.error("Error:", err);
-                alert("Error: " + err.message);
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
-                        }
-                    
-                
-
-        async function deleteResource(id) {
-            if(confirm("Permanently delete this resource?")) {
-                const { error } = await _supabase
-                    .from('academic_resources')
-                    .delete()
-                    .eq('id', id);
-                
-                if(error) {
-                    alert("Delete failed: " + error.message);
-                } else {
-                    alert("Deleted successfully.");
-                    loadResources(); 
-                }
-            }
+            
+            document.getElementById('fileViewer').style.display = 'flex';
         }
+
+        function closeViewer() {
+            document.getElementById('fileViewer').style.display = 'none';
+            document.getElementById('viewer-container').innerHTML = ''; // Stop loading
+        }
+
+        // --- PAYMENT LOGIC ---
+        async function buyAccess(id, price) {
+            const { data: { user } } = await _supabase.auth.getUser();
+            const handler = PaystackPop.setup({
+                key: PAYSTACK_KEY,
+                email: user.email,
+                amount: price * 100,
+                ref: ''+Math.floor((Math.random() * 1000000000) + 1),
+                callback: async function(resp) {
+                    await _supabase.from('resource_payments').insert({
+                        user_id: user.id, resource_id: id, amount: price, payment_ref: resp.reference
+                    });
+                    purchasedIds.add(parseInt(id));
+                    loadResources();
+                    alert("Access Granted! Click 'Read Online' to view.");
+                },
+                onClose: function() { alert('Transaction cancelled'); }
+            });
+            handler.openIframe();
+        }
+
+        function openOrderModal(id, title, price) {
+            currentOrder = { id, title, price };
+            document.getElementById('modal-book-title').innerText = title;
+            document.getElementById('orderModal').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('orderModal').style.display = 'none'; }
+
+        async function processHardcopyPayment() {
+            const address = document.getElementById('order-address').value;
+            const phone = document.getElementById('order-phone').value;
+            if(!address || !phone) return alert("Please fill in address and phone number.");
+
+            const { data: { user } } = await _supabase.auth.getUser();
+            const handler = PaystackPop.setup({
+                key: PAYSTACK_KEY,
+                email: user.email,
+                amount: currentOrder.price * 100,
+                ref: ''+Math.floor((Math.random() * 1000000000) + 1),
+                callback: async function(resp) {
+                    const { error } = await _supabase.from('hardcopy_orders').insert({
+                        user_id: user.id, resource_id: currentOrder.id, amount: currentOrder.price,
+                        full_name: user.user_metadata.full_name || 'Student',
+                        delivery_address: address, phone_number: phone, payment_ref: resp.reference
+                    });
+                    if(error) alert("Error saving order.");
+                    else { alert("Order Placed Successfully!"); closeModal(); }
+                },
+                onClose: function() { alert('Transaction cancelled'); }
+            });
+            handler.openIframe();
+        }
+
+        init();
     </script>
 </body>
-</html>
+        </html>
+                    
