@@ -16,13 +16,12 @@
         :root { --primary: #2563eb; --bg: #f8fafc; --white: #ffffff; --dark: #0f172a; --gray: #64748b; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; user-select: none; }
 
-        /* HEADER */
         .header { background: white; padding: 15px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; gap: 15px; }
         .header-left { display: flex; align-items: center; gap: 15px; }
         .back-btn { text-decoration: none; color: var(--dark); display: flex; align-items: center; font-size: 18px; }
         .page-title { font-weight: 800; font-size: 18px; color: var(--dark); margin: 0; }
 
-        /* NOTIFICATION BELL */
+        /* NOTIFICATIONS */
         .notif-btn { position: relative; cursor: pointer; color: var(--dark); font-size: 22px; padding: 5px; }
         .badge-dot { position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; display: none; }
         
@@ -37,9 +36,9 @@
 
         .container { padding: 20px; flex: 1; overflow-y: auto; }
         .filter-section { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        label { display: block; font-size: 12px; font-weight: 700; color: var(--gray); margin-bottom: 5px; }
         select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; background: #f8fafc; margin-bottom: 15px; }
         
+        /* CARDS */
         .resource-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 10px; }
         .res-top { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
         .icon-box { width: 45px; height: 45px; background: #eff6ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--primary); font-size: 20px; }
@@ -47,21 +46,20 @@
         .res-title { font-weight: 600; font-size: 14px; color: var(--dark); }
         .level-badge { font-size: 10px; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700; margin-right: 5px; }
         
-        /* Buttons */
+        /* BUTTONS */
         .actions { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn-buy { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; flex: 1; text-align: center; }
         .btn-read { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; flex: 1; text-align: center; }
         .btn-hard { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; flex: 1; text-align: center; }
         .btn-delete { color: #ef4444; padding: 8px; cursor: pointer; background: none; border: none; font-size: 16px; } 
         
-        /* FLOATING UPLOAD BUTTON (Admin Only) */
+        /* FLOATING UPLOAD BUTTON (Hidden by default, shown by JS) */
         .fab { 
             position: fixed; bottom: 30px; right: 20px; width: 56px; height: 56px; 
             background: var(--primary); border-radius: 50%; color: white; 
-            display: none; /* Hidden by default, shown via JS for admins */
-            align-items: center; justify-content: center; 
-            box-shadow: 0 4px 15px rgba(37,99,235,0.4); 
-            text-decoration: none; z-index: 1000; font-size: 24px; 
+            display: none; align-items: center; justify-content: center; 
+            box-shadow: 0 4px 15px rgba(37,99,235,0.4); text-decoration: none; 
+            z-index: 1000; font-size: 24px; 
         }
 
         /* MODALS */
@@ -81,9 +79,7 @@
 
     <div class="header">
         <div class="header-left">
-            <a href="index.html" class="back-btn">
-                <i class="fa-solid fa-arrow-left"></i>
-            </a>
+            <a href="index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
             <h1 class="page-title">Lecture Materials</h1>
         </div>
         <div class="notif-btn" onclick="toggleNotifs()">
@@ -98,11 +94,8 @@
 
     <div class="container">
         <div class="filter-section">
-            <label>Select Faculty</label>
             <select id="faculty-select" onchange="loadDepartments()"><option value="">-- Choose Faculty --</option></select>
-            <label>Select Department</label>
             <select id="dept-select" disabled onchange="checkSelections()"><option value="">-- Select Faculty First --</option></select>
-            <label>Select Level</label>
             <select id="level-select" disabled onchange="loadResources()">
                 <option value="">-- All Levels --</option>
                 <option value="100L">100L</option>
@@ -121,9 +114,9 @@
 
     <div id="orderModal" class="modal">
         <div class="modal-content">
-            <h3 style="margin-top:0;">Order Hardcopy</h3>
-            <p style="font-size:14px; color:#64748b;">Enter delivery details for <b id="modal-book-title"></b></p>
-            <input type="text" id="order-address" placeholder="Delivery Address (e.g. Hostel A, Room 4)">
+            <h3>Order Hardcopy</h3>
+            <p>Enter details for <b id="modal-book-title"></b></p>
+            <input type="text" id="order-address" placeholder="Delivery Address">
             <input type="tel" id="order-phone" placeholder="Phone Number">
             <div style="display:flex; gap:10px; margin-top:15px;">
                 <button class="btn-buy" style="background:#f1f5f9; color:#64748b; border:none;" onclick="closeModal()">Cancel</button>
@@ -147,86 +140,51 @@
 
         const PAYSTACK_KEY = 'pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5';
         
-        // --- 🔴 ENTER YOUR EMAILJS IDS HERE ---
-        const EMAILJS_SERVICE_ID = "YOUR_SERVICE_ID";   // e.g. service_g4d23s
-        const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID"; // e.g. template_h432h
-        const EMAILJS_PUBLIC_KEY = "Y38V-Sq0IZSBfpHbR"; // Filled from your screenshot
-        // ------------------------------------
+        // --- 🔴 YOUR EMAILJS KEYS ---
+        const EMAILJS_SERVICE_ID = "service_xxxxxxx"; 
+        const EMAILJS_TEMPLATE_ID = "template_xxxxxxx";
+        const EMAILJS_PUBLIC_KEY = "Y38V-Sq0IZSBfpHbR";
+        // ----------------------------
 
         let isAdmin = false;
         let purchasedIds = new Set();
         let currentOrder = null;
 
-        // Initialize EmailJS
-        (function(){ emailjs.init(EMAILJS_PUBLIC_KEY); })();
-
-        // Prevent Downloading Shortcuts
-        document.addEventListener('keydown', function(e) {
-            if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'p' || e.key === 'u')) {
-                e.preventDefault(); alert("Protected Content.");
-            }
-        });
+        // Init EmailJS Safely
+        if(typeof emailjs !== 'undefined') {
+            emailjs.init(EMAILJS_PUBLIC_KEY);
+        }
 
         async function init() {
             try {
                 const { data: { user } } = await _supabase.auth.getUser();
                 if(!user) return window.location.href='index.html';
 
-                const { data: admin } = await _supabase.from('admin_users').select('*').ilike('email', user.email).maybeSingle();
+                // --- 1. ADMIN CHECK (PRIORITY) ---
+                const { data: admin } = await _supabase
+                    .from('admin_users')
+                    .select('*')
+                    .ilike('email', user.email)
+                    .maybeSingle();
+
                 if (admin) { 
                     isAdmin = true; 
-                    document.getElementById('admin-fab').style.display = 'flex'; // SHOW UPLOAD BUTTON
+                    // Force display ON immediately for admins
+                    const btn = document.getElementById('admin-fab');
+                    if(btn) btn.style.display = 'flex';
                 }
 
+                // --- 2. LOAD PAYMENTS ---
                 const { data: payments } = await _supabase.from('resource_payments').select('resource_id').eq('user_id', user.id);
                 if(payments) payments.forEach(p => purchasedIds.add(p.resource_id.toString()));
 
                 loadFaculties();
                 loadNotifications();
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error("Init Error:", e); }
         }
         init();
 
-        // --- NOTIFICATIONS & EMAIL ---
-        async function loadNotifications() {
-            const { data: { user } } = await _supabase.auth.getUser();
-            const { data } = await _supabase.from('notifications')
-                .select('*').eq('user_id', user.id).order('created_at', {ascending:false}).limit(10);
-            
-            const list = document.getElementById('notif-list');
-            
-            if(data && data.length > 0) {
-                document.getElementById('notif-badge').style.display = 'block';
-                list.innerHTML = data.map(n => `
-                    <div class="notif-item">
-                        <span class="notif-title">${n.title}</span>
-                        ${n.message}
-                        <div class="notif-time">${new Date(n.created_at).toLocaleDateString()}</div>
-                    </div>
-                `).join('');
-            } else {
-                list.innerHTML = '<div style="padding:15px; text-align:center; color:#94a3b8;">No new notifications</div>';
-            }
-        }
-
-        function toggleNotifs() {
-            const el = document.getElementById('notif-list');
-            el.style.display = el.style.display === 'block' ? 'none' : 'block';
-            document.getElementById('notif-badge').style.display = 'none';
-        }
-
-        function sendEmailNotification(email, name, message) {
-            const params = {
-                to_email: email,
-                to_name: name,
-                message: message,
-            };
-            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
-                .then(res => console.log("Email Sent"))
-                .catch(err => console.error("Email Failed", err));
-        }
-
-        // --- RESOURCES LOGIC ---
+        // --- CORE FUNCTIONS ---
         async function loadFaculties() {
             const { data } = await _supabase.from('faculties').select('*');
             const select = document.getElementById('faculty-select');
@@ -272,17 +230,14 @@
                 const isOwned = purchasedIds.has(res.id.toString()) || isAdmin;
                 const softPrice = res.softcopy_price || 100;
                 
-                // 1. Softcopy: Read (if owned) OR Buy
                 let softBtn = isOwned 
                     ? `<button class="btn-read" onclick="openReader('${res.file_url}', '${res.title.replace(/'/g, "\\'")}')">Read Online</button>`
                     : `<button class="btn-buy" onclick="buySoftcopy('${res.id}', '${softPrice}', '${res.title.replace(/'/g, "\\'")}')">Unlock PDF (₦${softPrice})</button>`;
 
-                // 2. Hardcopy Button
                 let hardBtn = res.is_hardcopy_available 
                     ? `<button class="btn-hard" onclick="openOrderModal('${res.id}', '${res.title.replace(/'/g, "\\'")}', '${res.hardcopy_price}')">Order Book (₦${res.hardcopy_price})</button>`
                     : "";
 
-                // 3. Admin Delete
                 let delBtn = isAdmin 
                     ? `<button class="btn-delete" onclick="deleteResource('${res.id}')"><i class="fa-solid fa-trash"></i></button>` 
                     : "";
@@ -291,82 +246,89 @@
                 <div class="resource-card">
                     <div class="res-top">
                         <div class="icon-box"><i class="fa-solid fa-book-open"></i></div>
-                        <div class="res-info">
-                            <div class="res-title"><span class="level-badge">${res.level || 'GEN'}</span> ${res.title}</div>
-                        </div>
+                        <div class="res-info"><div class="res-title"><span class="level-badge">${res.level || 'GEN'}</span> ${res.title}</div></div>
                     </div>
-                    <div class="actions">
-                        ${softBtn}
-                        ${hardBtn}
-                        ${delBtn}
-                    </div>
+                    <div class="actions">${softBtn}${hardBtn}${delBtn}</div>
                 </div>`;
             }).join('');
         }
 
-        // --- PAYMENT LOGIC ---
+        // --- NOTIFICATIONS & EMAIL ---
+        async function loadNotifications() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            const { data } = await _supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', {ascending:false}).limit(5);
+            const list = document.getElementById('notif-list');
+            if(data && data.length > 0) {
+                document.getElementById('notif-badge').style.display = 'block';
+                list.innerHTML = data.map(n => `<div class="notif-item"><span class="notif-title">${n.title}</span>${n.message}<div class="notif-time">${new Date(n.created_at).toLocaleDateString()}</div></div>`).join('');
+            } else { list.innerHTML = '<div style="padding:15px;text-align:center;color:#94a3b8;">No notifications</div>'; }
+        }
+
+        function toggleNotifs() {
+            const el = document.getElementById('notif-list');
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+            document.getElementById('notif-badge').style.display = 'none';
+        }
+
+        function sendEmailNotification(email, name, message) {
+            if(typeof emailjs === 'undefined') return;
+            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_email: email, to_name: name, message: message })
+                .catch(err => console.log("Email Error (Ignore if not set up):", err));
+        }
+
+        // --- PAYMENT ---
         async function buySoftcopy(id, price, title) {
             if (typeof PaystackPop === 'undefined') return alert("Paystack loading...");
             const { data: { user } } = await _supabase.auth.getUser();
-
             const handler = PaystackPop.setup({
-                key: PAYSTACK_KEY,
-                email: user.email,
-                amount: Math.ceil(price * 100),
-                ref: 'SOFT-' + Date.now(),
+                key: PAYSTACK_KEY, email: user.email, amount: Math.ceil(price * 100), ref: 'SOFT-' + Date.now(),
                 callback: async function(resp) {
-                    // Record Payment
-                    await _supabase.from('resource_payments').insert({
-                        user_id: user.id, resource_id: id, amount: price, payment_ref: resp.reference
-                    });
-                    
-                    // Notify & Email
-                    const msg = `You unlocked: ${title}. You can now read it online.`;
-                    await _supabase.from('notifications').insert({ user_id: user.id, title: "PDF Unlocked", message: msg });
-                    sendEmailNotification(user.email, user.user_metadata.full_name || "Student", msg);
-
+                    await _supabase.from('resource_payments').insert({ user_id: user.id, resource_id: id, amount: price, payment_ref: resp.reference });
+                    const msg = `You unlocked: ${title}. Read it online now.`;
+                    await _supabase.from('notifications').insert({ user_id: user.id, title: "Unlocked", message: msg });
+                    sendEmailNotification(user.email, user.user_metadata.full_name, msg);
                     purchasedIds.add(id.toString());
-                    loadResources();
-                    loadNotifications();
-                    alert("Unlocked! Check notifications.");
-                },
-                onClose: () => alert('Cancelled')
+                    loadResources(); loadNotifications(); alert("Unlocked!");
+                }, onClose: () => alert('Cancelled')
             });
             handler.openIframe();
         }
 
-        function openOrderModal(id, title, price) {
-            currentOrder = { id, title, price };
-            document.getElementById('modal-book-title').innerText = title;
-            document.getElementById('orderModal').style.display = 'flex';
-        }
+        function openOrderModal(id, title, price) { currentOrder = { id, title, price }; document.getElementById('modal-book-title').innerText = title; document.getElementById('orderModal').style.display = 'flex'; }
         function closeModal() { document.getElementById('orderModal').style.display = 'none'; }
 
         async function processHardcopyPayment() {
             const address = document.getElementById('order-address').value;
             const phone = document.getElementById('order-phone').value;
             if(!address || !phone) return alert("Enter details");
-
             const { data: { user } } = await _supabase.auth.getUser();
-
             const handler = PaystackPop.setup({
-                key: PAYSTACK_KEY,
-                email: user.email,
-                amount: Math.ceil(currentOrder.price * 100),
-                ref: 'HARD-' + Date.now(),
+                key: PAYSTACK_KEY, email: user.email, amount: Math.ceil(currentOrder.price * 100), ref: 'HARD-' + Date.now(),
                 callback: async function(resp) {
-                    // Save Order
-                    await _supabase.from('hardcopy_orders').insert({
-                        user_id: user.id, resource_id: currentOrder.id, amount: currentOrder.price,
-                        full_name: user.user_metadata.full_name || 'Student',
-                        delivery_address: address, phone_number: phone, payment_ref: resp.reference
-                    });
-
-                    // Notify & Email
-                    const msg = `Order received for hardcopy: ${currentOrder.title}. We will contact you at ${phone}.`;
+                    await _supabase.from('hardcopy_orders').insert({ user_id: user.id, resource_id: currentOrder.id, amount: currentOrder.price, full_name: user.user_metadata.full_name || 'Student', delivery_address: address, phone_number: phone, payment_ref: resp.reference });
+                    const msg = `Order received: ${currentOrder.title}. We will contact you at ${phone}.`;
                     await _supabase.from('notifications').insert({ user_id: user.id, title: "Order Confirmed", message: msg });
-                    sendEmailNotification(user.email, user.user_metadata.full_name || "Student", msg);
+                    sendEmailNotification(user.email, user.user_metadata.full_name, msg);
+                    alert("Order Placed!"); closeModal(); loadNotifications();
+                }, onClose: () => alert('Cancelled')
+            });
+            handler.openIframe();
+        }
 
-                    alert("Order Placed!");
-                    closeModal();
-                    loadNotific
+        // --- VIEWER & DELETE ---
+        function openReader(url, title) {
+            document.getElementById('view-title').innerText = title;
+            const container = document.getElementById('viewer-container');
+            if (url.toLowerCase().match(/\.(jpeg|jpg|png)$/i)) { container.innerHTML = `<img src="${url}" class="view-img" oncontextmenu="return false;">`; } 
+            else { container.innerHTML = `<iframe src="${url}#toolbar=0&navpanes=0&scrollbar=0" oncontextmenu="return false;"></iframe>`; }
+            document.getElementById('fileViewer').style.display = 'flex';
+        }
+        function closeViewer() { document.getElementById('fileViewer').style.display = 'none'; document.getElementById('viewer-container').innerHTML = ''; }
+
+        async function deleteResource(id) {
+            if(confirm("Delete this?")) { await _supabase.from('academic_resources').delete().eq('id', id); loadResources(); }
+        }
+    </script>
+</body>
+    </html>
+    
