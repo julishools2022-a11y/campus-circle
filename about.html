@@ -2,190 +2,268 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>About | Campus Circle</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
   <style>
     :root { 
-        --primary: #2563eb; 
+        --primary: #3b82f6; 
+        --primary-dark: #1d4ed8;
+        --accent: #8b5cf6;
         --dark: #0f172a; 
         --bg: #f8fafc; 
         --white: #ffffff; 
         --text: #334155; 
         --text-light: #64748b; 
+        --gradient: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
     }
 
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    body {
+    /* --- Base Settings --- */
+    body { 
+        font-family: 'Outfit', sans-serif; 
+        background: var(--bg); 
+        color: var(--text); 
         margin: 0;
-        font-family: 'Roboto', sans-serif;
-        background: var(--bg);
-        color: var(--text);
-        line-height: 1.6;
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
+        overflow-x: hidden;
     }
 
-    /* --- Header --- */
+    /* --- Animations --- */
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s ease;
+    }
+    .reveal.active {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* --- Glass Header --- */
     header {
-        background: var(--dark);
-        padding: 15px 20px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 15px 5%;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        flex-wrap: wrap;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(0,0,0,0.05);
     }
 
-    .logo {
-        color: var(--white);
-        font-weight: 900;
-        font-size: 20px;
-        text-decoration: none;
-        white-space: nowrap;
-    }
-
-    nav {
+    .logo { 
+        color: var(--primary-dark); 
+        font-weight: 800; 
+        font-size: 22px; 
+        text-decoration: none; 
         display: flex;
-        gap: 20px;
         align-items: center;
-        overflow-x: auto;
-        padding-bottom: 5px; /* For scrollbar spacing on mobile */
-        -webkit-overflow-scrolling: touch;
-    }
-    nav::-webkit-scrollbar { display: none; }
-
-    nav a {
-        color: #94a3b8;
-        text-decoration: none;
-        font-size: 14px;
-        font-weight: 500;
-        white-space: nowrap;
-        transition: color 0.2s;
+        gap: 8px;
     }
 
-    nav a:hover, nav a.active {
-        color: var(--white);
+    nav { display: flex; gap: 25px; align-items: center; }
+    
+    nav a { 
+        color: var(--text); 
+        text-decoration: none; 
+        font-size: 15px; 
+        font-weight: 500; 
+        transition: color 0.3s;
+    }
+    nav a:hover { color: var(--primary); }
+    nav a.active { color: var(--primary); font-weight: 700; }
+
+    /* --- Hero Section (Mini Version) --- */
+    .page-hero { 
+        background: var(--gradient); 
+        color: white;
+        padding: 120px 20px 80px;
+        text-align: center;
+        border-radius: 0 0 40px 40px;
+        margin-bottom: 40px;
+    }
+
+    .page-hero h1 { 
+        font-size: 2.5rem; 
+        margin-bottom: 15px; 
+        font-weight: 800; 
+        animation: fadeInUp 0.8s ease-out;
     }
     
-    /* Join Now Button Style */
-    nav a.btn {
-        background: var(--primary);
-        color: white;
-        padding: 8px 16px;
-        border-radius: 6px;
-        font-weight: 700;
+    .page-hero p { 
+        font-size: 1.1rem; 
+        max-width: 600px; 
+        margin: 0 auto; 
+        opacity: 0.9; 
+        animation: fadeInUp 1s ease-out;
     }
 
-    /* --- Page Hero --- */
-    .page-hero {
-        background: var(--white);
-        text-align: center;
-        padding: 60px 20px;
-        border-bottom: 1px solid #e2e8f0;
-    }
-
-    .page-hero h1 {
-        color: var(--dark);
-        font-size: 2.2rem;
-        margin: 0 0 10px 0;
-        font-weight: 900;
-    }
-
-    .page-hero p {
-        font-size: 1.1rem;
-        color: var(--text-light);
-        max-width: 600px;
+    /* --- Content Sections --- */
+    .content-container {
+        max-width: 900px;
         margin: 0 auto;
+        padding: 0 20px 60px;
     }
 
-    /* --- Main Content --- */
-    .content {
-        max-width: 800px;
-        margin: 40px auto;
-        padding: 0 20px;
-        flex: 1;
-        width: 100%;
+    .story-section {
+        margin-bottom: 60px;
     }
-
-    h2 {
+    .story-section h2 {
+        font-size: 2rem;
         color: var(--dark);
-        font-size: 1.5rem;
-        margin-top: 40px;
-        margin-bottom: 15px;
-        font-weight: 700;
-        border-bottom: 2px solid #e2e8f0;
-        padding-bottom: 10px;
+        margin-bottom: 20px;
+        position: relative;
         display: inline-block;
     }
-
-    p {
-        color: var(--text);
+    
+    .story-section p {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: var(--text-light);
         margin-bottom: 20px;
-        font-size: 1rem;
+    }
+
+    /* --- Grid for Mission/Vision --- */
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-top: 40px;
+    }
+
+    .card {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        border: 1px solid #f1f5f9;
+        transition: transform 0.3s ease;
+    }
+    .card:hover { transform: translateY(-5px); }
+
+    .card h3 {
+        color: var(--primary);
+        font-size: 1.5rem;
+        margin-top: 0;
+        margin-bottom: 15px;
+    }
+
+    .card p {
+        color: var(--text-light);
+        line-height: 1.6;
+        margin: 0;
     }
 
     /* --- Footer --- */
-    footer {
-        text-align: center;
-        padding: 30px 20px;
-        color: #94a3b8;
-        font-size: 0.9rem;
-        border-top: 1px solid #e2e8f0;
-        background: var(--bg);
-        margin-top: auto;
-    }
+    footer { text-align: center; padding: 40px 20px; color: #94a3b8; background: var(--bg); margin-top: auto; }
 
-    /* Mobile Header Adjust */
+    /* Mobile Adjustments */
     @media (max-width: 768px) {
-        header { flex-direction: column; gap: 15px; align-items: flex-start; }
-        nav { width: 100%; justify-content: space-between; }
+        /* Ensure main nav is scrollable/visible on mobile since bottom nav is gone */
+        header { 
+            flex-direction: column; 
+            gap: 15px; 
+            align-items: flex-start;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.95);
+        }
+        
+        nav { 
+            width: 100%; 
+            overflow-x: auto; 
+            padding-bottom: 5px; 
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        nav::-webkit-scrollbar { display: none; }
+        
+        nav a { white-space: nowrap; }
+
+        .page-hero h1 { font-size: 2rem; }
     }
   </style>
 </head>
 <body>
+
   <header>
-    <div class="logo">🎓 Campus Circle</div>
+    <a href="index.html" class="logo">
+        <span style="font-size: 28px;">🎓</span> Campus Circle
+    </a>
     <nav>
       <a href="index.html">Home</a>
       <a href="about.html" class="active">About</a>
+     
       <a href="marketplace.html">Marketplace</a>
-      <a href="how-it-works.html">How It Works</a>
-      <a href="students.html">For Students</a>
-      <a href="admin.html">For Admins</a>
-      <a href="sign up.html" class="btn">Join Now</a>
+      <a href="signin.html" style="font-weight: 700; color: var(--primary);">Log In</a>
+      <a href="sign up.html" style="background: var(--primary); color: white; padding: 10px 20px; border-radius: 30px;">Sign Up</a>
     </nav>
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2563eb">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
   </header>
 
-  <section class="page-hero">
-    <h1>About Campus Circle</h1>
-    <p>Creating safer, smarter student commerce across campuses.</p>
-  </section>
+  <div class="page-hero">
+    <h1>We are Campus Circle</h1>
+    <p>Bridging the gap between academic success and student life.</p>
+  </div>
 
-  <section class="content">
-    <h2>Our Story</h2>
-    <p>Campus Circle was founded to eliminate scams and stress from student trading. We built a platform that connects verified students across multiple campuses in a secure, transparent environment.</p>
+  <div class="content-container">
+    
+    <div class="story-section reveal">
+        <h2>Our Story</h2>
+        <p>
+            Campus Circle started with a simple observation: University life is fragmented. Students struggle to find reliable lecture notes, study partners are hard to coordinate, and buying textbooks or selling old gear often leads to scams or unsafe meetups.
+        </p>
+        <p>
+            We decided to fix this by building a <strong>centralized digital campus</strong>. What began as a small project to share past questions has grown into a comprehensive ecosystem where verified students can ace their exams and trade safely—all in one place.
+        </p>
+    </div>
 
-    <h2>Our Mission</h2>
-    <p>To empower students with a trusted digital marketplace that promotes integrity, safety, and collaboration across universities.</p>
+    <div class="grid">
+        <div class="card reveal">
+            <h3>🚀 Our Mission</h3>
+            <p>To empower every university student by democratizing access to academic resources and creating a safe, trust-based economy within campuses.</p>
+        </div>
 
-    <h2>Our Vision</h2>
-    <p>To become the global standard for verified student-to-student marketplaces — where students buy, sell, and connect with confidence.</p>
-  </section>
+        <div class="card reveal">
+            <h3>🌍 Our Vision</h3>
+            <p>To become the student operating system—the first place you go to study, connect, buy, or sell, knowing you are interacting with verified peers.</p>
+        </div>
+    </div>
+
+  </div>
 
   <footer>
-    <p>© 2026 Campus Circle | Safe. Verified. Student-Driven.</p>
+    <p>© 2026 Campus Circle | Built for Students, by Students.</p>
   </footer>
-  <script src="script.js"></script>
+
+  <script>
+    // Reveal Animations on Scroll
+    window.addEventListener('scroll', reveal);
+
+    function reveal(){
+      var reveals = document.querySelectorAll('.reveal');
+
+      for(var i = 0; i < reveals.length; i++){
+        var windowheight = window.innerHeight;
+        var revealtop = reveals[i].getBoundingClientRect().top;
+        var revealpoint = 150;
+
+        if(revealtop < windowheight - revealpoint){
+          reveals[i].classList.add('active');
+        }
+      }
+    }
+    reveal(); // Trigger on load
+  </script>
+
 </body>
 </html>
