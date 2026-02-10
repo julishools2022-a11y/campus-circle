@@ -2,92 +2,214 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Material | Staff Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Upload Material | Campus Circle</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Roboto', sans-serif; background: #f1f5f9; padding: 20px; }
-        .container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #0f172a; margin-top: 0; }
+        :root { 
+            --primary: #4f46e5; 
+            --primary-dark: #4338ca;
+            --bg: #f8fafc; 
+            --text: #1e293b; 
+            --text-light: #64748b;
+            --surface: #ffffff;
+            --border: #e2e8f0;
+        }
+
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
         
-        label { display: block; margin: 15px 0 5px; font-weight: 700; font-size: 14px; color: #334155; }
-        select, input, textarea { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; box-sizing: border-box; }
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            background: var(--bg); 
+            color: var(--text);
+            margin: 0; 
+            padding: 20px; 
+            display: flex; 
+            justify-content: center; 
+            min-height: 100vh;
+        }
+
+        .container { 
+            width: 100%; 
+            max-width: 550px; 
+            background: var(--surface); 
+            padding: 25px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); 
+        }
+
+        /* --- Header --- */
+        .header-row { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 25px; 
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
         
-        .section-box { background: #f8fafc; padding: 15px; border: 1px solid #e2e8f0; border-radius: 8px; margin-top: 15px; }
-        .price-row { display: flex; gap: 15px; }
-        .price-col { flex: 1; }
+        .back-btn { 
+            text-decoration: none; 
+            color: var(--text); 
+            font-size: 1.2rem; 
+            margin-right: 15px; 
+            width: 40px; 
+            height: 40px; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            transition: 0.2s; 
+            background: #f1f5f9;
+        }
+        .back-btn:hover { background: #e2e8f0; }
+
+        h2 { margin: 0; font-size: 1.4rem; font-weight: 700; color: var(--primary); }
         
-        .checkbox-group { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-        .checkbox-group input { width: 20px; height: 20px; margin: 0; }
+        /* --- Form --- */
+        label { 
+            display: block; 
+            margin: 15px 0 6px; 
+            font-weight: 600; 
+            font-size: 0.9rem; 
+            color: var(--text); 
+        }
+
+        select, input, textarea { 
+            width: 100%; 
+            padding: 14px; 
+            border: 1px solid var(--border); 
+            border-radius: 12px; 
+            background: #f8fafc; 
+            font-family: inherit; 
+            font-size: 0.95rem;
+            color: var(--text);
+            transition: 0.2s;
+        }
+        select:focus, input:focus, textarea:focus { 
+            border-color: var(--primary); 
+            background: white; 
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); 
+        }
+
+        /* --- Pricing Box --- */
+        .section-box { 
+            background: #f8fafc; 
+            padding: 20px; 
+            border: 1px solid var(--border); 
+            border-radius: 16px; 
+            margin-top: 20px; 
+        }
+
+        .checkbox-group { 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+            cursor: pointer;
+        }
+        input[type="checkbox"] { 
+            width: 20px; 
+            height: 20px; 
+            margin: 0; 
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+        .checkbox-label { margin: 0; font-weight: 500; cursor: pointer; }
+
+        /* --- Buttons --- */
+        .btn-upload { 
+            width: 100%; 
+            padding: 16px; 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 12px; 
+            font-weight: 700; 
+            font-size: 1rem;
+            margin-top: 30px; 
+            cursor: pointer; 
+            transition: transform 0.1s, box-shadow 0.2s;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        .btn-upload:active { transform: scale(0.98); }
+        .btn-upload:disabled { background: var(--text-light); cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* --- File Input --- */
+        input[type="file"] {
+            background: white;
+            padding: 10px;
+        }
         
-        .btn-upload { width: 100%; padding: 15px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 700; margin-top: 20px; cursor: pointer; }
-        .btn-upload:disabled { background: #94a3b8; cursor: wait; }
-        .back-link { display: block; text-align: center; margin-top: 15px; text-decoration: none; color: #64748b; font-size: 14px; }
+        /* Helper Text */
+        small { color: var(--text-light); font-size: 0.8rem; }
+        
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Upload Material</h2>
+    <div class="header-row">
+        <a href="resources.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+        <h2>Upload Material</h2>
+    </div>
+
     <form id="upload-form">
         <label>Faculty</label>
-        <select id="faculty" onchange="loadDepartments()" required></select>
-        <label>Department</label>
-        <select id="dept" disabled required></select>
+        <select id="faculty" onchange="loadDepartments()" required>
+            <option value="" disabled selected>Select Faculty...</option>
+        </select>
         
-        <label>Level</label>
+        <label>Department</label>
+        <select id="dept" disabled required>
+            <option value="" disabled selected>Select Department...</option>
+        </select>
+        
+        <label>Level / Category</label>
         <select id="level" required>
             <option value="100L">100L</option>
             <option value="200L">200L</option>
             <option value="300L">300L</option>
             <option value="400L">400L</option>
             <option value="500L">500L</option>
+            <option value="Q&A" style="font-weight:700; color:var(--primary);">Past Questions (Q&A)</option>
         </select>
 
         <label>Material Title</label>
         <input type="text" id="title" placeholder="e.g. GST 101 Textbook" required>
 
         <label>Description</label>
-        <textarea id="desc" placeholder="Brief description..."></textarea>
+        <textarea id="desc" rows="3" placeholder="Brief details about this material..."></textarea>
 
         <div class="section-box">
-            <h4 style="margin:0 0 10px 0; color:#2563eb;">Pricing Settings (₦)</h4>
+            <h4 style="margin:0 0 15px 0; color:var(--primary); font-size:1rem;"><i class="fa-solid fa-tag"></i> Pricing</h4>
             
-            <div class="price-row">
-                <div class="price-col">
-                    <label style="margin-top:0;">Softcopy Price *</label>
-                    <input type="number" id="soft_price" placeholder="e.g. 200" required>
-                    <small style="color:#64748b;">Cost to download PDF</small>
-                </div>
-            </div>
+            <label style="margin-top:0;">Softcopy Price (₦)</label>
+            <input type="number" id="soft_price" placeholder="e.g. 200" required>
+            <small>Price for PDF download</small>
 
-            <hr style="border:0; border-top:1px solid #e2e8f0; margin:15px 0;">
+            <div style="height:1px; background:var(--border); margin:20px 0;"></div>
 
             <div class="checkbox-group">
                 <input type="checkbox" id="is_hardcopy" onchange="toggleHardcopy()">
-                <label for="is_hardcopy">Hardcopy Available?</label>
+                <label for="is_hardcopy" class="checkbox-label">Hardcopy Available?</label>
             </div>
             
-            <div id="hard-price-box" style="display:none; margin-top:10px;">
+            <div id="hard-price-box" style="display:none; margin-top:15px; animation:fadeIn 0.3s;">
                 <label>Hardcopy Price (₦)</label>
                 <input type="number" id="hard_price" placeholder="e.g. 3000">
             </div>
         </div>
 
-        <div class="section-box" style="padding:10px;">
-            <div class="checkbox-group">
-                <input type="checkbox" id="is_borrowed">
-                <label for="is_borrowed" style="font-weight:400; font-size:13px;">Mark as Borrowed / General Course</label>
-            </div>
-        </div>
+        <label>Select File (PDF)</label>
+        <input type="file" id="file" accept=".pdf, .doc, .docx" required>
 
-        <label>Select File (PDF/Image)</label>
-        <input type="file" id="file" accept=".pdf, .doc, .docx, .jpg, .png" required>
-
-        <button type="submit" class="btn-upload" id="btn">UPLOAD & SET PRICE</button>
+        <button type="submit" class="btn-upload" id="btn">
+            <i class="fa-solid fa-cloud-arrow-up"></i> UPLOAD MATERIAL
+        </button>
     </form>
-    <a href="resources.html" class="back-link">Back to Resources</a>
 </div>
 
 <script>
@@ -112,16 +234,17 @@
         const { data } = await _supabase.from('faculties').select('*');
         const select = document.getElementById('faculty');
         if(data) data.forEach(f => select.innerHTML += `<option value="${f.id}">${f.name}</option>`);
-        loadDepartments(); 
     }
     loadFaculties();
 
     window.loadDepartments = async function() {
         const facId = document.getElementById('faculty').value;
         const deptSelect = document.getElementById('dept');
-        deptSelect.innerHTML = ''; deptSelect.disabled = true;
+        deptSelect.innerHTML = '<option value="" disabled selected>Select Department...</option>'; 
+        deptSelect.disabled = true;
+        
         const { data } = await _supabase.from('departments').select('*').eq('faculty_id', facId);
-        if (data) {
+        if (data && data.length > 0) {
             data.forEach(d => deptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`);
             deptSelect.disabled = false;
         }
@@ -130,44 +253,70 @@
     document.getElementById('upload-form').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn');
-        btn.disabled = true; btn.textContent = "Uploading...";
+        btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
 
         try {
             const file = document.getElementById('file').files[0];
-            const fileName = `${Date.now()}_${file.name.replace(/\s/g, '')}`;
+            const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
+            const fileName = `${Date.now()}_${cleanName}`;
             
             const { error: upErr } = await _supabase.storage.from('materials').upload(fileName, file);
             if (upErr) throw upErr;
             const { data: { publicUrl } } = _supabase.storage.from('materials').getPublicUrl(fileName);
 
+            const deptId = document.getElementById('dept').value;
+            const title = document.getElementById('title').value;
             const isHardcopy = document.getElementById('is_hardcopy').checked;
             
-            // Insert with dynamic prices
             const { error: dbErr } = await _supabase.from('academic_resources').insert({
-                department_id: document.getElementById('dept').value,
-                title: document.getElementById('title').value,
+                department_id: deptId,
+                title: title,
                 description: document.getElementById('desc').value,
                 level: document.getElementById('level').value,
-                is_borrowed: document.getElementById('is_borrowed').checked,
-                
-                // PRICING DATA
-                softcopy_price: document.getElementById('soft_price').value, // <--- SAVES PDF PRICE
+                softcopy_price: document.getElementById('soft_price').value,
                 is_hardcopy_available: isHardcopy,
                 hardcopy_price: isHardcopy ? document.getElementById('hard_price').value : null,
-                
                 type: 'File',
                 file_url: publicUrl
             });
 
             if (dbErr) throw dbErr;
+
+            // Notify
+            await sendNotifications(deptId, title);
+
             alert("Uploaded Successfully!");
             window.location.reload();
+
         } catch (err) {
+            console.error(err);
             alert("Error: " + err.message);
-            btn.disabled = false; btn.textContent = "UPLOAD & SET PRICE";
+            btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> UPLOAD MATERIAL';
         }
     };
+
+    async function sendNotifications(deptId, title) {
+        const { data: deptData } = await _supabase.from('departments').select('name').eq('id', deptId).single();
+        if (!deptData) return;
+        const deptName = deptData.name;
+        const searchKey = deptName.split(' ')[0]; 
+
+        const { data: students } = await _supabase.from('profiles').select('id').ilike('department', `%${searchKey}%`);
+
+        if (students && students.length > 0) {
+            const notifications = students.map(s => ({
+                user_id: s.id,
+                title: "New Material 📚",
+                message: `New: "${title}" added to ${deptName}.`
+            }));
+            await _supabase.from('notifications').insert(notifications);
+        }
+    }
 </script>
+
+<style>
+@keyframes fadeIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
+</style>
+
 </body>
-    </html>
-    
+</html>
