@@ -226,233 +226,229 @@
         </div>
         <div class="viewer-body" id="viewer-container"></div>
     </div>
+<script>
+    const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    
+    // PAYSTACK & EMAILJS
+    const PAYSTACK_KEY = 'pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5';
+    const EMAILJS_PUBLIC_KEY = "Y38V-Sq0IZSBfpHbR";
 
-    <script>
-        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
-        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    let isAdmin = false;
+    let purchasedIds = new Set();
+    let currentOrder = null;
+
+    if(typeof emailjs !== 'undefined') emailjs.init(EMAILJS_PUBLIC_KEY);
+
+    // --- MAIN INIT ---
+    async function init() {
+        try {
+            console.log("Initializing...");
+            const { data: { user } } = await _supabase.auth.getUser();
+            if(!user) return window.location.href='index.html';
+
+            // 1. Admin Check
+            const { data: admin } = await _supabase.from('admin_users').select('*').ilike('email', user.email).maybeSingle();
+            if (admin) { 
+                isAdmin = true; 
+                const fab = document.getElementById('admin-fab');
+                if(fab) fab.style.display = 'flex';
+            }
+
+            // 2. Load Purchases
+            const { data: payments } = await _supabase.from('resource_payments').select('resource_id').eq('user_id', user.id);
+            if(payments) payments.forEach(p => purchasedIds.add(p.resource_id.toString()));
+
+            // 3. Load UI Basics
+            loadNotifications();
+            await loadFaculties(); 
+
+            // 4. SMART AUTO-SELECT
+            const { data: profile } = await _supabase.from('profiles').select('department').eq('id', user.id).single();
+            if (profile && profile.department) {
+                let { data: deptData } = await _supabase.from('departments').select('*').ilike('name', profile.department).maybeSingle();
+                if (!deptData) {
+                        const { data: fuzzyData } = await _supabase.from('departments').select('*').ilike('name', `%${profile.department.split(' ')[0]}%`).limit(1);
+                        if(fuzzyData && fuzzyData.length > 0) deptData = fuzzyData[0];
+                }
+
+                if (deptData) {
+                    document.getElementById('faculty-select').value = deptData.faculty_id;
+                    await loadDepartments();
+                    const deptSelect = document.getElementById('dept-select');
+                    deptSelect.value = deptData.id;
+                    deptSelect.disabled = false;
+                    document.getElementById('level-select').disabled = false;
+                    loadResources();
+                }
+            }
+
+        } catch (e) { console.error("Init Error", e); }
+    }
+    init();
+
+    // --- FETCH FUNCTIONS ---
+    async function loadFaculties() {
+        const { data } = await _supabase.from('faculties').select('*');
+        const select = document.getElementById('faculty-select');
+        select.innerHTML = '<option value="">Select Faculty...</option>'; 
+        if(data) data.forEach(f => select.innerHTML += `<option value="${f.id}">${f.name}</option>`);
+    }
+
+    async function loadDepartments() {
+        const facId = document.getElementById('faculty-select').value;
+        const deptSelect = document.getElementById('dept-select');
+        deptSelect.innerHTML = '<option value="">Select Department...</option>';
+        deptSelect.disabled = true;
+        if(!facId) return;
+
+        const { data } = await _supabase.from('departments').select('*').eq('faculty_id', facId);
+        if(data) {
+            data.forEach(d => deptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`);
+            deptSelect.disabled = false;
+        }
+    }
+
+    function checkSelections() {
+        if(document.getElementById('dept-select').value) {
+            document.getElementById('level-select').disabled = false;
+            loadResources();
+        }
+    }
+
+    async function loadResources() {
+        const deptId = document.getElementById('dept-select').value;
+        const level = document.getElementById('level-select').value;
+        const list = document.getElementById('resources-list');
         
-        // PAYSTACK & EMAILJS
-        const PAYSTACK_KEY = 'pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5';
-        const EMAILJS_PUBLIC_KEY = "Y38V-Sq0IZSBfpHbR";
+        list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-spinner fa-spin empty-icon"></i><h3>Searching Library...</h3></div>`;
 
-        let isAdmin = false;
-        let purchasedIds = new Set();
-        let currentOrder = null;
+        let query = _supabase.from('academic_resources').select('*').eq('department_id', deptId);
+        if (level) query = query.eq('level', level);
 
-        if(typeof emailjs !== 'undefined') emailjs.init(EMAILJS_PUBLIC_KEY);
-
-        // --- MAIN INIT ---
-        async function init() {
-            try {
-                console.log("Initializing...");
-                const { data: { user } } = await _supabase.auth.getUser();
-                if(!user) return window.location.href='index.html';
-
-                // 1. Admin Check
-                const { data: admin } = await _supabase.from('admin_users').select('*').ilike('email', user.email).maybeSingle();
-                if (admin) { 
-                    isAdmin = true; 
-                    const fab = document.getElementById('admin-fab');
-                    if(fab) fab.style.display = 'flex';
-                }
-
-                // 2. Load Purchases
-                const { data: payments } = await _supabase.from('resource_payments').select('resource_id').eq('user_id', user.id);
-                if(payments) payments.forEach(p => purchasedIds.add(p.resource_id.toString()));
-
-                // 3. Load UI Basics
-                loadNotifications();
-                await loadFaculties(); // Critical Wait
-
-                // 4. SMART AUTO-SELECT
-                console.log("Checking profile for auto-select...");
-                const { data: profile } = await _supabase.from('profiles').select('department').eq('id', user.id).single();
-                
-                if (profile && profile.department) {
-                    console.log("User Profile Dept:", profile.department);
-                    
-                    // A. Attempt Exact Match First
-                    let { data: deptData } = await _supabase.from('departments').select('*').ilike('name', profile.department).maybeSingle();
-                    
-                    // B. Attempt Fuzzy Match (for "Economics" vs "Econs")
-                    if (!deptData) {
-                         const { data: fuzzyData } = await _supabase.from('departments').select('*').ilike('name', `%${profile.department.split(' ')[0]}%`).limit(1);
-                         if(fuzzyData && fuzzyData.length > 0) deptData = fuzzyData[0];
-                    }
-
-                    if (deptData) {
-                        console.log("Database Match:", deptData.name);
-                        document.getElementById('faculty-select').value = deptData.faculty_id;
-                        await loadDepartments();
-                        const deptSelect = document.getElementById('dept-select');
-                        deptSelect.value = deptData.id;
-                        deptSelect.disabled = false;
-                        document.getElementById('level-select').disabled = false;
-                        loadResources();
-                    }
-                }
-
-            } catch (e) { console.error("Init Error", e); }
-        }
-        init();
-
-        // --- FETCH FUNCTIONS ---
-        async function loadFaculties() {
-            const { data } = await _supabase.from('faculties').select('*');
-            const select = document.getElementById('faculty-select');
-            select.innerHTML = '<option value="">Select Faculty...</option>'; 
-            if(data) data.forEach(f => select.innerHTML += `<option value="${f.id}">${f.name}</option>`);
+        const { data, error } = await query;
+        if (error || !data || data.length === 0) {
+            list.innerHTML = `<div class="empty-state"><i class="fa-regular fa-folder-open empty-icon"></i><h3>No Materials Found</h3><p>Check back later.</p></div>`;
+            return;
         }
 
-        async function loadDepartments() {
-            const facId = document.getElementById('faculty-select').value;
-            const deptSelect = document.getElementById('dept-select');
-            deptSelect.innerHTML = '<option value="">Select Department...</option>';
-            deptSelect.disabled = true;
-            if(!facId) return;
-
-            const { data } = await _supabase.from('departments').select('*').eq('faculty_id', facId);
-            if(data) {
-                data.forEach(d => deptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`);
-                deptSelect.disabled = false;
-            }
-        }
-
-        function checkSelections() {
-            if(document.getElementById('dept-select').value) {
-                document.getElementById('level-select').disabled = false;
-                loadResources();
-            }
-        }
-
-        async function loadResources() {
-            const deptId = document.getElementById('dept-select').value;
-            const level = document.getElementById('level-select').value;
-            const list = document.getElementById('resources-list');
+        list.innerHTML = data.map(res => {
+            const isOwned = purchasedIds.has(res.id.toString()) || isAdmin;
+            const softPrice = res.softcopy_price || 100;
+            const safeTitle = res.title ? res.title.replace(/'/g, "\\'") : 'Material';
             
-            list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-spinner fa-spin empty-icon"></i><h3>Searching Library...</h3></div>`;
+            const fileExt = res.file_url.split('.').pop().toLowerCase();
+            const iconClass = ['jpg','jpeg','png'].includes(fileExt) ? 'fa-image' : 'fa-file-pdf';
+            const iconType = ['jpg','jpeg','png'].includes(fileExt) ? 'doc' : 'pdf';
 
-            let query = _supabase.from('academic_resources').select('*').eq('department_id', deptId);
-            if (level) query = query.eq('level', level);
+            // BUTTON LOGIC
+            let softBtn = isOwned 
+                ? `<button class="btn btn-success" style="grid-column:1/-1; width:100%;" onclick="openReader('${res.file_url}', '${safeTitle}')"><i class="fa-solid fa-book-open"></i> Read</button>`
+                : `<button class="btn btn-primary" onclick="buySoftcopy('${res.id}', '${softPrice}', '${safeTitle}')"><i class="fa-solid fa-unlock"></i> PDF</button>`;
 
-            const { data, error } = await query;
-            if (error || !data || data.length === 0) {
-                list.innerHTML = `<div class="empty-state"><i class="fa-regular fa-folder-open empty-icon"></i><h3>No Materials Found</h3><p>Check back later.</p></div>`;
-                return;
-            }
+            let hardBtn = res.is_hardcopy_available 
+                ? `<button class="btn btn-secondary" onclick="openOrderModal('${res.id}', '${safeTitle}', '${res.hardcopy_price}')"><i class="fa-solid fa-truck"></i> Hardcopy</button>`
+                : isOwned ? "" : `<button class="btn btn-secondary" disabled style="opacity:0.5">No Hardcopy</button>`;
+            
+            let aiBtn = isOwned 
+                ? `<a href="ai-study.html?url=${encodeURIComponent(res.file_url)}&title=${encodeURIComponent(res.title)}" class="btn btn-ai" style="grid-column:1/-1; width:100%; display:flex; align-items:center; justify-content:center; gap:8px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Study with AI</a>`
+                : '';
 
-            list.innerHTML = data.map(res => {
-                const isOwned = purchasedIds.has(res.id.toString()) || isAdmin;
-                const softPrice = res.softcopy_price || 100;
-                const safeTitle = res.title ? res.title.replace(/'/g, "\\'") : 'Material';
-                
-                const fileExt = res.file_url.split('.').pop().toLowerCase();
-                const iconClass = ['jpg','jpeg','png'].includes(fileExt) ? 'fa-image' : 'fa-file-pdf';
-                const iconType = ['jpg','jpeg','png'].includes(fileExt) ? 'doc' : 'pdf';
+            let hcBadge = res.is_hardcopy_available ? `<div class="hardcopy-badge">Book Available</div>` : '';
+            let delBtn = isAdmin ? `<div style="position:absolute; bottom:10px; right:10px; z-index:5;"><button class="btn" style="color:var(--danger); padding:5px;" onclick="deleteResource('${res.id}')"><i class="fa-solid fa-trash"></i></button></div>` : "";
 
-                let softBtn = isOwned 
-                    ? `<button class="btn btn-success" style="grid-column:1/-1" onclick="openReader('${res.file_url}', '${safeTitle}')"><i class="fa-solid fa-book-open"></i> Read</button>`
-                    : `<button class="btn btn-primary" onclick="buySoftcopy('${res.id}', '${softPrice}', '${safeTitle}')"><i class="fa-solid fa-unlock"></i> PDF</button>`;
-
-                let hardBtn = res.is_hardcopy_available 
-                    ? `<button class="btn btn-secondary" onclick="openOrderModal('${res.id}', '${safeTitle}', '${res.hardcopy_price}')"><i class="fa-solid fa-truck"></i> Hardcopy</button>`
-                    : isOwned ? "" : `<button class="btn btn-secondary" disabled style="opacity:0.5">No Hardcopy</button>`;
-                
-           // AI Button
-                let aiBtn = isOwned 
-                    ? `<a href="ai-study.html?url=${encodeURIComponent(res.file_url)}&title=${encodeURIComponent(res.title)}" class="btn btn-ai" style="grid-column:1/-1; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:8px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Study with AI</a>`
-                    : '';
-
-                let hcBadge = res.is_hardcopy_available ? `<div class="hardcopy-badge">Book Available</div>` : '';
-                let delBtn = isAdmin ? `<div style="position:absolute; bottom:10px; right:10px; z-index:5;"><button class="btn" style="color:var(--danger); padding:5px;" onclick="deleteResource('${res.id}')"><i class="fa-solid fa-trash"></i></button></div>` : "";
-
-                return `
-                <div class="res-card">
-                    ${hcBadge} ${delBtn}
-                    <div class="res-header">
-                        <div class="file-icon ${iconType}"><i class="fa-regular ${iconClass}"></i></div>
-                        <div class="res-details">
-                            <div class="res-title">${res.title}</div>
-                            <div class="res-meta"><span class="badge-level">${res.level || 'GEN'}</span><span>${fileExt.toUpperCase()}</span></div>
-                        </div>
+            
+            // NOTE: Added inline styles to .res-card to fix the cut-off issue
+            return `
+            <div class="res-card" style="height: auto !important; overflow: visible !important; display: flex !important; flex-direction: column !important; min-height: 200px;">
+                ${hcBadge} ${delBtn}
+                <div class="res-header">
+                    <div class="file-icon ${iconType}"><i class="fa-regular ${iconClass}"></i></div>
+                    <div class="res-details">
+                        <div class="res-title">${res.title}</div>
+                        <div class="res-meta"><span class="badge-level">${res.level || 'GEN'}</span><span>${fileExt.toUpperCase()}</span></div>
                     </div>
-                    <div class="res-price-tag">₦${isOwned ? 'PAID' : softPrice.toLocaleString()} <span>${isOwned ? 'Owned' : 'Softcopy'}</span></div>
-                    <div class="res-actions">
-                        ${softBtn} 
-                        ${!isOwned ? hardBtn : ''}
-                    </div>
+                </div>
+                <div class="res-price-tag">₦${isOwned ? 'PAID' : softPrice.toLocaleString()} <span>${isOwned ? 'Owned' : 'Softcopy'}</span></div>
+                
+                <div class="res-actions">
+                    ${softBtn} 
+                    ${!isOwned ? hardBtn : ''}
                     ${aiBtn}
-                </div>`;
-            }).join('');
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // --- PAYMENT & MODALS ---
+    async function buySoftcopy(id, price, title) {
+        if (typeof PaystackPop === 'undefined') return alert("Paystack loading... wait 3s.");
+        const { data: { user } } = await _supabase.auth.getUser();
+        if(!user) return alert("Login first");
+
+        const handler = PaystackPop.setup({
+            key: PAYSTACK_KEY, email: user.email, amount: Math.ceil(price * 100), ref: 'SOFT-' + Date.now(),
+            callback: async function(resp) {
+                await _supabase.from('resource_payments').insert({ user_id: user.id, resource_id: id, amount: price, payment_ref: resp.reference });
+                await _supabase.from('notifications').insert({ user_id: user.id, title: "Success", message: `Unlocked: ${title}` });
+                purchasedIds.add(id.toString());
+                loadResources(); loadNotifications(); alert("Unlocked!");
+            }, onClose: () => alert('Cancelled')
+        });
+        handler.openIframe();
+    }
+
+    function openOrderModal(id, title, price) { currentOrder = { id, title, price }; document.getElementById('modal-book-title').innerText = title; document.getElementById('orderModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('orderModal').style.display = 'none'; }
+
+    async function processHardcopyPayment() {
+        const address = document.getElementById('order-address').value;
+        const phone = document.getElementById('order-phone').value;
+        if(!address || !phone) return alert("Fill all fields");
+        const { data: { user } } = await _supabase.auth.getUser();
+        
+        const handler = PaystackPop.setup({
+            key: PAYSTACK_KEY, email: user.email, amount: Math.ceil(currentOrder.price * 100), ref: 'HARD-' + Date.now(),
+            callback: async function(resp) {
+                await _supabase.from('hardcopy_orders').insert({ 
+                    user_id: user.id, resource_id: currentOrder.id, amount: currentOrder.price, 
+                    full_name: user.user_metadata.full_name || 'Student', delivery_address: address, phone_number: phone, payment_ref: resp.reference 
+                });
+                await _supabase.from('notifications').insert({ user_id: user.id, title: "Ordered", message: `Order: ${currentOrder.title}` });
+                alert("Order Placed!"); closeModal();
+            }, onClose: () => alert('Cancelled')
+        });
+        handler.openIframe();
+    }
+
+    function openReader(url, title) {
+        document.getElementById('view-title').innerText = title;
+        const container = document.getElementById('viewer-container');
+        if (url.toLowerCase().match(/\.(jpeg|jpg|png)$/i)) { container.innerHTML = `<img src="${url}" class="view-img">`; } 
+        else { container.innerHTML = `<iframe src="${url}#toolbar=0&navpanes=0&scrollbar=0"></iframe>`; }
+        document.getElementById('fileViewer').style.display = 'flex';
+    }
+    function closeViewer() { document.getElementById('fileViewer').style.display = 'none'; document.getElementById('viewer-container').innerHTML = ''; }
+
+    async function loadNotifications() {
+        const { data: { user } } = await _supabase.auth.getUser();
+        const { data } = await _supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', {ascending:false}).limit(5);
+        const list = document.getElementById('notif-list');
+        if(data && data.length > 0) {
+            document.getElementById('notif-badge').style.display = 'block';
+            list.innerHTML = data.map(n => `<div class="notif-item"><div style="font-weight:600;margin-bottom:2px">${n.title}</div>${n.message}<div class="notif-time">${new Date(n.created_at).toLocaleDateString()}</div></div>`).join('');
         }
+    }
+    function toggleNotifs() {
+        const el = document.getElementById('notif-list');
+        el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        document.getElementById('notif-badge').style.display = 'none';
+    }
 
-        // --- PAYMENT & MODALS ---
-        async function buySoftcopy(id, price, title) {
-            if (typeof PaystackPop === 'undefined') return alert("Paystack loading... wait 3s.");
-            const { data: { user } } = await _supabase.auth.getUser();
-            if(!user) return alert("Login first");
+    async function deleteResource(id) { if(confirm("Delete this?")) { await _supabase.from('academic_resources').delete().eq('id', id); loadResources(); } }
+</script>
 
-            const handler = PaystackPop.setup({
-                key: PAYSTACK_KEY, email: user.email, amount: Math.ceil(price * 100), ref: 'SOFT-' + Date.now(),
-                callback: async function(resp) {
-                    await _supabase.from('resource_payments').insert({ user_id: user.id, resource_id: id, amount: price, payment_ref: resp.reference });
-                    await _supabase.from('notifications').insert({ user_id: user.id, title: "Success", message: `Unlocked: ${title}` });
-                    purchasedIds.add(id.toString());
-                    loadResources(); loadNotifications(); alert("Unlocked!");
-                }, onClose: () => alert('Cancelled')
-            });
-            handler.openIframe();
-        }
-
-        function openOrderModal(id, title, price) { currentOrder = { id, title, price }; document.getElementById('modal-book-title').innerText = title; document.getElementById('orderModal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('orderModal').style.display = 'none'; }
-
-        async function processHardcopyPayment() {
-            const address = document.getElementById('order-address').value;
-            const phone = document.getElementById('order-phone').value;
-            if(!address || !phone) return alert("Fill all fields");
-            const { data: { user } } = await _supabase.auth.getUser();
-            
-            const handler = PaystackPop.setup({
-                key: PAYSTACK_KEY, email: user.email, amount: Math.ceil(currentOrder.price * 100), ref: 'HARD-' + Date.now(),
-                callback: async function(resp) {
-                    await _supabase.from('hardcopy_orders').insert({ 
-                        user_id: user.id, resource_id: currentOrder.id, amount: currentOrder.price, 
-                        full_name: user.user_metadata.full_name || 'Student', delivery_address: address, phone_number: phone, payment_ref: resp.reference 
-                    });
-                    await _supabase.from('notifications').insert({ user_id: user.id, title: "Ordered", message: `Order: ${currentOrder.title}` });
-                    alert("Order Placed!"); closeModal();
-                }, onClose: () => alert('Cancelled')
-            });
-            handler.openIframe();
-        }
-
-        function openReader(url, title) {
-            document.getElementById('view-title').innerText = title;
-            const container = document.getElementById('viewer-container');
-            if (url.toLowerCase().match(/\.(jpeg|jpg|png)$/i)) { container.innerHTML = `<img src="${url}" class="view-img">`; } 
-            else { container.innerHTML = `<iframe src="${url}#toolbar=0&navpanes=0&scrollbar=0"></iframe>`; }
-            document.getElementById('fileViewer').style.display = 'flex';
-        }
-        function closeViewer() { document.getElementById('fileViewer').style.display = 'none'; document.getElementById('viewer-container').innerHTML = ''; }
-
-        async function loadNotifications() {
-            const { data: { user } } = await _supabase.auth.getUser();
-            const { data } = await _supabase.from('notifications').select('*').eq('user_id', user.id).order('created_at', {ascending:false}).limit(5);
-            const list = document.getElementById('notif-list');
-            if(data && data.length > 0) {
-                document.getElementById('notif-badge').style.display = 'block';
-                list.innerHTML = data.map(n => `<div class="notif-item"><div style="font-weight:600;margin-bottom:2px">${n.title}</div>${n.message}<div class="notif-time">${new Date(n.created_at).toLocaleDateString()}</div></div>`).join('');
-            }
-        }
-        function toggleNotifs() {
-            const el = document.getElementById('notif-list');
-            el.style.display = el.style.display === 'block' ? 'none' : 'block';
-            document.getElementById('notif-badge').style.display = 'none';
-        }
-
-        async function deleteResource(id) { if(confirm("Delete this?")) { await _supabase.from('academic_resources').delete().eq('id', id); loadResources(); } }
-    </script>
+    
 </body>
 </html>
