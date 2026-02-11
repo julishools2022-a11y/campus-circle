@@ -30,8 +30,8 @@
         h2 { margin: 0; font-size: 1.5rem; color: var(--primary); }
 
         /* SMART FILTERS */
-        .filter-bar { display: flex; gap: 10px; margin-bottom: 15px; }
-        .filter-select { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: white; font-family: inherit; font-size: 0.9rem; color: var(--text); outline: none; }
+        .filter-bar { display: flex; gap: 10px; margin-bottom: 15px; flex-direction: column; }
+        .filter-select { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: white; font-family: inherit; font-size: 0.9rem; color: var(--text); outline: none; }
 
         /* SEARCH & CATS */
         .search-box { position: relative; margin-bottom: 20px; }
@@ -47,7 +47,6 @@
         .resource-card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 15px; transition: transform 0.2s; }
         
         .card-top { display: flex; justify-content: space-between; align-items: flex-start; }
-        
         .file-icon { width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
         .icon-pdf { background: #fee2e2; color: #ef4444; } 
         .icon-img { background: #e0e7ff; color: #4f46e5; }
@@ -59,13 +58,11 @@
         /* ACTIONS */
         .actions { display: flex; gap: 10px; }
         .btn-ai { flex: 1; border: none; padding: 12px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; text-decoration: none; transition: 0.2s; }
-        .btn-view { width: 50px; background: #f1f5f9; color: var(--text); border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; text-decoration: none; transition: 0.2s; }
+        .btn-view { width: 50px; background: #f1f5f9; color: var(--text); border: none; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; text-decoration: none; }
         
-        .btn-free { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2); }
+        .btn-free { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; }
         .btn-paid { background: #10b981; color: white; width: 100%; } 
         .btn-admin { background: #f59e0b; color: white; } 
-
-        .btn-ai:active, .btn-view:active { transform: scale(0.95); }
 
         /* UPLOAD BTN */
         .fab { position: fixed; bottom: 25px; right: 25px; width: 60px; height: 60px; background: var(--primary); color: white; border-radius: 50%; display: none; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 10px 20px rgba(79, 70, 229, 0.4); text-decoration: none; z-index: 100; }
@@ -87,12 +84,7 @@
 
     <div class="filter-bar">
         <select id="faculty-select" class="filter-select" onchange="updateDeptOptions()">
-            <option value="All">All Faculties</option>
-            <option value="Social Sciences">Social Sciences</option>
-            <option value="Science">Science</option>
-            <option value="Arts">Arts</option>
-            <option value="Management">Management</option>
-        </select>
+            </select>
         
         <select id="dept-select" class="filter-select" onchange="manualFilter()">
             <option value="All">All Departments</option>
@@ -101,7 +93,7 @@
 
     <div class="search-box">
         <i class="fa-solid fa-search"></i>
-        <input type="text" id="search" placeholder="Search textbooks..." onkeyup="manualFilter()">
+        <input type="text" id="search" placeholder="Search past questions, notes..." onkeyup="manualFilter()">
     </div>
 
     <div class="cats">
@@ -128,20 +120,27 @@
 <a href="upload-material.html" class="fab" id="admin-upload-btn"><i class="fa-solid fa-plus"></i></a>
 
 <script>
-    // --- 1. CONFIGURATION ---
+    // --- 1. CONFIG & UNIZIK DATA ---
     const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-    
-    // ✅ LIVE PAYSTACK PUBLIC KEY
     const PAYSTACK_KEY = 'pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5'; 
 
-    // Department Mapping
     const depts = {
-        "Social Sciences": ["Sociology", "Psychology", "Political Science", "Economics", "Mass Comm"],
-        "Science": ["Computer Science", "Microbiology", "Biochemistry"],
-        "Arts": ["English", "History", "Philosophy"],
-        "Management": ["Accounting", "Business Admin", "Banking & Finance"]
+        "Agriculture": ["Agricultural Economics and Extension", "Animal Science and Technology", "Crop Science and Horticulture", "Fisheries and Aquaculture", "Food Science and Technology", "Forestry and Wildlife Management", "Soil Science and Land Resources Management"],
+        "Arts": ["English Language and Literature", "History and International Studies", "Linguistics", "Modern European Languages", "Music", "Philosophy", "Religion and Human Relations", "Theatre and Film Studies", "Igbo, African and Asian Studies", "Chinese Studies"],
+        "Basic Medical Sciences": ["Anatomy", "Human Physiology"],
+        "Biosciences": ["Applied Biochemistry", "Applied Microbiology and Brewing", "Botany", "Parasitology and Entomology", "Zoology"],
+        "Education": ["Adult Education", "Early Childhood and Primary Education", "Educational Foundations", "Educational Management and Policy", "Guidance and Counselling", "Human Kinetics and Sports Science", "Library and Information Science", "Science Education"],
+        "Engineering": ["Agricultural and Bio-resources Engineering", "Chemical Engineering", "Civil Engineering", "Electrical Engineering", "Electronic and Computer Engineering", "Industrial and Production Engineering", "Mechanical Engineering", "Metallurgical and Materials Engineering", "Polymer and Textile Engineering"],
+        "Environmental Sciences": ["Architecture", "Building", "Environmental Management", "Estate Management", "Fine and Applied Arts", "Geography and Meteorology", "Quantity Surveying", "Surveying and Geoinformatics", "Urban and Regional Planning"],
+        "Health Sciences and Technology": ["Medical Laboratory Science", "Medical Rehabilitation", "Nursing Science", "Radiography and Radiological Sciences", "Environmental Health Science"],
+        "Law": ["Commercial and Property Law", "International Law and Jurisprudence", "Public and Private Law"],
+        "Management Sciences": ["Accountancy", "Banking and Finance", "Business Administration", "Cooperative Economics and Management", "Marketing", "Public Administration", "Entrepreneurial Studies"],
+        "Medicine": ["Medicine", "Surgery"],
+        "Pharmaceutical Sciences": ["Clinical Pharmacy and Pharmacy Management", "Pharmaceutical Chemistry and Medicinal Chemistry", "Pharmaceutical Microbiology and Biotechnology", "Pharmaceutics and Pharmaceutical Technology", "Pharmacognosy and Traditional Medicine", "Pharmacology and Toxicology"],
+        "Physical Sciences": ["Computer Science", "Geological Sciences", "Mathematics", "Physics and Industrial Physics", "Pure and Industrial Chemistry", "Statistics"],
+        "Social Sciences": ["Economics", "Mass Communication", "Political Science", "Psychology", "Sociology", "Anthropology"]
     };
 
     let allResources = [];
@@ -149,22 +148,27 @@
     let isAdmin = false;
     let currentLevel = 'all';
 
-    // --- 2. AUTH & AUTO-DETECT ---
+    // --- 2. INITIALIZATION ---
     async function init() {
+        const facSelect = document.getElementById('faculty-select');
+        facSelect.innerHTML = '<option value="All">All Faculties</option>';
+        Object.keys(depts).sort().forEach(fac => {
+            const opt = document.createElement('option');
+            opt.value = fac;
+            opt.innerText = "Faculty of " + fac;
+            facSelect.appendChild(opt);
+        });
+
         const { data: { user } } = await _supabase.auth.getUser();
         if (user) {
             currentUserEmail = user.email;
-            
-            // Check Admin Status from 'admins' table
             const { data: admin } = await _supabase.from('admin_users').select('*').eq('email', user.email).single();
             if (admin) {
                 isAdmin = true;
                 document.getElementById('admin-upload-btn').style.display = 'flex';
             }
 
-            // Fetch Profile for Auto-Select
             const { data: profile } = await _supabase.from('profiles').select('faculty, department').eq('id', user.id).single();
-            
             if (profile) {
                 if (profile.faculty) {
                     document.getElementById('faculty-select').value = profile.faculty;
@@ -182,25 +186,23 @@
         const faculty = document.getElementById('faculty-select').value;
         const deptSelect = document.getElementById('dept-select');
         deptSelect.innerHTML = '<option value="All">All Departments</option>';
-        
         if (depts[faculty]) {
-            depts[faculty].forEach(d => {
+            depts[faculty].sort().forEach(d => {
                 const opt = document.createElement('option');
-                opt.value = d;
-                opt.innerText = d;
+                opt.value = d; opt.innerText = d;
                 deptSelect.appendChild(opt);
             });
         }
         manualFilter();
     }
 
-    // --- 3. FETCH & FILTER ---
+    // --- 3. DATA FETCH & FILTER ---
     async function fetchResources() {
         try {
             const { data, error } = await _supabase.from('academic_resources').select('*').order('created_at', { ascending: false });
             if (error) throw error;
             allResources = data;
-            manualFilter(); 
+            manualFilter();
         } catch (err) { console.error(err); } 
         finally { document.getElementById('loading-area').style.display = 'none'; }
     }
@@ -215,10 +217,8 @@
             const matchDept = dept === "All" || r.department === dept;
             const matchLevel = currentLevel === "all" || r.level === currentLevel;
             const matchSearch = r.title.toLowerCase().includes(query);
-            
             return matchFaculty && matchDept && matchLevel && matchSearch;
         });
-
         renderList(filtered);
     };
 
@@ -229,12 +229,11 @@
         manualFilter();
     };
 
-    // --- 4. RENDER LIST ---
+    // --- 4. RENDERER ---
     function renderList(items) {
         const list = document.getElementById('resource-list');
         list.innerHTML = '';
         document.getElementById('empty-state').style.display = (!items || items.length === 0) ? 'block' : 'none';
-
         if (!items) return;
 
         items.forEach((item, index) => {
@@ -250,24 +249,19 @@
             const btnIcon = isImage ? "fa-brain" : "fa-robot";
 
             let actionHtml = '';
-
             if (isAdmin) {
-                actionHtml = `
-                    <a href="${aiLink}" class="btn-ai btn-admin"><i class="fa-solid fa-user-shield"></i> ${btnText} (Admin)</a>
-                    <a href="${item.file_url}" target="_blank" class="btn-view"><i class="fa-solid fa-eye"></i></a>`;
+                actionHtml = `<a href="${aiLink}" class="btn-ai btn-admin"><i class="fa-solid fa-user-shield"></i> ${btnText}</a>
+                              <a href="${item.file_url}" target="_blank" class="btn-view"><i class="fa-solid fa-eye"></i></a>`;
             } else if (isFree) {
-                actionHtml = `
-                    <a href="${aiLink}" class="btn-ai btn-free"><i class="fa-solid ${btnIcon}"></i> ${btnText}</a>
-                    <a href="${item.file_url}" target="_blank" class="btn-view"><i class="fa-solid fa-eye"></i></a>`;
+                actionHtml = `<a href="${aiLink}" class="btn-ai btn-free"><i class="fa-solid ${btnIcon}"></i> ${btnText}</a>
+                              <a href="${item.file_url}" target="_blank" class="btn-view"><i class="fa-solid fa-eye"></i></a>`;
             } else {
-                actionHtml = `
-                    <button onclick="payToUnlock(${index})" class="btn-ai btn-paid"><i class="fa-solid fa-lock"></i> Unlock ₦${price}</button>`;
+                actionHtml = `<button onclick="payToUnlock(${index})" class="btn-ai btn-paid"><i class="fa-solid fa-lock"></i> Unlock ₦${price}</button>`;
             }
 
             list.innerHTML += `
                 <div class="resource-card">
-                    <div class="card-top">
-                        ${iconHtml}
+                    <div class="card-top">${iconHtml}
                         <div class="card-info">
                             <div class="card-title">${item.title}</div>
                             <div class="card-meta"><span>${item.level}</span> • <span>${isFree ? 'Free' : '₦' + price}</span></div>
@@ -286,11 +280,7 @@
             email: currentUserEmail || "student@campuscircle.com",
             amount: item.softcopy_price * 100,
             currency: "NGN",
-            metadata: { custom_fields: [{ display_name: "Resource", value: item.title }] },
-            callback: function(response) {
-                const aiLink = `ai-study.html?url=${encodeURIComponent(item.file_url)}&title=${encodeURIComponent(item.title)}`;
-                window.location.href = aiLink;
-            },
+            callback: function(res) { window.location.href = `ai-study.html?url=${encodeURIComponent(item.file_url)}&title=${encodeURIComponent(item.title)}`; },
             onClose: function() { alert('Payment cancelled.'); }
         });
         handler.openIframe();
@@ -298,6 +288,5 @@
 
     init();
 </script>
-
 </body>
 </html>
