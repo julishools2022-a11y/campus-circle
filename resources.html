@@ -124,7 +124,7 @@
             
             // 🔍 CHECK DATABASE: Is this email in the 'admins' table?
             const { data: adminRecord, error } = await _supabase
-                .from('admins')
+                .from('admin_users')
                 .select('*')
                 .eq('email', currentUserEmail)
                 .single();
