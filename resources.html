@@ -128,7 +128,7 @@
         if (user) {
             currentUserEmail = user.email;
             // Check Admins Table
-            const { data: adminRecord } = await _supabase.from('admins').select('*').eq('email', user.email).single();
+            const { data: adminRecord } = await _supabase.from('admin_users').select('*').eq('email', user.email).single();
             if (adminRecord) {
                 isAdmin = true;
                 document.getElementById('admin-upload-btn').style.display = 'flex';
