@@ -160,7 +160,7 @@
 
     <header class="header">
         <div class="header-title">
-            <a href="entry.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
             <span>Campus Library</span>
         </div>
         <div class="notif-btn" onclick="toggleNotifs()">
@@ -359,7 +359,7 @@
                     ? `<button class="btn btn-secondary" onclick="openOrderModal('${res.id}', '${safeTitle}', '${res.hardcopy_price}')"><i class="fa-solid fa-truck"></i> Hardcopy</button>`
                     : isOwned ? "" : `<button class="btn btn-secondary" disabled style="opacity:0.5">No Hardcopy</button>`;
                 
-          // AI Button
+           // AI Button
                 let aiBtn = isOwned 
                     ? `<a href="ai-study.html?url=${encodeURIComponent(res.file_url)}&title=${encodeURIComponent(res.title)}" class="btn btn-ai" style="grid-column:1/-1; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:8px;"><i class="fa-solid fa-wand-magic-sparkles"></i> Study with AI</a>`
                     : '';
