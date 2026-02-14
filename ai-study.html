@@ -245,15 +245,14 @@
     </div>
 
 </div>                
-   <script>
+                               
+        <script>
     // --- API & CONFIG ---
     // PUT YOUR OPENROUTER KEY HERE
-    const OPENROUTER_API_KEY = "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"; 
+    const OPENROUTER_API_KEY = "YOUR_OPENROUTER_KEY_HERE"; 
     
-    // Using Gemini Flash via OpenRouter for main logic (Fast/Cheap)
+    // Models
     const MODEL_MAIN = "google/gemini-2.0-flash-001";
-    
-    // Using Gemma for the specific style analysis feature
     const MODEL_ANALYSIS = "google/gemma-3-4b-it:free";
 
     let pdfText = "";
@@ -287,6 +286,7 @@
         document.querySelectorAll('.section-view').forEach(el => { el.style.display = 'none'; el.classList.remove('active'); });
         const target = document.getElementById(`${tabId}-section`);
         if(target) {
+            // Force flex for chat, block for others to ensure visibility
             target.style.display = (tabId === 'chat') ? 'flex' : 'block';
             setTimeout(() => target.classList.add('active'), 10);
         }
@@ -345,7 +345,7 @@
         }
     };
 
-    // --- UNIFIED OPENROUTER CALL ---
+    // --- AI CALLER ---
     async function callOpenRouter(model, prompt, systemContext, base64Image = null) {
         if(!OPENROUTER_API_KEY || OPENROUTER_API_KEY.includes("YOUR")) {
             alert("Please set a valid OpenRouter Key in the code.");
@@ -353,13 +353,9 @@
         }
 
         const messages = [];
-        if (systemContext) {
-            messages.push({ role: "system", content: systemContext });
-        }
+        if (systemContext) messages.push({ role: "system", content: systemContext });
 
-        const userContent = [];
-        userContent.push({ type: "text", text: prompt });
-        
+        const userContent = [{ type: "text", text: prompt }];
         if (base64Image) {
             userContent.push({
                 type: "image_url",
@@ -375,20 +371,13 @@
                 headers: {
                     "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
                     "Content-Type": "application/json",
-                    "HTTP-Referer": window.location.href, // Required by OpenRouter
-                    "X-Title": "Campus Circle Study App"
+                    "HTTP-Referer": window.location.href,
+                    "X-Title": "Campus Circle Study"
                 },
-                body: JSON.stringify({
-                    model: model,
-                    messages: messages
-                })
+                body: JSON.stringify({ model: model, messages: messages })
             });
 
-            if (!response.ok) {
-                const err = await response.text();
-                throw new Error(`OpenRouter API Error: ${err}`);
-            }
-            
+            if (!response.ok) throw new Error("API Error");
             const data = await response.json();
             return data.choices[0].message.content || "";
         } catch (e) {
@@ -403,100 +392,68 @@
         
         const btn = document.querySelector(`#${type}-section .action-btn`);
         const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; 
+        btn.disabled = true;
 
         let prompt = "";
-        // Use a reasonable context limit for OpenRouter models
         let context = `CONTEXT FROM PDF:\n${pdfText.substring(0, 15000)}`;
         
         try {
-            // 1. QUIZ (Gemini Flash via OpenRouter)
             if(type === 'quiz') {
                 const count = document.getElementById('q-count').value;
                 const diff = document.getElementById('q-diff').value;
                 prompt = `Generate ${count} multiple-choice questions based on the context. Difficulty: ${diff}. 
-                Return STRICT valid JSON only. No markdown formatting.
-                Structure: { "quiz": [{"q":"Question text","options":["Option A","Option B","Option C","Option D"],"a":"Correct Option Full Text","explanation":"Why it is correct"}] }`;
+                Return STRICT valid JSON only. Format: { "quiz": [{"q":"Question","options":["A","B","C","D"],"a":"Correct Answer String","explanation":"Why"}] }`;
                 
                 const rawText = await callOpenRouter(MODEL_MAIN, prompt, context);
                 processAIResponse(rawText, type);
             } 
-            
-            // 2. THEORY (Gemma for Vision -> Gemini Flash for Generation)
             else if(type === 'theory') {
                 const diff = document.getElementById('t-diff').value;
                 let styleDescription = document.getElementById('lecturer-style').value;
                 
-                // If image exists, ask Gemma to analyze it first
                 if (styleImageBase64) {
                     btn.innerHTML = '<i class="fa-solid fa-eye"></i> Analyzing Image...';
-                    const imageAnalysis = await callOpenRouter(
-                        MODEL_ANALYSIS, 
-                        "Analyze this image of an exam/document. Describe the question style, formatting, handwriting tone, and complexity. Be concise.", 
-                        null,
-                        styleImageBase64
-                    );
-                    if (imageAnalysis) {
-                        styleDescription += `\n\n[STYLE INSTRUCTION FROM IMAGE ANALYSIS]: ${imageAnalysis}`;
-                    }
+                    const imageAnalysis = await callOpenRouter(MODEL_ANALYSIS, "Analyze style...", null, styleImageBase64);
+                    if (imageAnalysis) styleDescription += `\n\n[STYLE]: ${imageAnalysis}`;
                 }
                 
                 btn.innerHTML = 'Generating Questions...';
-                prompt = `Generate 5 theory/essay questions. Difficulty: ${diff}.
-                User Instructions/Style: "${styleDescription}".
-                Return STRICT valid JSON only: { "questions": ["Question 1...", "Question 2...", "Question 3...", "Question 4...", "Question 5..."] }`;
-                
+                prompt = `Generate 5 theory questions (Diff: ${diff}). Style: "${styleDescription}". JSON: { "questions": ["Q1...", "Q2..."] }`;
                 const rawText = await callOpenRouter(MODEL_MAIN, prompt, context);
                 processAIResponse(rawText, type);
             } 
-            
-            // 3. FLASHCARDS (Gemini Flash via OpenRouter)
             else if(type === 'flashcard') {
-                prompt = `Generate 15 flashcards based on key terms in the context.
-                Return STRICT valid JSON only: { "flashcards": [{"front":"Term","back":"Definition"}] }`;
+                prompt = `Generate 15 flashcards. JSON: { "flashcards": [{"front":"Term","back":"Definition"}] }`;
                 const rawText = await callOpenRouter(MODEL_MAIN, prompt, context);
                 processAIResponse(rawText, type);
             }
-
         } catch(e) { 
             console.error(e);
-            alert("Error generating content. See console for details."); 
+            alert("Error: " + e.message); 
         }
         btn.innerHTML = originalText; btn.disabled = false;
     }
 
     function processAIResponse(rawText, type) {
-        // Cleaning JSON (removing markdown code blocks if AI adds them)
+        // Robust JSON Cleaner
         let cleanText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const jsonStart = cleanText.indexOf('{');
-        const jsonEnd = cleanText.lastIndexOf('}');
-        if (jsonStart !== -1 && jsonEnd !== -1) {
-            cleanText = cleanText.substring(jsonStart, jsonEnd + 1);
-        }
-        
+        const firstOpen = cleanText.indexOf('{');
+        const lastClose = cleanText.lastIndexOf('}');
+        if(firstOpen !== -1 && lastClose !== -1) cleanText = cleanText.substring(firstOpen, lastClose + 1);
+
         try {
             const parsed = JSON.parse(cleanText);
-
-            if(type === 'quiz') { 
-                quizData = parsed.quiz; 
-                renderQuiz(); 
-            }
-            if(type === 'theory') { 
-                theoryQuestions = parsed.questions; 
-                theoryTotalScore = 0; currentTheoryIndex = 0; 
-                renderTheory(); 
-            }
-            if(type === 'flashcard') { 
-                flashcardData = parsed.flashcards; 
-                setupFlashcards(); 
-            }
+            if(type === 'quiz') { quizData = parsed.quiz; renderQuiz(); }
+            if(type === 'theory') { theoryQuestions = parsed.questions; theoryTotalScore = 0; currentTheoryIndex = 0; renderTheory(); }
+            if(type === 'flashcard') { flashcardData = parsed.flashcards; setupFlashcards(); }
         } catch (e) {
-            console.error("JSON Parse Error", e);
-            alert("AI returned invalid data format. Please try again.");
+            console.error("Parse Error", e);
+            alert("AI Response Format Error. Try again.");
         }
     }
 
-    // --- QUIZ LOGIC ---
+    // --- QUIZ LOGIC (FIXED) ---
     function renderQuiz() {
         score = 0; answeredCount = 0;
         document.getElementById('quiz-setup').style.display = 'none';
@@ -508,31 +465,67 @@
         list.innerHTML = "";
         
         quizData.forEach((q, i) => {
-            const div = document.createElement('div');
-            div.className = 'quiz-card';
-            div.innerHTML = `<div><strong>${i+1}. ${q.q}</strong></div>`;
+            const card = document.createElement('div');
+            card.className = 'quiz-card';
+            
+            // 1. Question Title
+            const qTitle = document.createElement('div');
+            qTitle.innerHTML = `<strong>${i+1}. ${q.q}</strong>`;
+            card.appendChild(qTitle);
+
+            // 2. Options Container
             const optsContainer = document.createElement('div');
             optsContainer.id = `opts-${i}`;
+            
             q.options.forEach(opt => {
-                const b = document.createElement('div'); b.className = 'option'; b.innerText = opt;
+                const btn = document.createElement('div'); 
+                btn.className = 'option'; 
+                btn.innerText = opt;
+                // Safely add click listener
                 btn.onclick = function() { checkAns(i, btn, opt, q.a, card); };
                 optsContainer.appendChild(btn);
             });
-            
-            div.appendChild(optsContainer);
-            div.innerHTML += `<div class="explanation">💡 ${q.explanation || "No explanation"}</div>`;
-            list.appendChild(div);
+            card.appendChild(optsContainer);
+
+            // 3. Explanation (Hidden)
+            const exp = document.createElement('div');
+            exp.className = 'explanation';
+            exp.innerText = `💡 ${q.explanation || "No explanation"}`;
+            card.appendChild(exp);
+
+            list.appendChild(card);
         });
     }
 
     function checkAns(idx, el, sel, cor, parentDiv) {
         const container = document.getElementById(`opts-${idx}`);
         if(container.classList.contains('answered')) return;
+        
         container.classList.add('answered');
-        Array.from(container.children).forEach(o => o.style.pointerEvents = 'none');
+        
+        // Lock options visually
+        Array.from(container.children).forEach(o => {
+            o.style.pointerEvents = 'none';
+            o.style.opacity = '0.7';
+        });
         
         answeredCount++;
-        if(sel === cor) { el.classList.add('correct'); score++; } else { el.classList.add('wrong'); }
+        
+        // Check logic: loose comparison to handle "A" vs "A. Answer"
+        const isCorrect = (sel === cor) || (sel.includes(cor)) || (cor.includes(sel));
+        
+        if(isCorrect) { 
+            el.classList.add('correct'); 
+            el.style.opacity = '1';
+            score++; 
+        } else { 
+            el.classList.add('wrong');
+            el.style.opacity = '1';
+            // Try to highlight correct one if we can find it
+            Array.from(container.children).forEach(o => {
+                if(o.innerText === cor || o.innerText.includes(cor)) o.classList.add('correct');
+            });
+        }
         
         parentDiv.querySelector('.explanation').style.display = 'block';
         document.getElementById('current-score').innerText = score;
@@ -546,9 +539,14 @@
             }, 1000);
         }
     }
-    function resetQuiz() { document.getElementById('quiz-result').style.display = 'none'; document.getElementById('quiz-active').style.display = 'none'; document.getElementById('quiz-setup').style.display = 'block'; }
 
-    // --- THEORY LOGIC ---
+    function resetQuiz() { 
+        document.getElementById('quiz-result').style.display = 'none'; 
+        document.getElementById('quiz-active').style.display = 'none'; 
+        document.getElementById('quiz-setup').style.display = 'block'; 
+    }
+
+    // --- OTHER LOGIC (Theory/Flashcard/Chat) remains same ---
     function renderTheory() {
         document.getElementById('theory-setup').style.display = 'none';
         document.getElementById('theory-result').style.display = 'none';
@@ -564,23 +562,16 @@
 
     async function gradeAnswer() {
         const ans = document.getElementById('t-answer').value;
-        if(ans.length < 5) return alert("Please type an answer.");
+        if(ans.length < 2) return alert("Please type an answer.");
         const btn = document.getElementById('btn-grade');
         btn.innerHTML = "Grading..."; btn.disabled = true;
 
         try {
-            const rawText = await callOpenRouter(
-                MODEL_MAIN,
-                `Grade this answer out of 10. 
-                Question: "${theoryQuestions[currentTheoryIndex]}"
-                Student Answer: "${ans}"
-                Provide a short feedback and a score in format "Score: X/10".`, 
-                `Context: ${pdfText.substring(0, 5000)}`
-            );
+            const rawText = await callOpenRouter(MODEL_MAIN, `Grade this /10. Q: "${theoryQuestions[currentTheoryIndex]}". Ans: "${ans}". Format: Score: X/10. Feedback: ...`, `Context: ${pdfText.substring(0, 5000)}`);
             const fbBox = document.getElementById('t-feedback');
             fbBox.innerHTML = marked.parse(rawText);
             fbBox.style.display = 'block';
-
+            
             const scoreMatch = rawText.match(/(\d+)\/10/);
             if(scoreMatch) {
                 theoryTotalScore += parseInt(scoreMatch[1]);
@@ -603,7 +594,6 @@
     }
     function resetTheory() { document.getElementById('theory-result').style.display = 'none'; document.getElementById('theory-setup').style.display = 'block'; }
 
-    // --- FLASHCARD LOGIC ---
     function setupFlashcards() {
         document.getElementById('fc-setup').style.display = 'none';
         document.getElementById('fc-active').style.display = 'block';
@@ -620,7 +610,6 @@
     window.prevCard = () => { if(currentCardIndex > 0) { currentCardIndex--; updateCard(); } };
     window.resetFlashcards = () => { document.getElementById('fc-active').style.display = 'none'; document.getElementById('fc-setup').style.display = 'block'; };
 
-    // --- CHAT LOGIC ---
     window.sendMessage = async function() {
         const input = document.getElementById('chat-input');
         const msg = input.value;
@@ -636,8 +625,7 @@
             hist.scrollTop = hist.scrollHeight;
         } catch(e) {}
     }
-    </script>
-        
-
+                </script>
+    
 </body>
 </html>
