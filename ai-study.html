@@ -245,10 +245,8 @@
     </div>
 
 </div>
-
-<script>
+                        <script>
     const API_KEY = "AIzaSyAcd64om0cgKpCVQaKigE7ShwkakWoXHNM"; 
-    // ✅ LOCKED TO GEMINI-3-FLASH-PREVIEW
     const AI_MODEL = "gemini-3-flash-preview"; 
 
     let pdfText = "";
@@ -259,14 +257,12 @@
 
     // --- INIT ---
     window.onload = async () => {
+        switchTab('quiz');
         const params = new URLSearchParams(window.location.search);
         const url = params.get('url');
         const title = params.get('title');
         if(title) document.getElementById('doc-title').innerText = title;
         document.querySelectorAll('.section-view').forEach(el => el.style.display = 'none');
-
-        // Default to Quiz
-        switchTab('quiz');
 
         if(url) {
             document.getElementById('loading-box').style.display = 'block';
@@ -282,12 +278,9 @@
         if(btn) btn.classList.add('active');
 
         document.querySelectorAll('.section-view').forEach(el => { el.style.display = 'none'; el.classList.remove('active'); });
-        
         const target = document.getElementById(`${tabId}-section`);
-        if(target) {
-            target.style.display = (tabId === 'chat') ? 'flex' : 'block';
-            setTimeout(() => target.classList.add('active'), 10);
-        }
+        target.style.display = (tabId === 'chat') ? 'flex' : 'block';
+        setTimeout(() => target.classList.add('active'), 10);
     }
 
     // --- PDF ---
@@ -307,6 +300,7 @@
             }
             pdfText = fullText;
             document.getElementById('loading-box').style.display = 'none';
+            switchTab('quiz');
         } catch (e) {
             document.getElementById('loading-box').innerHTML = "<p>Error loading PDF. Use Manual Upload.</p>";
         }
@@ -326,6 +320,7 @@
             }
             pdfText = fullText;
             document.getElementById('upload-box').style.display = 'none';
+            switchTab('quiz');
         };
         reader.readAsArrayBuffer(file);
     };
@@ -377,7 +372,7 @@
             });
             const data = await response.json();
             
-            // Safer parsing: find first '{' and last '}'
+            // Clean JSON
             let rawText = data.candidates[0].content.parts[0].text;
             const jsonStart = rawText.indexOf('{');
             const jsonEnd = rawText.lastIndexOf('}');
@@ -397,7 +392,7 @@
         btn.innerHTML = originalText; btn.disabled = false;
     }
 
-    // --- QUIZ ---
+    // --- QUIZ (FIXED CLICKABLE OPTIONS) ---
     function renderQuiz() {
         score = 0; answeredCount = 0;
         document.getElementById('quiz-setup').style.display = 'none';
@@ -411,26 +406,61 @@
         quizData.forEach((q, i) => {
             const div = document.createElement('div');
             div.className = 'quiz-card';
-            div.innerHTML = `<div><strong>${i+1}. ${q.q}</strong></div>`;
+            div.id = `q-card-${i}`;
+            
+            // 1. Add Question Text
+            const qText = document.createElement('div');
+            qText.innerHTML = `<strong>${i+1}. ${q.q}</strong>`;
+            div.appendChild(qText);
+
+            // 2. Add Options Container (so we can find it later)
+            const optsContainer = document.createElement('div');
+            optsContainer.id = `opts-${i}`;
+            div.appendChild(optsContainer);
+
+            // 3. Add Options
             q.options.forEach(opt => {
-                const b = document.createElement('div'); b.className = 'option'; b.innerText = opt;
+                const b = document.createElement('div'); 
+                b.className = 'option'; 
+                b.innerText = opt;
+                // Pass the specific container div to checkAns
                 b.onclick = () => checkAns(i, b, opt, q.a, div);
-                div.appendChild(b);
+                optsContainer.appendChild(b);
             });
-            div.innerHTML += `<div class="explanation">💡 ${q.explanation}</div>`;
+
+            // 4. Add Explanation (Hidden by default)
+            const exp = document.createElement('div');
+            exp.className = 'explanation';
+            exp.innerHTML = `💡 ${q.explanation || "No explanation provided."}`;
+            div.appendChild(exp);
+
             list.appendChild(div);
         });
     }
 
     function checkAns(idx, el, sel, cor, parentDiv) {
-        if(el.parentNode.classList.contains('answered')) return;
-        el.parentNode.classList.add('answered');
+        // Prevent double clicking using the options container
+        const optsContainer = document.getElementById(`opts-${idx}`);
+        if(optsContainer.classList.contains('answered')) return;
+        
+        optsContainer.classList.add('answered');
         answeredCount++;
         
-        if(sel === cor) { el.classList.add('correct'); score++; }
-        else { el.classList.add('wrong'); }
+        if(sel === cor) { 
+            el.classList.add('correct'); 
+            score++; 
+        } else { 
+            el.classList.add('wrong'); 
+            // Highlight correct answer
+            Array.from(optsContainer.children).forEach(child => {
+                if(child.innerText === cor) child.classList.add('correct');
+            });
+        }
         
-        parentDiv.querySelector('.explanation').style.display = 'block';
+        // Show Explanation
+        const expDiv = parentDiv.querySelector('.explanation');
+        if(expDiv) expDiv.style.display = 'block';
+
         document.getElementById('current-score').innerText = score;
         document.getElementById('quiz-progress').innerText = `${answeredCount}/${quizData.length}`;
 
@@ -439,7 +469,7 @@
                 document.getElementById('quiz-active').style.display = 'none';
                 document.getElementById('quiz-result').style.display = 'block';
                 document.getElementById('final-score').innerText = Math.round((score/quizData.length)*100) + "%";
-            }, 1000);
+            }, 1500);
         }
     }
     function resetQuiz() { document.getElementById('quiz-result').style.display = 'none'; document.getElementById('quiz-setup').style.display = 'block'; }
@@ -484,9 +514,7 @@
             // Extract Score
             const scoreMatch = text.match(/(\d+)\/10/);
             if(scoreMatch) {
-                const s = parseInt(scoreMatch[1]);
-                theoryTotalScore += s;
-                fbBox.className = 'grading-box ' + (s >= 7 ? 'good' : s >= 4 ? 'avg' : 'bad');
+                theoryTotalScore += parseInt(scoreMatch[1]);
                 document.getElementById('theory-score').innerText = theoryTotalScore;
             }
 
@@ -508,7 +536,7 @@
     }
     function resetTheory() { document.getElementById('theory-result').style.display = 'none'; document.getElementById('theory-setup').style.display = 'block'; }
 
-    // --- FLASHCARDS ---
+    // --- FLASHCARDS & CHAT ---
     function setupFlashcards() {
         document.getElementById('fc-setup').style.display = 'none';
         document.getElementById('fc-active').style.display = 'block';
@@ -518,6 +546,7 @@
         const c = flashcardData[currentCardIndex];
         document.getElementById('fc-front').innerText = c.front;
         document.getElementById('fc-back').innerText = c.back;
+        document.getElementById('fc-count').innerText = `${currentCardIndex+1}/${flashcardData.length}`;
         document.getElementById('active-card').classList.remove('flipped');
     }
     window.toggleFlip = () => document.getElementById('active-card').classList.toggle('flipped');
@@ -525,7 +554,6 @@
     window.prevCard = () => { if(currentCardIndex > 0) { currentCardIndex--; updateCard(); } };
     window.resetFlashcards = () => { document.getElementById('fc-active').style.display = 'none'; document.getElementById('fc-setup').style.display = 'block'; };
 
-    // --- CHAT ---
     window.sendMessage = async function() {
         const input = document.getElementById('chat-input');
         const msg = input.value;
@@ -543,7 +571,8 @@
             hist.scrollTop = hist.scrollHeight;
         } catch(e) {}
     }
-</script>
+                </script>
+    
 
 </body>
 </html>
