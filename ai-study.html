@@ -244,10 +244,17 @@
         </div>
     </div>
 
-</div>
-                        <script>
-    const API_KEY = "AIzaSyDLlBs1oVQ3ZVVBiX8QL6XPERjXvxk5FUs"; 
-    const AI_MODEL = "gemini-3-flash-preview"; 
+</div>                
+    script>
+    // --- API & CONFIG ---
+    // PUT YOUR OPENROUTER KEY HERE
+    const OPENROUTER_API_KEY = "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"; 
+    
+    // Using Gemini Flash via OpenRouter for main logic (Fast/Cheap)
+    const MODEL_MAIN = "google/gemini-2.0-flash-001";
+    
+    // Using Gemma for the specific style analysis feature
+    const MODEL_ANALYSIS = "google/gemma-3-4b-it:free";
 
     let pdfText = "";
     let quizData = [], score = 0, answeredCount = 0;
@@ -257,12 +264,12 @@
 
     // --- INIT ---
     window.onload = async () => {
-        switchTab('quiz');
         const params = new URLSearchParams(window.location.search);
         const url = params.get('url');
         const title = params.get('title');
         if(title) document.getElementById('doc-title').innerText = title;
-        document.querySelectorAll('.section-view').forEach(el => el.style.display = 'none');
+        
+        switchTab('quiz');
 
         if(url) {
             document.getElementById('loading-box').style.display = 'block';
@@ -279,11 +286,13 @@
 
         document.querySelectorAll('.section-view').forEach(el => { el.style.display = 'none'; el.classList.remove('active'); });
         const target = document.getElementById(`${tabId}-section`);
-        target.style.display = (tabId === 'chat') ? 'flex' : 'block';
-        setTimeout(() => target.classList.add('active'), 10);
+        if(target) {
+            target.style.display = (tabId === 'chat') ? 'flex' : 'block';
+            setTimeout(() => target.classList.add('active'), 10);
+        }
     }
 
-    // --- PDF ---
+    // --- PDF HANDLING ---
     async function extractTextFromURL(url) {
         try {
             const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
@@ -300,7 +309,6 @@
             }
             pdfText = fullText;
             document.getElementById('loading-box').style.display = 'none';
-            switchTab('quiz');
         } catch (e) {
             document.getElementById('loading-box').innerHTML = "<p>Error loading PDF. Use Manual Upload.</p>";
         }
@@ -320,7 +328,6 @@
             }
             pdfText = fullText;
             document.getElementById('upload-box').style.display = 'none';
-            switchTab('quiz');
         };
         reader.readAsArrayBuffer(file);
     };
@@ -338,61 +345,158 @@
         }
     };
 
-    // --- AI CALL ---
-    async function startGen(type) {
-        if(!pdfText) return alert("Upload PDF first!");
-        const btn = document.querySelector(`#${type}-section .action-btn`);
-        const originalText = btn.innerHTML;
-        btn.innerHTML = "Generating..."; btn.disabled = true;
-
-        let prompt = "";
-        let contents = [];
-        
-        if(type === 'quiz') {
-            const count = document.getElementById('q-count').value;
-            const diff = document.getElementById('q-diff').value;
-            prompt = `Generate ${count} multiple-choice questions (Diff: ${diff}). JSON format strictly: { "quiz": [{"q":"...","options":["A","B","C","D"],"a":"Correct Answer String","explanation":"Why"}] }`;
-            contents = [{ parts: [{ text: `${prompt}\n\nCONTEXT:\n${pdfText.substring(0, 20000)}` }] }];
-        } else if(type === 'theory') {
-            const diff = document.getElementById('t-diff').value;
-            const style = document.getElementById('lecturer-style').value;
-            prompt = `Generate 5 theory questions (Diff: ${diff}). Style: ${style}. Return strictly a JSON Object: { "questions": ["Q1...", "Q2..."] }`;
-            const parts = [{ text: prompt }, { text: `CONTEXT:\n${pdfText.substring(0, 20000)}` }];
-            if(styleImageBase64) parts.push({ inlineData: { mimeType: "image/jpeg", data: styleImageBase64 } });
-            contents = [{ parts: parts }];
-        } else if(type === 'flashcard') {
-            prompt = `Generate 15 flashcards. JSON: { "flashcards": [{"front":"Term","back":"Definition"}] }`;
-            contents = [{ parts: [{ text: `${prompt}\n\nCONTEXT:\n${pdfText.substring(0, 20000)}` }] }];
+    // --- UNIFIED OPENROUTER CALL ---
+    async function callOpenRouter(model, prompt, systemContext, base64Image = null) {
+        if(!OPENROUTER_API_KEY || OPENROUTER_API_KEY.includes("YOUR")) {
+            alert("Please set a valid OpenRouter Key in the code.");
+            throw new Error("Invalid API Key");
         }
 
-        try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${API_KEY}`, {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents: contents })
-            });
-            const data = await response.json();
-            
-            // Clean JSON
-            let rawText = data.candidates[0].content.parts[0].text;
-            const jsonStart = rawText.indexOf('{');
-            const jsonEnd = rawText.lastIndexOf('}');
-            if (jsonStart !== -1 && jsonEnd !== -1) {
-                rawText = rawText.substring(jsonStart, jsonEnd + 1);
-            }
-            const parsed = JSON.parse(rawText);
+        const messages = [];
+        if (systemContext) {
+            messages.push({ role: "system", content: systemContext });
+        }
 
-            if(type === 'quiz') { quizData = parsed.quiz; renderQuiz(); }
-            if(type === 'theory') { theoryQuestions = parsed.questions; theoryTotalScore = 0; currentTheoryIndex = 0; renderTheory(); }
-            if(type === 'flashcard') { flashcardData = parsed.flashcards; setupFlashcards(); }
+        const userContent = [];
+        userContent.push({ type: "text", text: prompt });
+        
+        if (base64Image) {
+            userContent.push({
+                type: "image_url",
+                image_url: { url: `data:image/jpeg;base64,${base64Image}` }
+            });
+        }
+
+        messages.push({ role: "user", content: userContent });
+
+        try {
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": window.location.href, // Required by OpenRouter
+                    "X-Title": "Campus Circle Study App"
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: messages
+                })
+            });
+
+            if (!response.ok) {
+                const err = await response.text();
+                throw new Error(`OpenRouter API Error: ${err}`);
+            }
+            
+            const data = await response.json();
+            return data.choices[0].message.content || "";
+        } catch (e) {
+            console.error("AI Call Failed:", e);
+            throw e;
+        }
+    }
+
+    // --- MAIN GENERATOR ---
+    async function startGen(type) {
+        if(!pdfText) return alert("Upload PDF first!");
+        
+        const btn = document.querySelector(`#${type}-section .action-btn`);
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; btn.disabled = true;
+
+        let prompt = "";
+        // Use a reasonable context limit for OpenRouter models
+        let context = `CONTEXT FROM PDF:\n${pdfText.substring(0, 15000)}`;
+        
+        try {
+            // 1. QUIZ (Gemini Flash via OpenRouter)
+            if(type === 'quiz') {
+                const count = document.getElementById('q-count').value;
+                const diff = document.getElementById('q-diff').value;
+                prompt = `Generate ${count} multiple-choice questions based on the context. Difficulty: ${diff}. 
+                Return STRICT valid JSON only. No markdown formatting.
+                Structure: { "quiz": [{"q":"Question text","options":["Option A","Option B","Option C","Option D"],"a":"Correct Option Full Text","explanation":"Why it is correct"}] }`;
+                
+                const rawText = await callOpenRouter(MODEL_MAIN, prompt, context);
+                processAIResponse(rawText, type);
+            } 
+            
+            // 2. THEORY (Gemma for Vision -> Gemini Flash for Generation)
+            else if(type === 'theory') {
+                const diff = document.getElementById('t-diff').value;
+                let styleDescription = document.getElementById('lecturer-style').value;
+                
+                // If image exists, ask Gemma to analyze it first
+                if (styleImageBase64) {
+                    btn.innerHTML = '<i class="fa-solid fa-eye"></i> Analyzing Image...';
+                    const imageAnalysis = await callOpenRouter(
+                        MODEL_ANALYSIS, 
+                        "Analyze this image of an exam/document. Describe the question style, formatting, handwriting tone, and complexity. Be concise.", 
+                        null,
+                        styleImageBase64
+                    );
+                    if (imageAnalysis) {
+                        styleDescription += `\n\n[STYLE INSTRUCTION FROM IMAGE ANALYSIS]: ${imageAnalysis}`;
+                    }
+                }
+                
+                btn.innerHTML = 'Generating Questions...';
+                prompt = `Generate 5 theory/essay questions. Difficulty: ${diff}.
+                User Instructions/Style: "${styleDescription}".
+                Return STRICT valid JSON only: { "questions": ["Question 1...", "Question 2...", "Question 3...", "Question 4...", "Question 5..."] }`;
+                
+                const rawText = await callOpenRouter(MODEL_MAIN, prompt, context);
+                processAIResponse(rawText, type);
+            } 
+            
+            // 3. FLASHCARDS (Gemini Flash via OpenRouter)
+            else if(type === 'flashcard') {
+                prompt = `Generate 15 flashcards based on key terms in the context.
+                Return STRICT valid JSON only: { "flashcards": [{"front":"Term","back":"Definition"}] }`;
+                const rawText = await callOpenRouter(MODEL_MAIN, prompt, context);
+                processAIResponse(rawText, type);
+            }
 
         } catch(e) { 
             console.error(e);
-            alert("AI Error. Model may be busy or PDF too large."); 
+            alert("Error generating content. See console for details."); 
         }
         btn.innerHTML = originalText; btn.disabled = false;
     }
 
-    // --- QUIZ (FIXED CLICKABLE OPTIONS) ---
+    function processAIResponse(rawText, type) {
+        // Cleaning JSON (removing markdown code blocks if AI adds them)
+        let cleanText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+        const jsonStart = cleanText.indexOf('{');
+        const jsonEnd = cleanText.lastIndexOf('}');
+        if (jsonStart !== -1 && jsonEnd !== -1) {
+            cleanText = cleanText.substring(jsonStart, jsonEnd + 1);
+        }
+        
+        try {
+            const parsed = JSON.parse(cleanText);
+
+            if(type === 'quiz') { 
+                quizData = parsed.quiz; 
+                renderQuiz(); 
+            }
+            if(type === 'theory') { 
+                theoryQuestions = parsed.questions; 
+                theoryTotalScore = 0; currentTheoryIndex = 0; 
+                renderTheory(); 
+            }
+            if(type === 'flashcard') { 
+                flashcardData = parsed.flashcards; 
+                setupFlashcards(); 
+            }
+        } catch (e) {
+            console.error("JSON Parse Error", e);
+            alert("AI returned invalid data format. Please try again.");
+        }
+    }
+
+    // --- QUIZ LOGIC ---
     function renderQuiz() {
         score = 0; answeredCount = 0;
         document.getElementById('quiz-setup').style.display = 'none';
@@ -406,61 +510,30 @@
         quizData.forEach((q, i) => {
             const div = document.createElement('div');
             div.className = 'quiz-card';
-            div.id = `q-card-${i}`;
-            
-            // 1. Add Question Text
-            const qText = document.createElement('div');
-            qText.innerHTML = `<strong>${i+1}. ${q.q}</strong>`;
-            div.appendChild(qText);
-
-            // 2. Add Options Container (so we can find it later)
+            div.innerHTML = `<div><strong>${i+1}. ${q.q}</strong></div>`;
             const optsContainer = document.createElement('div');
             optsContainer.id = `opts-${i}`;
-            div.appendChild(optsContainer);
-
-            // 3. Add Options
             q.options.forEach(opt => {
-                const b = document.createElement('div'); 
-                b.className = 'option'; 
-                b.innerText = opt;
-                // Pass the specific container div to checkAns
+                const b = document.createElement('div'); b.className = 'option'; b.innerText = opt;
                 b.onclick = () => checkAns(i, b, opt, q.a, div);
                 optsContainer.appendChild(b);
             });
-
-            // 4. Add Explanation (Hidden by default)
-            const exp = document.createElement('div');
-            exp.className = 'explanation';
-            exp.innerHTML = `💡 ${q.explanation || "No explanation provided."}`;
-            div.appendChild(exp);
-
+            div.appendChild(optsContainer);
+            div.innerHTML += `<div class="explanation">💡 ${q.explanation || "No explanation"}</div>`;
             list.appendChild(div);
         });
     }
 
     function checkAns(idx, el, sel, cor, parentDiv) {
-        // Prevent double clicking using the options container
-        const optsContainer = document.getElementById(`opts-${idx}`);
-        if(optsContainer.classList.contains('answered')) return;
+        const container = document.getElementById(`opts-${idx}`);
+        if(container.classList.contains('answered')) return;
+        container.classList.add('answered');
+        Array.from(container.children).forEach(o => o.style.pointerEvents = 'none');
         
-        optsContainer.classList.add('answered');
         answeredCount++;
+        if(sel === cor) { el.classList.add('correct'); score++; } else { el.classList.add('wrong'); }
         
-        if(sel === cor) { 
-            el.classList.add('correct'); 
-            score++; 
-        } else { 
-            el.classList.add('wrong'); 
-            // Highlight correct answer
-            Array.from(optsContainer.children).forEach(child => {
-                if(child.innerText === cor) child.classList.add('correct');
-            });
-        }
-        
-        // Show Explanation
-        const expDiv = parentDiv.querySelector('.explanation');
-        if(expDiv) expDiv.style.display = 'block';
-
+        parentDiv.querySelector('.explanation').style.display = 'block';
         document.getElementById('current-score').innerText = score;
         document.getElementById('quiz-progress').innerText = `${answeredCount}/${quizData.length}`;
 
@@ -469,22 +542,19 @@
                 document.getElementById('quiz-active').style.display = 'none';
                 document.getElementById('quiz-result').style.display = 'block';
                 document.getElementById('final-score').innerText = Math.round((score/quizData.length)*100) + "%";
-            }, 1500);
+            }, 1000);
         }
     }
-    function resetQuiz() { document.getElementById('quiz-result').style.display = 'none'; document.getElementById('quiz-setup').style.display = 'block'; }
+    function resetQuiz() { document.getElementById('quiz-result').style.display = 'none'; document.getElementById('quiz-active').style.display = 'none'; document.getElementById('quiz-setup').style.display = 'block'; }
 
-    // --- THEORY ---
+    // --- THEORY LOGIC ---
     function renderTheory() {
         document.getElementById('theory-setup').style.display = 'none';
         document.getElementById('theory-result').style.display = 'none';
         document.getElementById('theory-active').style.display = 'block';
-        
         document.getElementById('theory-score').innerText = theoryTotalScore;
-        document.getElementById('theory-max').innerText = theoryQuestions.length * 10;
         document.getElementById('t-num').innerText = currentTheoryIndex + 1;
         document.getElementById('t-question').innerText = theoryQuestions[currentTheoryIndex];
-        
         document.getElementById('t-answer').value = "";
         document.getElementById('t-feedback').style.display = 'none';
         document.getElementById('btn-grade').style.display = 'block';
@@ -497,38 +567,34 @@
         const btn = document.getElementById('btn-grade');
         btn.innerHTML = "Grading..."; btn.disabled = true;
 
-        const prompt = `Grade this answer /10. Question: "${theoryQuestions[currentTheoryIndex]}". Answer: "${ans}". Context: ${pdfText.substring(0, 5000)}. Format Response: Score: X/10. Feedback: ...`;
-
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${API_KEY}`, {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-            });
-            const data = await response.json();
-            const text = data.candidates[0].content.parts[0].text;
-            
+            const rawText = await callOpenRouter(
+                MODEL_MAIN,
+                `Grade this answer out of 10. 
+                Question: "${theoryQuestions[currentTheoryIndex]}"
+                Student Answer: "${ans}"
+                Provide a short feedback and a score in format "Score: X/10".`, 
+                `Context: ${pdfText.substring(0, 5000)}`
+            );
             const fbBox = document.getElementById('t-feedback');
-            fbBox.innerHTML = marked.parse(text);
+            fbBox.innerHTML = marked.parse(rawText);
             fbBox.style.display = 'block';
 
-            // Extract Score
-            const scoreMatch = text.match(/(\d+)\/10/);
+            const scoreMatch = rawText.match(/(\d+)\/10/);
             if(scoreMatch) {
                 theoryTotalScore += parseInt(scoreMatch[1]);
                 document.getElementById('theory-score').innerText = theoryTotalScore;
             }
-
             btn.style.display = 'none';
             document.getElementById('btn-next').style.display = 'block';
         } catch(e) { alert("Grading failed"); }
-        btn.innerHTML = "Grade Answer"; btn.disabled = false;
+        btn.innerHTML = "Grade"; btn.disabled = false;
     }
 
     function nextTheoryQ() {
         currentTheoryIndex++;
-        if(currentTheoryIndex < theoryQuestions.length) {
-            renderTheory();
-        } else {
+        if(currentTheoryIndex < theoryQuestions.length) renderTheory();
+        else {
             document.getElementById('theory-active').style.display = 'none';
             document.getElementById('theory-result').style.display = 'block';
             document.getElementById('final-theory-score').innerText = theoryTotalScore + "/" + (theoryQuestions.length * 10);
@@ -536,7 +602,7 @@
     }
     function resetTheory() { document.getElementById('theory-result').style.display = 'none'; document.getElementById('theory-setup').style.display = 'block'; }
 
-    // --- FLASHCARDS & CHAT ---
+    // --- FLASHCARD LOGIC ---
     function setupFlashcards() {
         document.getElementById('fc-setup').style.display = 'none';
         document.getElementById('fc-active').style.display = 'block';
@@ -546,7 +612,6 @@
         const c = flashcardData[currentCardIndex];
         document.getElementById('fc-front').innerText = c.front;
         document.getElementById('fc-back').innerText = c.back;
-        document.getElementById('fc-count').innerText = `${currentCardIndex+1}/${flashcardData.length}`;
         document.getElementById('active-card').classList.remove('flipped');
     }
     window.toggleFlip = () => document.getElementById('active-card').classList.toggle('flipped');
@@ -554,6 +619,7 @@
     window.prevCard = () => { if(currentCardIndex > 0) { currentCardIndex--; updateCard(); } };
     window.resetFlashcards = () => { document.getElementById('fc-active').style.display = 'none'; document.getElementById('fc-setup').style.display = 'block'; };
 
+    // --- CHAT LOGIC ---
     window.sendMessage = async function() {
         const input = document.getElementById('chat-input');
         const msg = input.value;
@@ -561,18 +627,16 @@
         const hist = document.getElementById('chat-history');
         hist.innerHTML += `<div class="msg user">${msg}</div>`;
         input.value = "";
+        hist.scrollTop = hist.scrollHeight;
+        
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent?key=${API_KEY}`, {
-                method: "POST", headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ contents: [{ parts: [{ text: `Context: ${pdfText.substring(0,10000)}\nUser: ${msg}` }] }] })
-            });
-            const data = await response.json();
-            hist.innerHTML += `<div class="msg ai">${marked.parse(data.candidates[0].content.parts[0].text)}</div>`;
+            const text = await callOpenRouter(MODEL_MAIN, msg, `Context: ${pdfText.substring(0,10000)}`);
+            hist.innerHTML += `<div class="msg ai">${marked.parse(text)}</div>`;
             hist.scrollTop = hist.scrollHeight;
         } catch(e) {}
     }
-                </script>
-    
+    </script>
+        
 
 </body>
 </html>
