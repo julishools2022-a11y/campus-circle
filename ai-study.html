@@ -515,9 +515,10 @@
             optsContainer.id = `opts-${i}`;
             q.options.forEach(opt => {
                 const b = document.createElement('div'); b.className = 'option'; b.innerText = opt;
-                b.onclick = () => checkAns(i, b, opt, q.a, div);
-                optsContainer.appendChild(b);
+                btn.onclick = function() { checkAns(i, btn, opt, q.a, card); };
+                optsContainer.appendChild(btn);
             });
+            
             div.appendChild(optsContainer);
             div.innerHTML += `<div class="explanation">💡 ${q.explanation || "No explanation"}</div>`;
             list.appendChild(div);
