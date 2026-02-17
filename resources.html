@@ -65,8 +65,7 @@
         .btn-primary { background: var(--primary); color: white; box-shadow: 0 2px 5px rgba(79, 70, 229, 0.3); }
         .btn-secondary { background: #f1f5f9; color: var(--text); border: 1px solid #e2e8f0; }
         .btn-success { background: var(--success); color: white; }
-        .btn-ai { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; }
-
+        
         .hardcopy-badge { position: absolute; top: 0; right: 0; background: var(--warning); color: #78350f; font-size: 0.65rem; font-weight: 800; padding: 4px 10px; border-bottom-left-radius: 10px; }
         .empty-state { grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--text-light); }
         .fab { position: fixed; bottom: 30px; right: 20px; width: 56px; height: 56px; background: var(--text); border-radius: 50%; color: white; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); z-index: 100; font-size: 24px; }
@@ -86,7 +85,7 @@
 
     <header class="header">
         <div class="header-title">
-            <a href="entry.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
             <span>Campus Library</span>
         </div>
         <div class="notif-btn" onclick="toggleNotifs()">
@@ -158,8 +157,8 @@
         const EMAILJS_PUBLIC_KEY = "Y38V-Sq0IZSBfpHbR"; 
 
         // ⚠️ REPLACE THESE WITH YOUR ACTUAL EMAILJS IDs
-        const EMAILJS_SERVICE_ID = "service_kxffvki"; 
-        const EMAILJS_TEMPLATE_ID = "template_ztmcqtb"; 
+        const EMAILJS_SERVICE_ID = "service_xxxxxx"; 
+        const EMAILJS_TEMPLATE_ID = "template_xxxxxx"; 
 
         let isAdmin = false;
         let purchasedIds = new Set();
@@ -264,8 +263,6 @@
                 const price = res.softcopy_price || 100;
                 const isImg = res.file_url.match(/\.(jpeg|jpg|png|webp)$/i);
                 
-                const aiText = isImg ? "Solve with AI" : "Study with AI";
-                const aiIcon = isImg ? "fa-brain" : "fa-wand-magic-sparkles";
                 const fileIcon = isImg ? "fa-camera" : "fa-file-pdf";
                 const fileClass = isImg ? "doc" : "pdf";
 
@@ -273,7 +270,6 @@
                 if(isOwned) {
                     buttonsHtml = `
                         <button class="btn btn-success" onclick="openReader('${res.file_url}', '${res.title.replace(/'/g,"")}')"><i class="fa-solid fa-book-open"></i> Read</button>
-                        <a href="ai-study.html?url=${encodeURIComponent(res.file_url)}&title=${encodeURIComponent(res.title)}" class="btn btn-ai"><i class="fa-solid ${aiIcon}"></i> ${aiText}</a>
                     `;
                 } else {
                     const hardcopyBtn = res.is_hardcopy_available 
@@ -319,7 +315,6 @@
             });
             handler.openIframe();
         }
-
         
         async function processSuccessfulPayment(resp, id, amount, title) {
             const { error } = await _supabase.from('resource_payments').insert({ user_id: currentUser.id, resource_id: id, amount: amount, payment_ref: resp.reference });
@@ -330,7 +325,7 @@
                 // 2. External Email
                 sendEmailNotification("Resource Unlocked", `You successfully purchased: ${title}. Reference: ${resp.reference}`);
                 
-                purchasedIds.add(id.toString());
+ purchasedIds.add(id.toString());
                 loadResources(); loadNotifications(); alert("Unlocked successfully!");
             }
         }
