@@ -1,24 +1,21 @@
 {
-  "name": "Campus Circle",
-  "short_name": "Campus",
-  "description": "Your all-in-one digital campus companion for academic excellence.",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#113D69",
-  
-  "icons": [
-    {
-      "src": "1771354317142.png",
-      "sizes": "192x192",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "1771354317142.png",
-      "sizes": "512x512",
-      "type": "image/jpeg",
-      "purpose": "any maskable"
-    }
-  ]
+    "name": "Campus Circle",
+    "short_name": "Campus C",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#f8fafc",
+    "theme_color": "#2563eb",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "1771354317142.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "1771354317142.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
 }
