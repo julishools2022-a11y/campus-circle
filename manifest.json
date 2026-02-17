@@ -1,21 +1,24 @@
 {
-    "name": "Campus Circle",
-    "short_name": "Campus C",
-    "start_url": "index.html",
-    "display": "standalone",
-    "background_color": "#f8fafc",
-    "theme_color": "#2563eb",
-    "orientation": "portrait",
-    "icons": [
-        {
-            "src": "https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/20260217_200714.jpg",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/20260217_200714.jpg",
-            "sizes": "512x512",
-            "type": "image/png"
-        }
-    ]
+  "name": "Campus Circle",
+  "short_name": "Campus",
+  "description": "Your all-in-one digital campus companion for academic excellence.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#113D69",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/20260217_200714.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/20260217_200714.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
 }
