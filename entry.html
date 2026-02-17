@@ -12,11 +12,12 @@
     <style>
         :root { 
             --primary: #2563eb; 
-            --danger: #ef4444; /* Red for Logout */
+            --danger: #ef4444; 
             --bg: #f8fafc; 
             --dark: #0f172a; 
             --white: #ffffff; 
             --gray: #64748b; 
+            --warning: #f59e0b; /* Orange for Coming Soon */
         }
 
         body {
@@ -26,8 +27,8 @@
             color: var(--dark);
             display: flex;
             flex-direction: column;
-            height: 100vh; /* Forces full screen height */
-            overflow: hidden; /* Prevents scrolling if content fits */
+            height: 100vh;
+            overflow: hidden;
         }
 
         /* HEADER */
@@ -38,7 +39,7 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid #e2e8f0;
-            flex-shrink: 0; /* Prevents header from shrinking */
+            flex-shrink: 0;
         }
 
         .logo {
@@ -68,16 +69,16 @@
             background: #fee2e2;
         }
 
-        /* MAIN LAYOUT (Centers content) */
+        /* MAIN LAYOUT */
         .main-container {
-            flex: 1; /* Takes up all remaining space */
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
             gap: 30px;
             flex-wrap: wrap;
-            overflow-y: auto; /* Allows scrolling only inside here if needed */
+            overflow-y: auto;
         }
 
         /* CARDS */
@@ -94,9 +95,11 @@
             display: flex;
             flex-direction: column;
             transition: transform 0.2s, box-shadow 0.2s;
+            position: relative; /* For absolute positioning of badge */
         }
 
-        .card:hover {
+        /* Active Card Hover Effect */
+        a.card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 15px rgba(0,0,0,0.1);
         }
@@ -121,15 +124,37 @@
             gap: 10px;
         }
 
-        /* Card Specific Colors */
+        /* Specific Styles */
         .market-footer { background-color: #3b82f6; } 
         .academic-footer { background-color: #22c55e; } 
+
+        /* COMING SOON / DISABLED STYLES */
+        .card.disabled {
+            cursor: default; /* Shows regular cursor, not hand pointer */
+            opacity: 0.8;
+            filter: grayscale(0.6); /* Makes it look slightly greyed out */
+        }
+
+        .coming-soon-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: var(--warning);
+            color: var(--dark);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 10;
+            text-transform: uppercase;
+        }
 
         /* Mobile Adjustments */
         @media (max-width: 768px) {
             .main-container { flex-direction: column; padding: 20px; gap: 20px; }
             .card { height: 200px; max-width: 100%; }
-            body { overflow: auto; } /* Allow scrolling on small phones */
+            body { overflow: auto; }
         }
     </style>
 </head>
@@ -141,21 +166,13 @@
             CampusCircle
         </div>
         
-        <a href="index.html" onclick="logout()" class="btn-logout">
+        <a href="#" onclick="logout()" class="btn-logout">
             Log Out <i class="fa-solid fa-right-from-bracket"></i>
         </a>
     </header>
 
     <div class="main-container">
         
-        <a href="dashboard.html" class="card">
-            <img src="https://images.unsplash.com/photo-1555529733-0e670560f7e1?q=80&w=1000&auto=format&fit=crop" class="card-image" alt="Marketplace">
-            <div class="card-footer market-footer">
-                <i class="fa-solid fa-store"></i>
-                Marketplace Resources
-            </div>
-        </a>
-
         <a href="resources.html" class="card">
             <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?q=80&w=1000&auto=format&fit=crop" class="card-image" alt="Library">
             <div class="card-footer academic-footer">
@@ -163,6 +180,15 @@
                 Academic Resources
             </div>
         </a>
+
+        <div class="card disabled">
+            <div class="coming-soon-badge">Coming Soon</div>
+            <img src="https://images.unsplash.com/photo-1555529733-0e670560f7e1?q=80&w=1000&auto=format&fit=crop" class="card-image" alt="Marketplace">
+            <div class="card-footer market-footer">
+                <i class="fa-solid fa-store"></i>
+                Marketplace Resources
+            </div>
+        </div>
 
     </div>
 
@@ -173,7 +199,7 @@
 
         async function logout() {
             await _supabase.auth.signOut();
-            window.location.reload(); // Refresh page to show login screen (if handled) or just clear session
+            window.location.reload(); 
         }
     </script>
 
