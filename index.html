@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Campus Circle | Your Academic Success Partner</title>
     
+    <link rel="manifest" href="manifest.json">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -43,14 +45,14 @@
             height: 75px; width: 100%;
         }
         
-        .logo-container { height: 100%; display: flex; align-items: center; gap: 10px; }
+        .logo-container { height: 100%; display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .brand-logo { height: 50px; width: auto; object-fit: contain; }
         .logo-container span {
             font-weight: 900; color: #2b5a9e; margin: 0; font-size: 1.5rem; letter-spacing: -0.5px;
         }
 
         .nav-links { display: flex; gap: 30px; align-items: center; }
-        .nav-item { font-weight: 600; font-size: 0.95rem; color: var(--text-main); position: relative; }
+        .nav-item { font-weight: 600; font-size: 0.95rem; color: var(--text-main); position: relative; cursor: pointer;}
         .nav-item:hover { color: var(--primary); }
         .badge-soon { font-size: 0.65rem; background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; position: absolute; top: -10px; right: -20px; font-weight: 700; }
 
@@ -65,7 +67,7 @@
         .btn-signup:hover { background: #059669; transform: translateY(-1px); }
 
         /* --- MOBILE MENU --- */
-        .mobile-menu-btn { display: none; font-size: 1.5rem; color: var(--text-main); }
+        .mobile-menu-btn { display: none; font-size: 1.5rem; color: var(--text-main); cursor: pointer; }
         .mobile-dropdown {
             display: none; position: fixed; top: 75px; left: 0; width: 100%;
             background: white; border-top: 1px solid #e5e7eb;
@@ -95,7 +97,7 @@
             display: flex; width: 100%; max-width: 550px; border: 1px solid #e5e7eb;
         }
         .search-input { 
-            flex: 1; border: none; padding: 9px 25px; font-size: 1.1rem; 
+            flex: 1; border: none; padding: 7px 25px; font-size: 1.1rem; 
             border-radius: 50px; color: var(--text-main); 
         }
         .search-btn { 
@@ -158,7 +160,7 @@
         .feature-text { font-size: 1rem; color: var(--text-sub); margin-bottom: 25px; flex: 1; }
         .feature-btn {
             padding: 12px 0; text-align: center; border: 2px solid var(--primary);
-            border-radius: 8px; color: var(--primary); font-weight: 700; transition: 0.2s;
+            border-radius: 8px; color: var(--primary); font-weight: 700; transition: 0.2s; background: transparent; cursor: pointer;
         }
         .feature-btn:hover { background: var(--primary); color: white; }
 
@@ -170,7 +172,7 @@
         }
         .cta-btn {
             background: var(--secondary); color: white; padding: 18px 50px;
-            font-size: 1.2rem; font-weight: 700; border-radius: 50px;
+            font-size: 1.2rem; font-weight: 700; border-radius: 50px; border: none; cursor: pointer;
             display: inline-block; margin-top: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
             transition: 0.3s;
         }
@@ -206,7 +208,7 @@
             position: absolute; top: 20px; right: 20px;
             font-size: 1.5rem; color: #9ca3af; cursor: pointer;
         }
-        .gate-img { width: 80px; margin-bottom: 20px; }
+        .gate-img { width: 80px; border-radius: 15px; margin-bottom: 20px; }
         .gate-title { font-size: 1.75rem; font-weight: 900; margin-bottom: 10px; color: #111827; }
         .gate-sub { color: var(--text-sub); margin-bottom: 30px; font-size: 1rem; line-height: 1.5; }
         
@@ -221,52 +223,39 @@
             border-radius: 8px; font-weight: 700; display: block; border: 1px solid #e5e7eb;
         }
 
-        /* MOBILE OPTIMIZATIONS (FIXED) */
+        /* MOBILE OPTIMIZATIONS */
         @media (max-width: 768px) {
             .nav-links, .auth-buttons { display: none; }
             .mobile-menu-btn { display: block; }
             
-            .hero { 
-                flex-direction: column-reverse; 
-                padding: 40px 20px; /* Reduced padding to fit screen */
-                text-align: center; 
-            }
+            .hero { flex-direction: column-reverse; padding: 40px 20px; text-align: center; }
             .hero-title { font-size: 2.2rem; }
             .hero-sub { font-size: 1rem; }
             .search-container { margin: 0 auto; }
             
-            .hero-img { 
-                width: 100%; 
-                margin-bottom: 30px; 
-                justify-content: center; /* Center image */
-            }
-            .hero-img img { 
-                max-height: 300px; 
-                width: 100%; 
-                box-shadow: 10px 10px 0px rgba(37, 99, 235, 0.1); /* Smaller shadow for mobile */
-            }
+            .hero-img { width: 100%; margin-bottom: 30px; justify-content: center; }
+            .hero-img img { max-height: 300px; width: 100%; box-shadow: 10px 10px 0px rgba(37, 99, 235, 0.1); }
             
-            .trust-stats { gap: 20px; }
-            .section { padding: 60px 20px; } /* Consistent side padding */
+            .section { padding: 60px 20px; }
             .cta-section { padding: 60px 20px; }
             .footer { padding: 60px 20px 30px; }
         }
     </style>
-    <link rel="manifest" href="manifest.json">
-    
 </head>
 <body>
 
     <header class="header">
         <div class="logo-container" onclick="window.location.reload()">
-            <img src="IMG_20260217_143421.jpg" alt="Campus Circle Logo" class="brand-logo">
+            <img src="IMG_20260217_143421.jpg" alt="Campus Circle Logo" class="brand-logo" style="border-radius: 10px;">
             <span>Campus Circle</span>
         </div>
         
         <nav class="nav-links">
-            <div class="nav-item" onclick="handleNavigation('resources.html')">Library</div>
+            <div class="nav-item" onclick="window.location.href='about.html'">About Us</div>
+            
+            <div class="nav-item" onclick="handleNavigation('profile.html')">Profile</div>
+            <div class="nav-item" style="opacity:0.6; cursor:not-allowed;">marketplace<span class="badge-soon">SOON</span></div>
             <div class="nav-item" style="opacity:0.6; cursor:not-allowed;">AI Tutor <span class="badge-soon">SOON</span></div>
-            <div class="nav-item" style="opacity:0.6; cursor:not-allowed;">Marketplace <span class="badge-soon">SOON</span></div>
         </nav>
 
         <div class="auth-buttons" id="auth-section">
@@ -278,9 +267,11 @@
     </header>
 
     <div class="mobile-dropdown" id="mobile-menu">
-        <div style="font-weight:700; padding:10px 0; border-bottom:1px solid #f3f4f6;" onclick="handleNavigation('resources.html')">Library</div>
+        <div style="font-weight:700; padding:10px 0; border-bottom:1px solid #f3f4f6;" onclick="window.location.href='about.html'">About Us</div>
+        
+        <div style="font-weight:700; padding:10px 0; border-bottom:1px solid #f3f4f6;" onclick="handleNavigation('profile.html')">My Profile</div>
+         <div style="padding:10px 0; opacity:0.6;">Marketplace (Coming Soon)</div>
         <div style="padding:10px 0; opacity:0.6;">AI Tutor (Coming Soon)</div>
-        <div style="padding:10px 0; opacity:0.6;">Marketplace (Coming Soon)</div>
         <div id="mobile-auth-actions" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;">
             <a href="sign up.html" style="text-align:center; padding:10px; border:1px solid #e5e7eb; border-radius:5px; font-weight:700;">Log In</a>
             <a href="signin.html" style="text-align:center; padding:10px; background:var(--secondary); color:white; border-radius:5px; font-weight:700;">Sign Up Free</a>
@@ -298,7 +289,7 @@
             </div>
         </div>
         <div class="hero-img">
-            <img src="photo-1583026411217-9d05a70d5230.jpeg" alt="African Students Studying Group">
+            <img src="photo-15830264.jpeg" alt="African Students Studying Group">
         </div>
     </section>
 
@@ -325,53 +316,6 @@
                 <div class="cat-icon-box"><i class="fa-solid fa-microchip"></i></div>
                 <div class="cat-name">Engineering</div>
             </div>
-            <div class="cat-card" onclick="handleNavigation('resources.html')">
-                <div class="cat-icon-box"><i class="fa-solid fa-palette"></i></div>
-                <div class="cat-name">Arts</div>
-            </div>
-            <div class="cat-card" onclick="handleNavigation('resources.html')">
-                <div class="cat-icon-box"><i class="fa-solid fa-user-doctor"></i></div>
-                <div class="cat-name">Health Sci</div>
-            </div>
-        </div>
-    </section>
-
-    <section class="section" style="background: #f9fafb;">
-        <div class="section-header">
-            <h2 class="section-title">Tools for Success</h2>
-            <p class="section-desc">Unlock your potential with our suite of student-focused tools.</p>
-        </div>
-
-        <div class="features-grid">
-            <div class="feature-card">
-                <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=500&q=60" class="feature-img">
-                <div class="feature-content">
-                    <span class="feature-label">Available Now</span>
-                    <h3 class="feature-title">Digital Library</h3>
-                    <p class="feature-text">Unlimited access to handouts, textbooks, and past questions. Organized and ready for download.</p>
-                    <button class="feature-btn" onclick="handleNavigation('resources.html')">Start Reading</button>
-                </div>
-            </div>
-
-            <div class="feature-card" style="opacity: 0.8;">
-                <img src="rm373batch5-18a.jpg" class="feature-img" style="filter:grayscale(100%)">
-                <div class="feature-content">
-                    <span class="feature-label" style="color:#f59e0b;">Coming Soon</span>
-                    <h3 class="feature-title">AI Study Partner</h3>
-                    <p class="feature-text">An intelligent tutor that summarizes your handouts and creates practice quizzes instantly.</p>
-                    <button class="feature-btn" style="border-color:#d1d5db; color:#9ca3af; cursor:not-allowed;">Join Waitlist</button>
-                </div>
-            </div>
-
-            <div class="feature-card" style="opacity: 0.8;">
-                <img src="pregnant-woman-looking-trendy-merchandise-stand-hangers.jpg" class="feature-img" style="filter:grayscale(100%)">
-                <div class="feature-content">
-                    <span class="feature-label" style="color:#f59e0b;">Coming Soon</span>
-                    <h3 class="feature-title">Marketplace</h3>
-                    <p class="feature-text">A safe space for students to buy and sell gadgets, books, and hostel essentials.</p>
-                    <button class="feature-btn" style="border-color:#d1d5db; color:#9ca3af; cursor:not-allowed;">Join Waitlist</button>
-                </div>
-            </div>
         </div>
     </section>
 
@@ -385,11 +329,20 @@
         <div class="footer-grid">
             <div class="footer-col">
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
-                    <img src="IMG_20260217_143421.jpg" style="height:40px;font-size:-7rem;">
+                    <img src="IMG_20260217_143421.jpg" style="height:40px; border-radius:8px;">
                     <span style="font-weight:900; font-size:15px; color:white;">Campus Circle</span>
                 </div>
                 <p style="font-size:0.9rem; line-height:1.6; color:white;">Empowering students with accessible resources and technology for academic excellence.</p>
             </div>
+            
+            <div class="footer-col">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="contact.html">Contact Support</a></li>
+                </ul>
+            </div>
+
             <div class="footer-col">
                 <h4>Learn</h4>
                 <ul>
@@ -399,9 +352,8 @@
                 </ul>
             </div>
             <div class="footer-col">
-                <h4>Support</h4>
+                <h4>Legal</h4>
                 <ul>
-                    <li><a href="contact.html">Help Center</a></li>
                     <li><a href="#">Terms of Service</a></li>
                     <li><a href="#">Privacy Policy</a></li>
                 </ul>
@@ -436,12 +388,12 @@
             
             if(user) {
                 isLoggedIn = true;
-                const dashboardBtn = `<a href="resources.html" class="btn-signup" style="background:var(--primary);">Dashboard</a>`;
+                const dashboardBtn = `<a href="profile.html" class="btn-signup" style="background:var(--primary);">My Profile</a>`;
                 const logoutBtn = `<a href="#" onclick="logout()" style="font-weight:700; color:var(--text-main);">Log Out</a>`;
                 
                 document.getElementById('auth-section').innerHTML = logoutBtn + dashboardBtn;
                 document.getElementById('mobile-auth-actions').innerHTML = `
-                    <a href="resources.html" style="text-align:center; padding:12px; background:var(--primary); color:white; border-radius:5px; font-weight:700;">Go to Dashboard</a>
+                    <a href="resources.html" style="text-align:center; padding:12px; background:var(--primary); color:white; border-radius:5px; font-weight:700;">Dashboard</a>
                     <a href="#" onclick="logout()" style="text-align:center; padding:10px; color:var(--text-sub);">Log Out</a>
                 `;
             }
@@ -485,8 +437,14 @@
 
         checkAuth();
     </script>
-
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(reg => console.log('App Engine (SW) Registered!', reg.scope))
+                    .catch(err => console.log('App Engine Failed:', err));
+            });
+        }
+    </script>
 </body>
 </html>
-            
-            
