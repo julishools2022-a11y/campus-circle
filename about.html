@@ -4,29 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>About | Campus Circle</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <style>
     :root { 
-        --primary: #3b82f6; 
-        --primary-dark: #1d4ed8;
-        --accent: #8b5cf6;
-        --dark: #0f172a; 
+        --primary: #2563eb; 
+        --primary-dark: #1e40af;
+        --secondary: #10b981;
+        --dark: #111827; 
         --bg: #f8fafc; 
         --white: #ffffff; 
-        --text: #334155; 
-        --text-light: #64748b; 
-        --gradient: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        --text: #1f2937; 
+        --text-light: #6b7280; 
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    /* --- Base Settings --- */
     body { 
         font-family: 'Outfit', sans-serif; 
         background: var(--bg); 
         color: var(--text); 
         margin: 0;
         overflow-x: hidden;
+        line-height: 1.6;
     }
 
     /* --- Animations --- */
@@ -45,204 +47,232 @@
         transform: translateY(0);
     }
 
-    /* --- Glass Header --- */
+    /* --- Header --- */
     header {
-        position: fixed;
+        position: sticky;
         top: 0;
-        left: 0;
         width: 100%;
-        padding: 15px 5%;
+        padding: 15px 20px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
         z-index: 1000;
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(0,0,0,0.05);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
     }
 
-    .logo { 
-        color: var(--primary-dark); 
-        font-weight: 800; 
-        font-size: 22px; 
+    .back-btn { 
+        color: var(--text); 
+        font-size: 1.2rem; 
         text-decoration: none; 
         display: flex;
         align-items: center;
-        gap: 8px;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #f1f5f9;
+        transition: 0.2s;
     }
-
-    nav { display: flex; gap: 25px; align-items: center; }
+    .back-btn:hover {
+        background: #e2e8f0;
+        color: var(--primary);
+    }
     
-    nav a { 
-        color: var(--text); 
-        text-decoration: none; 
-        font-size: 15px; 
-        font-weight: 500; 
-        transition: color 0.3s;
+    .header-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-left: 15px;
+        color: var(--dark);
     }
-    nav a:hover { color: var(--primary); }
-    nav a.active { color: var(--primary); font-weight: 700; }
 
-    /* --- Hero Section (Mini Version) --- */
+    /* --- Hero Section --- */
     .page-hero { 
-        background: var(--gradient); 
-        color: white;
-        padding: 120px 20px 80px;
+        background: var(--white); 
+        padding: 60px 20px;
         text-align: center;
-        border-radius: 0 0 40px 40px;
-        margin-bottom: 40px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .logo-img {
+        width: 90px;
+        height: 90px;
+        object-fit: cover;
+        border-radius: 50%;
+        margin-bottom: 15px;
+        box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.2);
+        animation: fadeInUp 0.5s ease-out;
     }
 
     .page-hero h1 { 
-        font-size: 2.5rem; 
-        margin-bottom: 15px; 
-        font-weight: 800; 
-        animation: fadeInUp 0.8s ease-out;
+        font-size: 2.2rem; 
+        margin-bottom: 10px; 
+        font-weight: 900; 
+        color: var(--primary-dark);
+        animation: fadeInUp 0.7s ease-out;
     }
     
     .page-hero p { 
         font-size: 1.1rem; 
-        max-width: 600px; 
-        margin: 0 auto; 
-        opacity: 0.9; 
-        animation: fadeInUp 1s ease-out;
+        font-weight: 600;
+        color: var(--text-light); 
+        margin: 0;
+        animation: fadeInUp 0.9s ease-out;
     }
 
     /* --- Content Sections --- */
     .content-container {
-        max-width: 900px;
+        max-width: 800px;
         margin: 0 auto;
-        padding: 0 20px 60px;
+        padding: 40px 20px 60px;
     }
 
-    .story-section {
-        margin-bottom: 60px;
-    }
-    .story-section h2 {
-        font-size: 2rem;
-        color: var(--dark);
-        margin-bottom: 20px;
-        position: relative;
-        display: inline-block;
-    }
+    .story-section { margin-bottom: 50px; }
     
     .story-section p {
-        font-size: 1.1rem;
-        line-height: 1.8;
-        color: var(--text-light);
+        font-size: 1.05rem;
+        color: var(--text);
         margin-bottom: 20px;
+        text-align: justify;
     }
 
-    /* --- Grid for Mission/Vision --- */
+    /* --- Features Grid --- */
+    .features-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 25px;
+        text-align: center;
+        color: var(--dark);
+    }
+
     .grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 30px;
-        margin-top: 40px;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        margin-top: 20px;
     }
 
     .card {
         background: white;
-        padding: 40px;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
-        border: 1px solid #f1f5f9;
+        padding: 30px;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        border: 1px solid #e2e8f0;
         transition: transform 0.3s ease;
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
     }
-    .card:hover { transform: translateY(-5px); }
+    .card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+
+    .card-icon {
+        background: #eff6ff;
+        color: var(--primary);
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
 
     .card h3 {
-        color: var(--primary);
-        font-size: 1.5rem;
+        color: var(--dark);
+        font-size: 1.2rem;
+        font-weight: 800;
         margin-top: 0;
-        margin-bottom: 15px;
+        margin-bottom: 8px;
     }
 
     .card p {
         color: var(--text-light);
-        line-height: 1.6;
         margin: 0;
+        font-size: 0.95rem;
     }
 
     /* --- Footer --- */
-    footer { text-align: center; padding: 40px 20px; color: #94a3b8; background: var(--bg); margin-top: auto; }
+    footer { text-align: center; padding: 30px 20px; color: #9ca3af; font-size: 0.9rem; margin-top: auto; }
 
-    /* Mobile Adjustments */
-    @media (max-width: 768px) {
-        /* Ensure main nav is scrollable/visible on mobile since bottom nav is gone */
-        header { 
-            flex-direction: column; 
-            gap: 15px; 
-            align-items: flex-start;
-            padding: 15px 20px;
-            background: rgba(255, 255, 255, 0.95);
-        }
-        
-        nav { 
-            width: 100%; 
-            overflow-x: auto; 
-            padding-bottom: 5px; 
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        nav::-webkit-scrollbar { display: none; }
-        
-        nav a { white-space: nowrap; }
-
-        .page-hero h1 { font-size: 2rem; }
+    @media (min-width: 768px) {
+        .grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 <body>
 
   <header>
-    <a href="index.html" class="logo">
-        <span style="font-size: 28px;">🎓</span> Campus Circle
-    </a>
-    <nav>
-      <a href="index.html">Home</a>
-      <a href="about.html" class="active">About</a>
-     
-      <a href="marketplace.html">Marketplace</a>
-      <a href="signin.html" style="font-weight: 700; color: var(--primary);">Log In</a>
-      <a href="sign up.html" style="background: var(--primary); color: white; padding: 10px 20px; border-radius: 30px;">Sign Up</a>
-    </nav>
+    <a href="index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="header-title">About Us</div>
   </header>
 
   <div class="page-hero">
-    <h1>We are Campus Circle</h1>
-    <p>Bridging the gap between academic success and student life.</p>
+    <img src="IMG_20260217_143421.jpg" alt="Campus Circle Logo" class="logo-img">
+    <h1>Campus Circle</h1>
+    <p>Your Ultimate Academic Success Partner</p>
   </div>
 
   <div class="content-container">
     
     <div class="story-section reveal">
-        <h2>Our Story</h2>
         <p>
-            Campus Circle started with a simple observation: University life is fragmented. Students struggle to find reliable lecture notes, study partners are hard to coordinate, and buying textbooks or selling old gear often leads to scams or unsafe meetups.
+            <strong>Campus Circle</strong> is a platform where students can access lecture materials and tools aimed at improving their academic journey. We are focused on empowering students with accessible resources and technology for academic excellence.
         </p>
         <p>
-            We decided to fix this by building a <strong>centralized digital campus</strong>. What began as a small project to share past questions has grown into a comprehensive ecosystem where verified students can ace their exams and trade safely—all in one place.
+            Why is Campus Circle safe? It is verified and aimed at bringing innovation to student learning, building them academically and ensuring they have exactly what they need to pass.
+        </p>
+        <p>
+            We are digitizing the campus library experience so you can focus on what actually matters: studying smarter, passing your exams, and achieving academic excellence.
         </p>
     </div>
 
-    <div class="grid">
-        <div class="card reveal">
-            <h3>🚀 Our Mission</h3>
-            <p>To empower every university student by democratizing access to academic resources and creating a safe, trust-based economy within campuses.</p>
-        </div>
+    <div class="reveal">
+        <h2 class="features-title">Key Features</h2>
+        <div class="grid">
+            
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-pen-nib"></i></div>
+                <div>
+                    <h3>Complete Lecture Notes</h3>
+                    <p>We know not everyone can write fast enough to copy everything during a lecture. We give you access to comprehensive, well-structured notes so you never miss out.</p>
+                </div>
+            </div>
 
-        <div class="card reveal">
-            <h3>🌍 Our Vision</h3>
-            <p>To become the student operating system—the first place you go to study, connect, buy, or sell, knowing you are interacting with verified peers.</p>
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-book-open-reader"></i></div>
+                <div>
+                    <h3>The Digital Library</h3>
+                    <p>Instantly unlock and read softcopy PDFs of your faculty and departmental handouts, textbooks, and past questions right from your phone.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                <div>
+                    <h3>Hardcopy Delivery</h3>
+                    <p>Prefer reading on physical paper? No problem. Order printed materials directly through the app and get them delivered to your hostel or the campus gate.</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-icon"><i class="fa-solid fa-bell"></i></div>
+                <div>
+                    <h3>Instant Alerts</h3>
+                    <p>Get real-time notifications on your orders and be the first to know when new study materials for your specific department are uploaded.</p>
+                </div>
+            </div>
+
         </div>
     </div>
 
   </div>
 
   <footer>
-    <p>© 2026 Campus Circle | Built for Students, by Students.</p>
+    <p>Thank you for choosing Campus Circle.</p>
+    <p>© 2026 Campus Circle. All Rights Reserved.</p>
   </footer>
 
   <script>
@@ -255,7 +285,7 @@
       for(var i = 0; i < reveals.length; i++){
         var windowheight = window.innerHeight;
         var revealtop = reveals[i].getBoundingClientRect().top;
-        var revealpoint = 150;
+        var revealpoint = 100;
 
         if(revealtop < windowheight - revealpoint){
           reveals[i].classList.add('active');
@@ -267,3 +297,4 @@
 
 </body>
 </html>
+
