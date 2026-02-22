@@ -84,8 +84,14 @@
         .form-input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #e2e8f0; border-radius: 8px; }
         .viewer-modal { background: #0f172a; flex-direction: column; }
         .viewer-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; color: white; background: rgba(255,255,255,0.1); }
-        .viewer-body { flex: 1; display: flex; align-items: center; justify-content: center; }
+        .viewer-body { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         iframe, img.view-img { width: 100%; height: 100%; border: none; object-fit: contain; }
+
+        /* DRIVE FALLBACK */
+        .drive-fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; color: white; text-align: center; padding: 30px; }
+        .drive-fallback i { font-size: 4rem; color: #4f46e5; }
+        .drive-fallback p { font-size: 0.95rem; color: #94a3b8; max-width: 280px; }
+        .btn-open-drive { background: #4f46e5; color: white; padding: 14px 28px; border-radius: 12px; border: none; font-size: 1rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -168,8 +174,6 @@
         
         const PAYSTACK_KEY = 'pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5';
         const EMAILJS_PUBLIC_KEY = "Y38V-Sq0IZSBfpHbR"; 
-
-        // ⚠️ REPLACE THESE WITH YOUR ACTUAL EMAILJS IDs
         const EMAILJS_SERVICE_ID = "service_kxffvki"; 
         const EMAILJS_TEMPLATE_ID = "template_ztmcqtb"; 
 
@@ -180,15 +184,53 @@
 
         if(typeof emailjs !== 'undefined') emailjs.init(EMAILJS_PUBLIC_KEY);
 
-        // --- ROBUST INIT ---
+        // ─── GOOGLE DRIVE HELPERS ───────────────────────────────────────────
+        
+        // Detects if a URL is a Google Drive link
+        function isGoogleDriveUrl(url) {
+            return url && url.includes('drive.google.com');
+        }
+
+        // Detects if a URL is an image
+        function isImageUrl(url) {
+            return url && url.match(/\.(jpeg|jpg|png|webp|gif)$/i);
+        }
+
+        // Extracts the file ID from any Google Drive URL format
+        function extractDriveFileId(url) {
+            // Format 1: /file/d/FILE_ID/view
+            let match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+            if (match) return match[1];
+            // Format 2: ?id=FILE_ID
+            match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (match) return match[1];
+            // Format 3: /open?id=FILE_ID
+            match = url.match(/open\?id=([a-zA-Z0-9_-]+)/);
+            if (match) return match[1];
+            return null;
+        }
+
+        // Converts any Google Drive link to an embeddable preview URL
+        function getDriveEmbedUrl(url) {
+            const fileId = extractDriveFileId(url);
+            if (!fileId) return url;
+            return `https://drive.google.com/file/d/${fileId}/preview`;
+        }
+
+        // Converts any Google Drive link to a direct open URL (fallback)
+        function getDriveOpenUrl(url) {
+            const fileId = extractDriveFileId(url);
+            if (!fileId) return url;
+            return `https://drive.google.com/file/d/${fileId}/preview?rm=minimal`;
+        }
+
+        // ─── INIT ───────────────────────────────────────────────────────────
         async function init() {
             try {
-                console.log("Initializing...");
                 const { data: { user } } = await _supabase.auth.getUser();
                 if(!user) return window.location.href='index.html';
                 currentUser = user;
 
-                // Load Data including the NEW 'transactions' table
                 const [adminReq, paymentsReq, facultiesReq, profileReq] = await Promise.all([
                     _supabase.from('admin_users').select('*').ilike('email', user.email).maybeSingle(),
                     _supabase.from('transactions').select('resource_id').eq('buyer_id', user.id),
@@ -221,19 +263,16 @@
             } catch (e) { console.error("Init Error", e); }
         }
 
-        // --- EMAIL SENDER ---
+        // ─── EMAIL ──────────────────────────────────────────────────────────
         async function sendEmailNotification(toEmail, subject, message) {
             try {
                 await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-                    to_email: toEmail,
-                    subject: subject,
-                    message: message,
-                    to_name: "Admin/User"
+                    to_email: toEmail, subject, message, to_name: "Admin/User"
                 });
             } catch(e) { console.error("Email Error:", e); }
         }
 
-        // --- FETCHERS ---
+        // ─── FETCHERS ───────────────────────────────────────────────────────
         async function loadDepartments() {
             const facId = document.getElementById('faculty-select').value;
             const deptSelect = document.getElementById('dept-select');
@@ -255,39 +294,44 @@
             const deptId = document.getElementById('dept-select').value;
             const level = document.getElementById('level-select').value;
             const list = document.getElementById('resources-list');
-            list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-spinner fa-spin empty-icon"></i><h3>Searching...</h3></div>`;
+            list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><h3>Searching...</h3></div>`;
 
             let query = _supabase.from('academic_resources').select('*').eq('department_id', deptId);
             if (level) query = query.eq('level', level);
 
             const { data, error } = await query;
             if (error || !data || data.length === 0) {
-                list.innerHTML = `<div class="empty-state"><i class="fa-regular fa-folder-open empty-icon"></i><h3>No Materials Found</h3></div>`;
+                list.innerHTML = `<div class="empty-state"><i class="fa-regular fa-folder-open"></i><h3>No Materials Found</h3></div>`;
                 return;
             }
 
             list.innerHTML = data.map(res => {
                 const isOwned = purchasedIds.has(res.id.toString()) || isAdmin;
                 const price = res.softcopy_price || 100;
-                const isImg = res.file_url.match(/\.(jpeg|jpg|png|webp)$/i);
-                
+
+                // Determine file type icon
+                const isDrive = isGoogleDriveUrl(res.file_url);
+                const isImg = isImageUrl(res.file_url);
                 const fileIcon = isImg ? "fa-camera" : "fa-file-pdf";
                 const fileClass = isImg ? "doc" : "pdf";
 
                 let buttonsHtml = '';
                 if(isOwned) {
                     buttonsHtml = `
-                        <button class="btn btn-success" onclick="openReader('${res.file_url}', '${res.title.replace(/'/g,"")}')"><i class="fa-solid fa-book-open"></i> Read</button>
+                        <button class="btn btn-success" onclick="openReader('${res.file_url}', '${res.title.replace(/'/g,"")}')">
+                            <i class="fa-solid fa-book-open"></i> Read
+                        </button>
                     `;
                 } else {
                     const hardcopyBtn = res.is_hardcopy_available 
                         ? `<button class="btn btn-secondary" onclick="openOrderModal('${res.id}', '${res.title.replace(/'/g,"")}', '${res.hardcopy_price}')"><i class="fa-solid fa-truck"></i> Hardcopy</button>`
                         : `<button class="btn btn-secondary" disabled style="opacity:0.5">No Print</button>`;
-                        
-                    // Passing uploader_id to the buySoftcopy function
                     buttonsHtml = `
                         <div class="btn-row">
-                            <button class="btn btn-primary" onclick="buySoftcopy('${res.id}', '${price}', '${res.title.replace(/'/g,"")}', '${res.uploader_id || ''}')"><i class="fa-solid fa-unlock"></i> PDF</button>
+                            
+                            <button class="btn btn-primary" onclick="buySoftcopy('${res.id}', '${price}', '${res.title.replace(/'/g,"")}', '${res.uploader_id || ''}')">
+                    <i class="fa-solid fa-unlock"></i> PDF
+                            </button>
                             ${hardcopyBtn}
                         </div>
                     `;
@@ -305,45 +349,89 @@
                     </div>
                     <div class="res-price-tag">₦${isOwned ? 'PAID' : price.toLocaleString()}</div>
                     <div class="res-actions">${buttonsHtml}</div>
-                    ${isAdmin ? `<button style="background:none; border:none; color:red; margin-top:5px; font-size:0.7rem; align-self:flex-end;" onclick="deleteResource('${res.id}')">Delete</button>` : ''}
+                    ${isAdmin ? `<button style="background:none;border:none;color:red;margin-top:5px;font-size:0.7rem;align-self:flex-end;" onclick="deleteResource('${res.id}')">Delete</button>` : ''}
                 </div>`;
             }).join('');
         }
 
-        // --- PAYMENT & ORDERING ---
+        // ─── FILE VIEWER ────────────────────────────────────────────────────
+        function openReader(url, title) {
+            document.getElementById('view-title').innerText = title;
+            const container = document.getElementById('viewer-container');
+
+            if (isImageUrl(url)) {
+                // Regular image
+                container.innerHTML = `<img src="${url}" class="view-img" crossorigin="anonymous">`;
+
+            } else if (isGoogleDriveUrl(url)) {
+                // Google Drive file — embed with preview
+                const embedUrl = getDriveEmbedUrl(url);
+                const openUrl = getDriveOpenUrl(url);
+                container.innerHTML = `
+                    <iframe 
+                        src="${embedUrl}" 
+                        allow="autoplay"
+                        style="width:100%;height:100%;border:none;"
+                        onload="this.style.opacity=1"
+                        onerror="showDriveFallback('${openUrl}')"
+                    ></iframe>
+                `;
+                // Show fallback after 8 seconds if iframe doesn't load
+                setTimeout(() => {
+                    const iframe = container.querySelector('iframe');
+                    if (iframe && iframe.style.opacity !== '1') {
+                        showDriveFallback(openUrl);
+                    }
+                }, 8000);
+
+            } else {
+                // Regular PDF (Supabase or direct URL)
+                container.innerHTML = `<iframe src="${url}#toolbar=0&navpanes=0&scrollbar=0"></iframe>`;
+            }
+
+            document.getElementById('fileViewer').style.display = 'flex';
+        }
+
+        function showDriveFallback(openUrl) {
+            const container = document.getElementById('viewer-container');
+            container.innerHTML = `
+                <div class="drive-fallback">
+                    <i class="fa-brands fa-google-drive"></i>
+                    <h3 style="margin:0">Open in Google Drive</h3>
+                    <p>Tap below to read this material in Google Drive</p>
+                    <a href="${openUrl}" target="_blank" class="btn-open-drive">
+                        <i class="fa-solid fa-external-link-alt"></i> Open Material
+                    </a>
+                </div>
+            `;
+        }
+
+        function closeViewer() { document.getElementById('fileViewer').style.display = 'none'; }
+
+        // ─── PAYMENT ────────────────────────────────────────────────────────
         function buySoftcopy(id, price, title, uploaderId) {
             if (!currentUser) return alert("Login first");
             const numericPrice = Number(String(price).replace(/[^0-9.-]+/g,""));
-
             const handler = PaystackPop.setup({
                 key: PAYSTACK_KEY, email: currentUser.email, amount: Math.ceil(numericPrice * 100), ref: 'SOFT-' + Date.now(),
-                callback: function(resp) {
-                    processSuccessfulPayment(resp, id, numericPrice, title, uploaderId);
-                },
+                callback: function(resp) { processSuccessfulPayment(resp, id, numericPrice, title, uploaderId); },
                 onClose: function() { alert('Transaction cancelled'); }
             });
             handler.openIframe();
         }
         
-        // This is exactly Step 2: The Purchase Logic integration
         async function processSuccessfulPayment(resp, id, amount, title, uploaderId) {
             try {
-                // 1. Record the Transaction in the new table
                 const { error: txError } = await _supabase.from('transactions').insert([{
-                    buyer_id: currentUser.id,
-                    resource_id: id,
-                    amount_paid: amount
+                    buyer_id: currentUser.id, resource_id: id, amount_paid: amount
                 }]);
+                if (txError) throw new Error("Transaction failed: " + txError.message);
 
-                if (txError) throw new Error("Transaction failed to record: " + txError.message);
-
-                // 2. Notify the Buyer
                 await _supabase.from('notifications').insert([{
                     user_id: currentUser.id,
                     message: `✅ Payment successful! You can now read "${title}" in your Library.`
                 }]);
 
-                // 3. Notify the Uploader / Course Rep
                 if (uploaderId && uploaderId.trim() !== "") {
                     await _supabase.from('notifications').insert([{
                         user_id: uploaderId,
@@ -351,9 +439,7 @@
                     }]);
                 }
 
-                // Backup Admin Email
                 sendEmailNotification(ADMIN_EMAIL, "PDF Sold", `User ${currentUser.email} bought PDF: ${title}`);
-                
                 purchasedIds.add(id.toString());
                 loadResources(); 
                 loadNotifications(); 
@@ -366,37 +452,29 @@
 
         async function processHardcopyPayment() {
             if (!currentUser) return alert("Please log in.");
-            
             const address = document.getElementById('order-address').value;
             const phone = document.getElementById('order-phone').value;
             if(!address || !phone) return alert("Please enter delivery details.");
 
-            const rawPrice = String(currentOrder.price).replace(/[^0-9.]/g, ""); 
-            const numericPrice = parseFloat(rawPrice);
-
+            const numericPrice = parseFloat(String(currentOrder.price).replace(/[^0-9.]/g, ""));
             if (isNaN(numericPrice) || numericPrice <= 0) return alert("Invalid price error.");
 
             const handler = PaystackPop.setup({
                 key: PAYSTACK_KEY, email: currentUser.email, amount: Math.ceil(numericPrice * 100),
                 ref: 'HARD-' + Math.floor(Math.random() * 1000000000),
                 callback: async function(resp) {
-                    
                     const { error } = await _supabase.from('hardcopy_orders').insert({ 
                         user_id: currentUser.id, resource_id: currentOrder.id, amount: numericPrice, 
                         delivery_address: address, phone_number: phone, payment_ref: resp.reference 
                     });
-
                     if(!error) {
                         const adminMsg = `New Hardcopy Order!\nItem: ${currentOrder.title}\nAmount: ₦${numericPrice}\nStudent: ${currentUser.email}\nAddress: ${address}\nPhone: ${phone}`;
                         sendEmailNotification(ADMIN_EMAIL, "New Hardcopy Order", adminMsg);
                         sendEmailNotification(currentUser.email, "Order Confirmation", `You ordered ${currentOrder.title}. Delivery to: ${address}`);
-
-                        // Insert to new notifications table format
                         await _supabase.from('notifications').insert([{ 
                             user_id: currentUser.id, 
                             message: `📦 Order placed! Your hardcopy of "${currentOrder.title}" will be delivered soon.` 
                         }]);
-
                         loadNotifications(); closeModal(); alert("Order Placed Successfully!");
                     } else {
                         alert("Payment successful but order saving failed. Contact support with ref: " + resp.reference);
@@ -406,32 +484,38 @@
             handler.openIframe();
         }
 
-        // --- HELPERS ---
-        function openOrderModal(id, title, price) { currentOrder = { id, title, price }; document.getElementById('modal-book-title').innerText = title; document.getElementById('orderModal').style.display = 'flex'; }
-        function closeModal() { document.getElementById('orderModal').style.display = 'none'; }
-        
-        function openReader(url, title) {
-            document.getElementById('view-title').innerText = title;
-            const container = document.getElementById('viewer-container');
-            container.innerHTML = url.match(/\.(jpeg|jpg|png|webp)$/i) ? `<img src="${url}" class="view-img" crossorigin="anonymous">` : `<iframe src="${url}#toolbar=0&navpanes=0&scrollbar=0"></iframe>`;
-            document.getElementById('fileViewer').style.display = 'flex';
+        // ─── HELPERS ────────────────────────────────────────────────────────
+        function openOrderModal(id, title, price) { 
+            currentOrder = { id, title, price }; 
+            document.getElementById('modal-book-title').innerText = title; 
+            document.getElementById('orderModal').style.display = 'flex'; 
         }
-        function closeViewer() { document.getElementById('fileViewer').style.display = 'none'; }
+        function closeModal() { document.getElementById('orderModal').style.display = 'none'; }
 
         async function loadNotifications() {
             const { data } = await _supabase.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', {ascending:false}).limit(5);
             const list = document.getElementById('notif-list');
             if(data && data.length > 0) {
                 document.getElementById('notif-badge').style.display = 'block';
-                // Adapted mapping to match new database format (no 'title' column)
                 list.innerHTML = data.map(n => {
                     const header = n.message.includes('Cha-ching') ? '💰 Commission Earned!' : '🔔 Library Alert';
                     return `<div class="notif-item"><div class="notif-title">${header}</div>${n.message}<span class="notif-time">${new Date(n.created_at).toLocaleTimeString()}</span></div>`;
                 }).join('');
             }
         }
-        function toggleNotifs() { const el = document.getElementById('notif-list'); el.style.display = el.style.display === 'block' ? 'none' : 'block'; document.getElementById('notif-badge').style.display = 'none'; }
-        async function deleteResource(id) { if(confirm("Delete this?")) { await _supabase.from('academic_resources').delete().eq('id', id); loadResources(); } }
+
+        function toggleNotifs() { 
+            const el = document.getElementById('notif-list'); 
+            el.style.display = el.style.display === 'block' ? 'none' : 'block'; 
+            document.getElementById('notif-badge').style.display = 'none'; 
+        }
+
+        async function deleteResource(id) { 
+            if(confirm("Delete this?")) { 
+                await _supabase.from('academic_resources').delete().eq('id', id); 
+                loadResources(); 
+            } 
+        }
 
         init();
     </script>
