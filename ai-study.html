@@ -3,629 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Study Partner | Campus Circle</title>
+    <title>My Profile | Campus Circle</title>
     
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        :root { --primary: #4f46e5; --bg: #f8fafc; --text: #1e293b; --chat-user: #4f46e5; --chat-ai: #ffffff; }
-        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Outfit', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
-        .container { max-width: 900px; margin: 0 auto; width: 100%; flex: 1; display: flex; flex-direction: column; }
-        
-        /* HEADER */
-        .header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px; }
-        .back-btn { text-decoration: none; color: var(--text); font-size: 1.2rem; width: 40px; height: 40px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        h2 { margin: 0; font-size: 1.4rem; color: var(--primary); }
+        :root { 
+            --primary: #2563eb; --primary-dark: #1e40af; 
+            --bg: #f8fafc; --surface: #ffffff;
+            --text: #1e293b; --text-light: #64748b;
+            --success: #10b981; --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); margin: 0; color: var(--text); padding-bottom: 50px; }
+
+        /* HEADER & PROFILE CARD */
+        .header { background: var(--surface); padding: 15px 20px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; border-bottom: 1px solid #e2e8f0; }
+        .back-btn { color: var(--text); font-size: 1.2rem; text-decoration: none; margin-right: 15px; }
+        .header-title { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+
+        .profile-card { background: var(--primary); color: white; padding: 40px 20px; text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.15); }
+        .avatar { width: 80px; height: 80px; background: white; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .user-name { font-size: 1.5rem; font-weight: 800; margin-bottom: 5px; }
+        .user-email { font-size: 0.95rem; opacity: 0.9; margin-bottom: 15px; }
+        .user-badge { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: inline-block; }
 
         /* TABS */
-        .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; background: white; padding: 8px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
-        .tab-btn { padding: 10px 5px; border: none; background: transparent; border-radius: 10px; font-weight: 700; color: #64748b; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.75rem; }
-        .tab-btn i { font-size: 1.2rem; margin-bottom: 2px; }
-        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+        .tabs-container { display: flex; justify-content: space-around; background: var(--surface); margin: -20px 20px 20px; border-radius: 16px; padding: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); position: relative; z-index: 10; border: 1px solid #e2e8f0; }
+        .tab-btn { flex: 1; text-align: center; padding: 12px 5px; font-weight: 600; color: var(--text-light); cursor: pointer; border-radius: 10px; transition: 0.3s; font-size: 0.95rem; }
+        .tab-btn.active { background: #eff6ff; color: var(--primary); }
+        .tab-btn i { margin-right: 5px; }
 
-        /* SECTIONS */
-        .section-view { display: none; flex: 1; flex-direction: column; animation: fadeIn 0.3s ease-out; }
-        .section-view.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-content { display: none; padding: 0 20px; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* UI HELPERS */
-        .action-btn { background: var(--primary); color: white; padding: 14px; border: none; border-radius: 12px; width: 100%; font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .action-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .secondary-btn { background: white; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; }
-        .setup-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        select { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; background: white; font-size: 1rem; }
-        .style-input { width: 100%; padding: 12px; border: 1px solid #fde68a; border-radius: 10px; font-family: inherit; margin-top: 10px; }
-        .theory-trainer { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        /* LIBRARY GRID */
+        .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .book-card { background: var(--surface); border: 1px solid #e2e8f0; border-radius: 16px; padding: 15px; text-align: center; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .book-icon { font-size: 2.5rem; color: var(--danger); margin-bottom: 10px; }
+        .book-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+        .btn-read { background: var(--success); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.2s; }
+        .btn-read:hover { background: #059669; }
+
+        /* NOTIFICATIONS LIST */
+        .notif-list { display: flex; flex-direction: column; gap: 10px; }
+        .notif-card { background: var(--surface); border-left: 4px solid var(--primary); padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        .notif-card.commission { border-left-color: var(--success); }
+        .notif-header { font-weight: 700; font-size: 0.95rem; margin-bottom: 5px; color: var(--text); display: flex; justify-content: space-between; }
+        .notif-time { font-size: 0.75rem; color: var(--text-light); font-weight: 400; }
+        .notif-body { font-size: 0.9rem; color: var(--text-light); line-height: 1.4; }
+
+        /* SETTINGS & LOGOUT */
+        .settings-menu { background: var(--surface); border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .menu-item { padding: 18px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text); text-decoration: none; }
+        .menu-item:hover { background: #f8fafc; }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item.logout { color: var(--danger); }
         
-        /* LOADING & UPLOAD */
-        #loading-box { text-align: center; padding: 60px 20px; display: none; }
-        .spinner { font-size: 30px; animation: spin 1s infinite linear; color: var(--primary); }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        #upload-box { display: none; text-align: center; padding: 40px; background: white; border-radius: 16px; margin-top: 20px; border: 2px dashed #cbd5e1; }
-        .upload-area { border: 2px dashed #f59e0b; border-radius: 12px; padding: 20px; text-align: center; background: rgba(255, 251, 235, 0.5); cursor: pointer; }
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-light); }
+        .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+        .empty-state h3 { color: var(--text); margin-bottom: 10px; }
 
-        /* QUIZ & THEORY CARDS */
-        .theory-card, .quiz-card { background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 15px; }
-        .theory-q-text { font-size: 1.1rem; font-weight: 600; line-height: 1.5; margin-bottom: 15px; }
-        .answer-box { width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 12px; font-family: inherit; font-size: 1rem; min-height: 150px; resize: vertical; margin-bottom:15px; }
-        .answer-box:focus { border-color: var(--primary); outline: none; }
-        .option { padding: 12px; border: 1px solid #e2e8f0; margin-top: 8px; border-radius: 10px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: space-between; }
-        .option.correct { background: #dcfce7; border-color: #22c55e; color: #166534; pointer-events: none; }
-        .option.wrong { background: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.8; pointer-events: none; }
-        .explanation { display: none; margin-top: 15px; padding: 15px; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 8px; font-size: 0.9rem; line-height: 1.5; color: #1e3a8a; }
-        .score-header { background: var(--primary); color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; font-weight: 700; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2); }
-        .result-screen { text-align: center; padding: 40px; background: white; border-radius: 20px; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-top: 20px; }
-        .score-circle { width: 120px; height: 120px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; font-weight: 800; margin: 0 auto 20px; box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3); }
-        .grading-box { margin-top: 20px; padding: 20px; border-radius: 12px; display: none; animation: slideUp 0.3s; border:1px solid #e2e8f0; }
-        .grading-box.good { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
-        .grading-box.avg { background: #fffbeb; border-color: #fde68a; color: #92400e; }
-        .grading-box.bad { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
-
-        /* FLASHCARDS */
-        .flashcard-container { height: 300px; cursor: pointer; perspective: 1000px; margin-bottom: 20px; width: 100%; }
-        .flashcard { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s; }
-        .flipped { transform: rotateY(180deg); }
-        .front, .back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; border-radius: 20px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.1); }
-        .front { background: white; border: 2px solid var(--primary); }
-        .back { background: var(--primary); color: white; transform: rotateY(180deg); overflow-y: auto; }
-
-        /* CHAT UI FIXED */
-        #chat-section { 
-            height: calc(100vh - 180px); /* Fixed height calculation */
-            display: flex; 
-            flex-direction: column; 
-            overflow: hidden;
-        }
-        .chat-history { 
-            flex: 1; 
-            overflow-y: auto; 
-            padding: 15px; 
-            background: #eef2ff; 
-            border-radius: 20px; 
-            margin-bottom: 10px; 
-        }
-        .msg { padding: 12px 16px; border-radius: 12px; margin-bottom: 10px; max-width: 85%; line-height: 1.5; font-size: 0.95rem; }
-        .msg.user { background: var(--primary); color: white; align-self: flex-end; margin-left: auto; border-bottom-right-radius: 2px; }
-        .msg.ai { background: white; color: var(--text); align-self: flex-start; border: 1px solid #e2e8f0; border-bottom-left-radius: 2px; }
-        
-        .chat-input-area { 
-            display: flex; 
-            align-items: center; /* Vertically center */
-            gap: 10px; 
-            padding: 10px 0;
-            background: var(--bg);
-        }
-        #chat-input { 
-            flex: 1; 
-            padding: 12px 15px; 
-            border: 1px solid #e2e8f0; 
-            border-radius: 25px; 
-            height: 50px; /* Fixed height to match button */
-            font-size: 1rem;
-        }
-        .send-btn {
-            width: 50px; 
-            height: 50px; 
-            border-radius: 50%; 
-            background: var(--primary); 
-            color: white; 
-            border: none; 
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0; /* Prevent squishing */
-        }
+        /* VIEWER MODAL */
+        .viewer-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: #0f172a; flex-direction: column; }
+        .viewer-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; color: white; background: rgba(255,255,255,0.1); }
+        .viewer-body { flex: 1; display: flex; align-items: center; justify-content: center; }
+        iframe, img.view-img { width: 100%; height: 100%; border: none; object-fit: contain; }
+        .btn-secondary { background: #334155; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 600; cursor: pointer; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
-<div class="container">
-    <div class="header">
+    <header class="header">
         <a href="resources.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
-        <div>
-            <h2>Study Companion</h2>
-            <span id="doc-title" style="font-size:0.9rem; color:#64748b;">Loading document...</span>
-        </div>
+        <div class="header-title">My Dashboard</div>
+    </header>
+
+    <div class="profile-card">
+        <div class="avatar"><i class="fa-regular fa-user"></i></div>
+        <div class="user-name" id="display-name">Loading...</div>
+        <div class="user-email" id="display-email">...</div>
+        <div class="user-badge" id="display-role">Student Account</div>
     </div>
 
-    <div class="tabs">
-        <button class="tab-btn active" data-target="quiz" onclick="switchTab('quiz')"><i class="fa-solid fa-list-check"></i> CBT Quiz</button>
-        <button class="tab-btn" data-target="theory" onclick="switchTab('theory')"><i class="fa-solid fa-pen-nib"></i> Theory</button>
-        <button class="tab-btn" data-target="flashcard" onclick="switchTab('flashcard')"><i class="fa-solid fa-layer-group"></i> Flash</button>
-        <button class="tab-btn" data-target="chat" onclick="switchTab('chat')"><i class="fa-solid fa-robot"></i> Chat</button>
+    <div class="tabs-container">
+        <div class="tab-btn active" onclick="switchTab('library')"><i class="fa-solid fa-book-bookmark"></i> Library</div>
+        <div class="tab-btn" onclick="switchTab('notifs')"><i class="fa-solid fa-bell"></i> Alerts</div>
+        <div class="tab-btn" onclick="switchTab('settings')"><i class="fa-solid fa-gear"></i> Settings</div>
     </div>
 
-    <div id="loading-box">
-        <i class="fa-solid fa-circle-notch spinner"></i><h3 id="loading-text">Processing PDF...</h3>
-    </div>
-
-    <div id="upload-box">
-        <h3>Upload PDF</h3>
-        <input type="file" id="manual-file" accept="application/pdf" onchange="handleManualUpload(this)">
-    </div>
-
-    <div id="quiz-section" class="section-view active">
-        <div id="quiz-setup" style="text-align:center; padding:30px; background:white; border-radius:20px;">
-            <h3>CBT Practice</h3>
-            <div class="setup-row">
-                <div><label>Questions</label><select id="q-count"><option value="10">10</option><option value="20" selected>20</option><option value="30">30</option><option value="50">50</option></select></div>
-                <div><label>Difficulty</label><select id="q-diff"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select></div>
-            </div>
-            <button class="action-btn" onclick="startGen('quiz')">Generate Quiz</button>
-        </div>
-        
-        <div id="quiz-active" style="display:none;">
-            <div class="score-header">
-                <span>Score: <span id="current-score">0</span></span>
-                <span id="quiz-progress">0/0</span>
-            </div>
-            <div id="quiz-list"></div>
-        </div>
-
-        <div id="quiz-result" class="result-screen">
-            <div class="score-circle" id="final-score">0%</div>
-            <h3>Quiz Completed!</h3>
-            <button class="action-btn" onclick="resetQuiz()">Start Again</button>
-        </div>
-    </div>
-
-    <div id="theory-section" class="section-view">
-        <div id="theory-setup">
-            <div class="theory-trainer">
-                <h3 style="color:#92400e; margin-top:0;">Lecturer Style</h3>
-                <select id="t-diff"><option value="medium">Medium</option><option value="hard">Hard</option></select>
-                <div class="upload-area" onclick="document.getElementById('style-img-input').click()" style="margin-top:10px;">
-                    <i class="fa-solid fa-camera"></i> Upload Exam Image
-                    <input type="file" id="style-img-input" accept="image/*" style="display:none" onchange="previewStyleImage(this)">
-                    <img id="style-preview" style="max-height:80px; display:none; margin:10px auto;">
-                </div>
-                <textarea class="style-input" id="lecturer-style" placeholder="Or type style..."></textarea>
-            </div>
-            <button class="action-btn" onclick="startGen('theory')">Start Theory Exam</button>
-        </div>
-
-        <div id="theory-active" style="display:none;">
-            <div class="score-header">
-                <span>Total: <span id="theory-score">0</span>/<span id="theory-max">50</span></span>
-                <span>Q <span id="t-num">1</span> of 5</span>
-            </div>
-            <div class="theory-card">
-                <div class="theory-q-text" id="t-question">Loading...</div>
-                <textarea class="answer-box" id="t-answer" placeholder="Type answer..."></textarea>
-                <div id="t-feedback" class="grading-box"></div>
-                <div style="display:flex; gap:10px;">
-                    <button class="action-btn" id="btn-grade" onclick="gradeAnswer()" style="background:#0f172a;">Grade</button>
-                    <button class="action-btn" id="btn-next" onclick="nextTheoryQ()" style="display:none;">Next</button>
-                </div>
+    <div id="tab-library" class="tab-content active">
+        <h3 style="margin-bottom: 15px;">Purchased Books</h3>
+        <div class="library-grid" id="my-books-container">
+            <div class="empty-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading your library...</p>
             </div>
         </div>
-
-        <div id="theory-result" class="result-screen">
-            <div class="score-circle" id="final-theory-score">0</div>
-            <h3>Exam Completed!</h3>
-            <button class="action-btn" onclick="resetTheory()">Start New Exam</button>
-        </div>
     </div>
 
-    <div id="flashcard-section" class="section-view">
-        <div id="fc-setup" style="text-align:center; padding:40px; background:white; border-radius:20px;">
-            <h3>Flashcards</h3>
-            <button class="action-btn" onclick="startGen('flashcard')">Create Deck</button>
-        </div>
-        <div id="fc-active" style="display:none;">
-            <div class="flashcard-container" onclick="toggleFlip()">
-                <div class="flashcard" id="active-card">
-                    <div class="front"><small>TERM</small><h3 id="fc-front">...</h3></div>
-                    <div class="back"><small>DEFINITION</small><h3 id="fc-back">...</h3></div>
-                </div>
+    <div id="tab-notifs" class="tab-content">
+        <h3 style="margin-bottom: 15px;">Inbox & History</h3>
+        <div class="notif-list" id="notifs-container">
+            <div class="empty-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading alerts...</p>
             </div>
-            <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                <button class="secondary-btn" onclick="prevCard()" style="width:48%;">Prev</button>
-                <button class="secondary-btn" onclick="nextCard()" style="width:48%;">Next</button>
+        </div>
+    </div>
+
+    <div id="tab-settings" class="tab-content">
+        <h3 style="margin-bottom: 15px;">Account</h3>
+        <div class="settings-menu">
+            <a href="resources.html" class="menu-item">
+                <span><i class="fa-solid fa-store" style="margin-right:10px; color:var(--primary);"></i> Browse Store</span>
+                <i class="fa-solid fa-chevron-right" style="color:#cbd5e1;"></i>
+            </a>
+            <a href="contact.html" class="menu-item">
+                <span><i class="fa-solid fa-headset" style="margin-right:10px; color:var(--success);"></i> Support & Help</span>
+                <i class="fa-solid fa-chevron-right" style="color:#cbd5e1;"></i>
+            </a>
+            <div class="menu-item logout" onclick="logout()">
+                <span><i class="fa-solid fa-arrow-right-from-bracket" style="margin-right:10px;"></i> Log Out</span>
             </div>
-            <button class="action-btn" onclick="resetFlashcards()" style="background:#334155;">Regenerate Deck</button>
         </div>
     </div>
 
-    <div id="chat-section" class="section-view">
-        <div class="chat-history" id="chat-history">
-            <div class="msg ai">I'm ready. Ask me anything!</div>
+    <div id="fileViewer" class="viewer-modal">
+        <div class="viewer-header">
+            <span id="view-title" style="font-weight:600">Reading Mode</span>
+            <button class="btn-secondary" onclick="closeViewer()">Close</button>
         </div>
-        <div class="chat-input-area">
-            <input type="text" id="chat-input" placeholder="Ask anything..." onkeypress="if(event.key==='Enter') sendMessage()">
-            <button class="send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
-        </div>
+        <div class="viewer-body" id="viewer-container"></div>
     </div>
 
-</div>                
-                               
-        <script>
-    // --- API & CONFIG ---
-    // PUT YOUR OPENROUTER KEY HERE
-    const OPENROUTER_API_KEY = "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"; 
-    
-    // Models
-    const MODEL_MAIN = "google/gemini-2.0-flash-001";
-    const MODEL_ANALYSIS = "google/gemma-3-4b-it:free";
+    <script>
+        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    let pdfText = "";
-    let quizData = [], score = 0, answeredCount = 0;
-    let theoryQuestions = [], currentTheoryIndex = 0, theoryTotalScore = 0;
-    let flashcardData = [], currentCardIndex = 0;
-    let styleImageBase64 = null;
+        let currentUser = null;
 
-    // --- INIT ---
-    window.onload = async () => {
-        const params = new URLSearchParams(window.location.search);
-        const url = params.get('url');
-        const title = params.get('title');
-        if(title) document.getElementById('doc-title').innerText = title;
-        
-        switchTab('quiz');
-
-        if(url) {
-            document.getElementById('loading-box').style.display = 'block';
-            await extractTextFromURL(url);
-        } else {
-            document.getElementById('upload-box').style.display = 'block';
-        }
-    };
-
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        const btn = document.querySelector(`.tab-btn[data-target="${tabId}"]`);
-        if(btn) btn.classList.add('active');
-
-        document.querySelectorAll('.section-view').forEach(el => { el.style.display = 'none'; el.classList.remove('active'); });
-        const target = document.getElementById(`${tabId}-section`);
-        if(target) {
-            // Force flex for chat, block for others to ensure visibility
-            target.style.display = (tabId === 'chat') ? 'flex' : 'block';
-            setTimeout(() => target.classList.add('active'), 10);
-        }
-    }
-
-    // --- PDF HANDLING ---
-    async function extractTextFromURL(url) {
-        try {
-            const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-            const response = await fetch(proxyUrl);
-            const blob = await response.blob();
-            const arrayBuffer = await blob.arrayBuffer();
-            const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
-            const pdf = await loadingTask.promise;
-            let fullText = "";
-            for(let i=1; i<=Math.min(pdf.numPages, 15); i++){
-                const page = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-                fullText += textContent.items.map(item => item.str).join(" ") + "\n";
+        async function initProfile() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) {
+                window.location.href = 'signin.html';
+                return;
             }
-            pdfText = fullText;
-            document.getElementById('loading-box').style.display = 'none';
-        } catch (e) {
-            document.getElementById('loading-box').innerHTML = "<p>Error loading PDF. Use Manual Upload.</p>";
-        }
-    }
+            currentUser = user;
 
-    window.handleManualUpload = (input) => {
-        const file = input.files[0];
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-            const typedarray = new Uint8Array(e.target.result);
-            const pdf = await pdfjsLib.getDocument(typedarray).promise;
-            let fullText = "";
-            for(let i=1; i<=Math.min(pdf.numPages, 15); i++){
-                const page = await pdf.getPage(i);
-                const text = await page.getTextContent();
-                fullText += text.items.map(s => s.str).join(" ");
+            // 1. Setup Profile Header
+            document.getElementById('display-email').innerText = user.email;
+            document.getElementById('display-name').innerText = user.email.split('@')[0].toUpperCase();
+
+            // Check if Admin/Course Rep
+            const { data: adminData } = await _supabase.from('admin_users').select('*').ilike('email', user.email).maybeSingle();
+            if(adminData) {
+                document.getElementById('display-role').innerText = "Admin / Course Rep";
+                document.getElementById('display-role').style.background = "#f59e0b";
             }
-            pdfText = fullText;
-            document.getElementById('upload-box').style.display = 'none';
-        };
-        reader.readAsArrayBuffer(file);
-    };
 
-    window.previewStyleImage = function(input) {
-        const file = input.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('style-preview').src = e.target.result;
-                document.getElementById('style-preview').style.display = 'block';
-                styleImageBase64 = e.target.result.split(',')[1];
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    // --- AI CALLER ---
-    async function callOpenRouter(model, prompt, systemContext, base64Image = null) {
-        if(!OPENROUTER_API_KEY || OPENROUTER_API_KEY.includes("YOUR")) {
-            alert("Please set a valid OpenRouter Key in the code.");
-            throw new Error("Invalid API Key");
+            // 2. Load Data
+            loadMyLibrary();
+            loadMyNotifications();
         }
 
-        const messages = [];
-        if (systemContext) messages.push({ role: "system", content: systemContext });
-
-        const userContent = [{ type: "text", text: prompt }];
-        if (base64Image) {
-            userContent.push({
-                type: "image_url",
-                image_url: { url: `data:image/jpeg;base64,${base64Image}` }
-            });
-        }
-
-        messages.push({ role: "user", content: userContent });
-
-        try {
-            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": window.location.href,
-                    "X-Title": "Campus Circle Study"
-                },
-                body: JSON.stringify({ model: model, messages: messages })
-            });
-
-            if (!response.ok) throw new Error("API Error");
-            const data = await response.json();
-            return data.choices[0].message.content || "";
-        } catch (e) {
-            console.error("AI Call Failed:", e);
-            throw e;
-        }
-    }
-
-    // --- MAIN GENERATOR ---
-    async function startGen(type) {
-        if(!pdfText) return alert("Upload PDF first!");
-        
-        const btn = document.querySelector(`#${type}-section .action-btn`);
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; 
-        btn.disabled = true;
-
-        let prompt = "";
-        let context = `CONTEXT FROM PDF:\n${pdfText.substring(0, 15000)}`;
-        
-        try {
-            if(type === 'quiz') {
-                const count = document.getElementById('q-count').value;
-                const diff = document.getElementById('q-diff').value;
-                prompt = `Generate ${count} multiple-choice questions based on the context. Difficulty: ${diff}. 
-                Return STRICT valid JSON only. Format: { "quiz": [{"q":"Question","options":["A","B","C","D"],"a":"Correct Answer String","explanation":"Why"}] }`;
-                
-                const rawText = await callOpenRouter(MODEL_MAIN, prompt, context);
-                processAIResponse(rawText, type);
-            } 
-            else if(type === 'theory') {
-                const diff = document.getElementById('t-diff').value;
-                let styleDescription = document.getElementById('lecturer-style').value;
-                
-                if (styleImageBase64) {
-                    btn.innerHTML = '<i class="fa-solid fa-eye"></i> Analyzing Image...';
-                    const imageAnalysis = await callOpenRouter(MODEL_ANALYSIS, "Analyze style...", null, styleImageBase64);
-                    if (imageAnalysis) styleDescription += `\n\n[STYLE]: ${imageAnalysis}`;
-                }
-                
-                btn.innerHTML = 'Generating Questions...';
-                prompt = `Generate 5 theory questions (Diff: ${diff}). Style: "${styleDescription}". JSON: { "questions": ["Q1...", "Q2..."] }`;
-                const rawText = await callOpenRouter(MODEL_MAIN, prompt, context);
-                processAIResponse(rawText, type);
-            } 
-            else if(type === 'flashcard') {
-                prompt = `Generate 15 flashcards. JSON: { "flashcards": [{"front":"Term","back":"Definition"}] }`;
-                const rawText = await callOpenRouter(MODEL_MAIN, prompt, context);
-                processAIResponse(rawText, type);
-            }
-        } catch(e) { 
-            console.error(e);
-            alert("Error: " + e.message); 
-        }
-        btn.innerHTML = originalText; btn.disabled = false;
-    }
-
-    function processAIResponse(rawText, type) {
-        // Robust JSON Cleaner
-        let cleanText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const firstOpen = cleanText.indexOf('{');
-        const lastClose = cleanText.lastIndexOf('}');
-        if(firstOpen !== -1 && lastClose !== -1) cleanText = cleanText.substring(firstOpen, lastClose + 1);
-
-        try {
-            const parsed = JSON.parse(cleanText);
-            if(type === 'quiz') { quizData = parsed.quiz; renderQuiz(); }
-            if(type === 'theory') { theoryQuestions = parsed.questions; theoryTotalScore = 0; currentTheoryIndex = 0; renderTheory(); }
-            if(type === 'flashcard') { flashcardData = parsed.flashcards; setupFlashcards(); }
-        } catch (e) {
-            console.error("Parse Error", e);
-            alert("AI Response Format Error. Try again.");
-        }
-    }
-
-    // --- QUIZ LOGIC (FIXED) ---
-    function renderQuiz() {
-        score = 0; answeredCount = 0;
-        document.getElementById('quiz-setup').style.display = 'none';
-        document.getElementById('quiz-result').style.display = 'none';
-        document.getElementById('quiz-active').style.display = 'block';
-        document.getElementById('current-score').innerText = "0";
-        document.getElementById('quiz-progress').innerText = `0/${quizData.length}`;
-        const list = document.getElementById('quiz-list');
-        list.innerHTML = "";
-        
-        quizData.forEach((q, i) => {
-            const card = document.createElement('div');
-            card.className = 'quiz-card';
+        async function loadMyLibrary() {
+            const container = document.getElementById('my-books-container');
             
-            // 1. Question Title
-            const qTitle = document.createElement('div');
-            qTitle.innerHTML = `<strong>${i+1}. ${q.q}</strong>`;
-            card.appendChild(qTitle);
-
-            // 2. Options Container
-            const optsContainer = document.createElement('div');
-            optsContainer.id = `opts-${i}`;
+            // Step 1: Get all resource IDs this user has bought from the transactions table
+            const { data: transactions, error: txError } = await _supabase.from('transactions').select('resource_id').eq('buyer_id', currentUser.id);
             
-            q.options.forEach(opt => {
-                const btn = document.createElement('div'); 
-                btn.className = 'option'; 
-                btn.innerText = opt;
-                // Safely add click listener
-                btn.onclick = function() { checkAns(i, btn, opt, q.a, card); };
-                optsContainer.appendChild(btn);
-            });
-            card.appendChild(optsContainer);
-
-            // 3. Explanation (Hidden)
-            const exp = document.createElement('div');
-            exp.className = 'explanation';
-            exp.innerText = `💡 ${q.explanation || "No explanation"}`;
-            card.appendChild(exp);
-
-            list.appendChild(card);
-        });
-    }
-
-    function checkAns(idx, el, sel, cor, parentDiv) {
-        const container = document.getElementById(`opts-${idx}`);
-        if(container.classList.contains('answered')) return;
-        
-        container.classList.add('answered');
-        
-        // Lock options visually
-        Array.from(container.children).forEach(o => {
-            o.style.pointerEvents = 'none';
-            o.style.opacity = '0.7';
-        });
-        
-        answeredCount++;
-        
-        // Check logic: loose comparison to handle "A" vs "A. Answer"
-        const isCorrect = (sel === cor) || (sel.includes(cor)) || (cor.includes(sel));
-        
-        if(isCorrect) { 
-            el.classList.add('correct'); 
-            el.style.opacity = '1';
-            score++; 
-        } else { 
-            el.classList.add('wrong');
-            el.style.opacity = '1';
-            // Try to highlight correct one if we can find it
-            Array.from(container.children).forEach(o => {
-                if(o.innerText === cor || o.innerText.includes(cor)) o.classList.add('correct');
-            });
-        }
-        
-        parentDiv.querySelector('.explanation').style.display = 'block';
-        document.getElementById('current-score').innerText = score;
-        document.getElementById('quiz-progress').innerText = `${answeredCount}/${quizData.length}`;
-
-        if(answeredCount === quizData.length) {
-            setTimeout(() => {
-                document.getElementById('quiz-active').style.display = 'none';
-                document.getElementById('quiz-result').style.display = 'block';
-                document.getElementById('final-score').innerText = Math.round((score/quizData.length)*100) + "%";
-            }, 1000);
-        }
-    }
-
-    function resetQuiz() { 
-        document.getElementById('quiz-result').style.display = 'none'; 
-        document.getElementById('quiz-active').style.display = 'none'; 
-        document.getElementById('quiz-setup').style.display = 'block'; 
-    }
-
-    // --- OTHER LOGIC (Theory/Flashcard/Chat) remains same ---
-    function renderTheory() {
-        document.getElementById('theory-setup').style.display = 'none';
-        document.getElementById('theory-result').style.display = 'none';
-        document.getElementById('theory-active').style.display = 'block';
-        document.getElementById('theory-score').innerText = theoryTotalScore;
-        document.getElementById('t-num').innerText = currentTheoryIndex + 1;
-        document.getElementById('t-question').innerText = theoryQuestions[currentTheoryIndex];
-        document.getElementById('t-answer').value = "";
-        document.getElementById('t-feedback').style.display = 'none';
-        document.getElementById('btn-grade').style.display = 'block';
-        document.getElementById('btn-next').style.display = 'none';
-    }
-
-    async function gradeAnswer() {
-        const ans = document.getElementById('t-answer').value;
-        if(ans.length < 2) return alert("Please type an answer.");
-        const btn = document.getElementById('btn-grade');
-        btn.innerHTML = "Grading..."; btn.disabled = true;
-
-        try {
-            const rawText = await callOpenRouter(MODEL_MAIN, `Grade this /10. Q: "${theoryQuestions[currentTheoryIndex]}". Ans: "${ans}". Format: Score: X/10. Feedback: ...`, `Context: ${pdfText.substring(0, 5000)}`);
-            const fbBox = document.getElementById('t-feedback');
-            fbBox.innerHTML = marked.parse(rawText);
-            fbBox.style.display = 'block';
-            
-            const scoreMatch = rawText.match(/(\d+)\/10/);
-            if(scoreMatch) {
-                theoryTotalScore += parseInt(scoreMatch[1]);
-                document.getElementById('theory-score').innerText = theoryTotalScore;
+            if (txError || !transactions || transactions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <h3>Your library is empty</h3>
+                        <p>Books you purchase will appear here.</p>
+                        <button onclick="window.location.href='resources.html'" style="margin-top:15px; background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer;">Go to Store</button>
+                    </div>`;
+                return;
             }
-            btn.style.display = 'none';
-            document.getElementById('btn-next').style.display = 'block';
-        } catch(e) { alert("Grading failed"); }
-        btn.innerHTML = "Grade"; btn.disabled = false;
-    }
 
-    function nextTheoryQ() {
-        currentTheoryIndex++;
-        if(currentTheoryIndex < theoryQuestions.length) renderTheory();
-        else {
-            document.getElementById('theory-active').style.display = 'none';
-            document.getElementById('theory-result').style.display = 'block';
-            document.getElementById('final-theory-score').innerText = theoryTotalScore + "/" + (theoryQuestions.length * 10);
+            // Extract the IDs into an array
+            const resourceIds = transactions.map(t => t.resource_id);
+
+            // Step 2: Fetch the actual book details using those IDs
+            const { data: books, error: booksError } = await _supabase.from('academic_resources').select('*').in('id', resourceIds);
+
+            if (books && books.length > 0) {
+                container.innerHTML = books.map(book => {
+                    const isImg = book.file_url.match(/\.(jpeg|jpg|png|webp)$/i);
+                    const fileIcon = isImg ? "fa-camera" : "fa-file-pdf";
+                    
+                    return `
+                    <div class="book-card">
+                        <div class="book-icon"><i class="fa-solid ${fileIcon}"></i></div>
+                        <div class="book-title">${book.title}</div>
+                        <button class="btn-read" onclick="openReader('${book.file_url}', '${book.title.replace(/'/g,"")}')">
+                            <i class="fa-solid fa-book-open"></i> Read
+                        </button>
+                    </div>`;
+                }).join('');
+            }
         }
-    }
-    function resetTheory() { document.getElementById('theory-result').style.display = 'none'; document.getElementById('theory-setup').style.display = 'block'; }
 
-    function setupFlashcards() {
-        document.getElementById('fc-setup').style.display = 'none';
-        document.getElementById('fc-active').style.display = 'block';
-        updateCard();
-    }
-    function updateCard() {
-        const c = flashcardData[currentCardIndex];
-        document.getElementById('fc-front').innerText = c.front;
-        document.getElementById('fc-back').innerText = c.back;
-        document.getElementById('active-card').classList.remove('flipped');
-    }
-    window.toggleFlip = () => document.getElementById('active-card').classList.toggle('flipped');
-    window.nextCard = () => { if(currentCardIndex < flashcardData.length-1) { currentCardIndex++; updateCard(); } };
-    window.prevCard = () => { if(currentCardIndex > 0) { currentCardIndex--; updateCard(); } };
-    window.resetFlashcards = () => { document.getElementById('fc-active').style.display = 'none'; document.getElementById('fc-setup').style.display = 'block'; };
+        async function loadMyNotifications() {
+            const container = document.getElementById('notifs-container');
+            
+            const { data, error } = await _supabase.from('notifications')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('created_at', { ascending: false });
 
-    window.sendMessage = async function() {
-        const input = document.getElementById('chat-input');
-        const msg = input.value;
-        if(!msg) return;
-        const hist = document.getElementById('chat-history');
-        hist.innerHTML += `<div class="msg user">${msg}</div>`;
-        input.value = "";
-        hist.scrollTop = hist.scrollHeight;
-        
-        try {
-            const text = await callOpenRouter(MODEL_MAIN, msg, `Context: ${pdfText.substring(0,10000)}`);
-            hist.innerHTML += `<div class="msg ai">${marked.parse(text)}</div>`;
-            hist.scrollTop = hist.scrollHeight;
-        } catch(e) {}
-    }
-                </script>
-    
+            if (error || !data || data.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-regular fa-bell-slash"></i>
+                        <h3>No Alerts Yet</h3>
+                        <p>Your notifications and receipts will show up here.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = data.map(n => {
+                const dateObj = new Date(n.created_at);
+                const isCommission = n.message.includes("Cha-ching") || n.message.includes("earned");
+                const cardClass = isCommission ? "notif-card commission" : "notif-card";
+                const icon = isCommission ? `<i class="fa-solid fa-money-bill-wave" style="color:var(--success); margin-right:5px;"></i>` : `<i class="fa-solid fa-circle-check" style="color:var(--primary); margin-right:5px;"></i>`;
+                const title = isCommission ? "Commission Earned" : "System Update";
+
+                return `
+                <div class="${cardClass}">
+                    <div class="notif-header">
+                        <span>${icon} ${title}</span>
+                        <span class="notif-time">${dateObj.toLocaleDateString()}</span>
+                    </div>
+                    <div class="notif-body">${n.message}</div>
+                </div>`;
+            }).join('');
+        }
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.currentTarget.classList.add('active');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        }
+
+        // PDF Reader Logic
+        function openReader(url, title) {
+            document.getElementById('view-title').innerText = title;
+            const container = document.getElementById('viewer-container');
+            container.innerHTML = url.match(/\.(jpeg|jpg|png|webp)$/i) ? `<img src="${url}" class="view-img" crossorigin="anonymous">` : `<iframe src="${url}#toolbar=0&navpanes=0&scrollbar=0"></iframe>`;
+            document.getElementById('fileViewer').style.display = 'flex';
+        }
+        function closeViewer() { document.getElementById('fileViewer').style.display = 'none'; }
+
+        async function logout() {
+            if(confirm("Are you sure you want to log out?")) {
+                await _supabase.auth.signOut();
+                window.location.href = 'index.html';
+            }
+        }
+
+        initProfile();
+    </script>
 </body>
-</html>
+    </html>
+    
