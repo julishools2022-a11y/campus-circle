@@ -18,6 +18,9 @@
             --text-light: #64748b;
             --surface: #ffffff;
             --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
         }
 
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -42,7 +45,6 @@
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); 
         }
 
-        /* --- Header --- */
         .header-row { 
             display: flex; 
             align-items: center; 
@@ -66,10 +68,8 @@
             background: #f1f5f9;
         }
         .back-btn:hover { background: #e2e8f0; }
-
         h2 { margin: 0; font-size: 1.4rem; font-weight: 700; color: var(--primary); }
         
-        /* --- Form --- */
         label { 
             display: block; 
             margin: 15px 0 6px; 
@@ -95,7 +95,6 @@
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); 
         }
 
-        /* --- Pricing Box --- */
         .section-box { 
             background: #f8fafc; 
             padding: 20px; 
@@ -119,7 +118,6 @@
         }
         .checkbox-label { margin: 0; font-weight: 500; cursor: pointer; }
 
-        /* --- Buttons --- */
         .btn-upload { 
             width: 100%; 
             padding: 16px; 
@@ -129,7 +127,7 @@
             border-radius: 12px; 
             font-weight: 700; 
             font-size: 1rem;
-            margin-top: 30px; 
+            margin-top: 25px; 
             cursor: pointer; 
             transition: transform 0.1s, box-shadow 0.2s;
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
@@ -137,15 +135,76 @@
         .btn-upload:active { transform: scale(0.98); }
         .btn-upload:disabled { background: var(--text-light); cursor: not-allowed; transform: none; box-shadow: none; }
 
-        /* --- File Input --- */
-        input[type="file"] {
-            background: white;
-            padding: 10px;
+        small { color: var(--text-light); font-size: 0.8rem; display: block; margin-top: 5px; }
+
+        /* Google Drive Guide Box */
+        .drive-guide {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 14px;
+            padding: 16px;
+            margin-top: 10px;
         }
-        
-        /* Helper Text */
-        small { color: var(--text-light); font-size: 0.8rem; }
-        
+        .drive-guide-title {
+            font-weight: 700;
+            color: #1d4ed8;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .drive-steps {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .drive-steps li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.85rem;
+            color: #1e40af;
+        }
+        .step-num {
+            background: #1d4ed8;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        /* Link Preview */
+        .link-preview {
+            display: none;
+            margin-top: 10px;
+            padding: 12px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            color: #166534;
+            align-items: center;
+            gap: 10px;
+        }
+        .link-preview.error {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+        .link-preview.show { display: flex; }
+
+        @keyframes fadeIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
 <body>
@@ -174,7 +233,7 @@
             <option value="300L">300L</option>
             <option value="400L">400L</option>
             <option value="500L">500L</option>
-            <option value="Q&A" style="font-weight:700; color:var(--primary);">Past Questions (Q&A)</option>
+            <option value="Q&A" style="font-weight:700;">Past Questions (Q&A)</option>
         </select>
 
         <label>Material Title</label>
@@ -183,12 +242,53 @@
         <label>Description</label>
         <textarea id="desc" rows="3" placeholder="Brief details about this material..."></textarea>
 
+        <!-- GOOGLE DRIVE LINK SECTION -->
+        <label>Google Drive Link</label>
+        <input 
+            type="url" 
+            id="drive-link" 
+            placeholder="Paste Google Drive link here..." 
+            oninput="validateDriveLink(this.value)"
+            required
+        >
+
+        <div id="link-preview" class="link-preview">
+            <i class="fa-solid fa-circle-check"></i>
+            <span id="link-preview-text">Valid Google Drive link detected!</span>
+        </div>
+
+        <div class="drive-guide">
+            <div class="drive-guide-title">
+                <i class="fa-brands fa-google-drive"></i>
+                How to get your Google Drive link
+            </div>
+            <ul class="drive-steps">
+                <li>
+                    <span class="step-num">1</span>
+                    <span>Upload your PDF to <strong>Google Drive</strong> (drive.google.com)</span>
+                </li>
+                <li>
+                    <span class="step-num">2</span>
+                    <span>Right-click the file → tap <strong>"Share"</strong></span>
+                </li>
+                <li>
+                    <span class="step-num">3</span>
+                    <span>Change access to <strong>"Anyone with the link"</strong></span>
+                </li>
+                <li>
+                    <span class="step-num">4</span>
+                    <span>Click <strong>"Copy link"</strong> and paste it above</span>
+                </li>
+            </ul>
+        </div>
+
+        <!-- PRICING -->
         <div class="section-box">
             <h4 style="margin:0 0 15px 0; color:var(--primary); font-size:1rem;"><i class="fa-solid fa-tag"></i> Pricing</h4>
             
             <label style="margin-top:0;">Softcopy Price (₦)</label>
             <input type="number" id="soft_price" placeholder="e.g. 200" required>
-            <small>Price for PDF download</small>
+            <small>Price students pay to unlock this material</small>
 
             <div style="height:1px; background:var(--border); margin:20px 0;"></div>
 
@@ -203,9 +303,6 @@
             </div>
         </div>
 
-        <label>Select File (PDF)</label>
-        <input type="file" id="file" accept=".pdf, .doc, .docx" required>
-
         <button type="submit" class="btn-upload" id="btn">
             <i class="fa-solid fa-cloud-arrow-up"></i> UPLOAD MATERIAL
         </button>
@@ -217,6 +314,7 @@
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
+    // ─── ADMIN CHECK ────────────────────────────────────────────────────────
     async function checkAdmin() {
         const { data: { user } } = await _supabase.auth.getUser();
         if (!user) return window.location.href = 'index.html';
@@ -225,6 +323,56 @@
     }
     checkAdmin();
 
+    // ─── GOOGLE DRIVE HELPERS ───────────────────────────────────────────────
+
+    function extractDriveFileId(url) {
+        // Format 1: /file/d/FILE_ID/view
+        let match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        if (match) return match[1];
+        // Format 2: ?id=FILE_ID
+        match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        if (match) return match[1];
+        // Format 3: /open?id=FILE_ID
+        match = url.match(/open\?id=([a-zA-Z0-9_-]+)/);
+        if (match) return match[1];
+        return null;
+    }
+
+    function isValidDriveUrl(url) {
+        return url.includes('drive.google.com') && extractDriveFileId(url) !== null;
+    }
+
+    // Converts to a clean, consistent Drive URL for storage
+    function normalizeDriveUrl(url) {
+        const fileId = extractDriveFileId(url);
+        if (!fileId) return url;
+        // Store as the standard shareable link format
+        return `https://drive.google.com/file/d/${fileId}/view`;
+    }
+
+    function validateDriveLink(url) {
+        const preview = document.getElementById('link-preview');
+        const previewText = document.getElementById('link-preview-text');
+
+        if (!url) {
+            preview.className = 'link-preview';
+            return;
+        }
+
+        if (isValidDriveUrl(url)) {
+            const fileId = extractDriveFileId(url);
+            preview.className = 'link-preview show';
+            preview.innerHTML = `<i class="fa-solid fa-circle-check" style="color:#16a34a"></i> <span>Valid Drive link! File ID: <strong>${fileId}</strong></span>`;
+        } else if (url.includes('drive.google.com')) {
+            preview.className = 'link-preview error show';
+            preview.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> <span>Could not read file ID. Make sure you copied the full link.</span>`;
+        } else {
+            preview.className = 'link-preview error show';
+            preview.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> <span>This doesn't look like a Google Drive link.</span>`;
+        }
+    }
+
+    // ─── FORM HELPERS ───────────────────────────────────────────────────────
     function toggleHardcopy() {
         const isChecked = document.getElementById('is_hardcopy').checked;
         document.getElementById('hard-price-box').style.display = isChecked ? 'block' : 'none';
@@ -242,7 +390,6 @@
         const deptSelect = document.getElementById('dept');
         deptSelect.innerHTML = '<option value="" disabled selected>Select Department...</option>'; 
         deptSelect.disabled = true;
-        
         const { data } = await _supabase.from('departments').select('*').eq('faculty_id', facId);
         if (data && data.length > 0) {
             data.forEach(d => deptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`);
@@ -250,23 +397,31 @@
         }
     }
 
+    // ─── FORM SUBMIT ────────────────────────────────────────────────────────
     document.getElementById('upload-form').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn');
-        btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+
+        const driveLink = document.getElementById('drive-link').value.trim();
+
+        // Validate Drive link before submitting
+        if (!isValidDriveUrl(driveLink)) {
+            alert("Please enter a valid Google Drive link.");
+            return;
+        }
+
+        btn.disabled = true; 
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
 
         try {
-            const file = document.getElementById('file').files[0];
-            const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, '');
-            const fileName = `${Date.now()}_${cleanName}`;
-            
-            const { error: upErr } = await _supabase.storage.from('materials').upload(fileName, file);
-            if (upErr) throw upErr;
-            const { data: { publicUrl } } = _supabase.storage.from('materials').getPublicUrl(fileName);
+            // Normalize the Drive URL to a clean format
+            const fileUrl = normalizeDriveUrl(driveLink);
 
             const deptId = document.getElementById('dept').value;
             const title = document.getElementById('title').value;
             const isHardcopy = document.getElementById('is_hardcopy').checked;
+
+            const { data: { user } } = await _supabase.auth.getUser();
             
             const { error: dbErr } = await _supabase.from('academic_resources').insert({
                 department_id: deptId,
@@ -277,46 +432,45 @@
                 is_hardcopy_available: isHardcopy,
                 hardcopy_price: isHardcopy ? document.getElementById('hard_price').value : null,
                 type: 'File',
-                file_url: publicUrl
+                file_url: fileUrl,
+                uploader_id: user.id
             });
 
             if (dbErr) throw dbErr;
 
-            // Notify
+            // Notify students in the department
             await sendNotifications(deptId, title);
 
-            alert("Uploaded Successfully!");
+            alert("✅ Material uploaded successfully!");
             window.location.reload();
 
         } catch (err) {
             console.error(err);
             alert("Error: " + err.message);
-            btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> UPLOAD MATERIAL';
+            btn.disabled = false; 
+            btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> UPLOAD MATERIAL';
         }
     };
 
+    // ─── NOTIFICATIONS ──────────────────────────────────────────────────────
     async function sendNotifications(deptId, title) {
         const { data: deptData } = await _supabase.from('departments').select('name').eq('id', deptId).single();
         if (!deptData) return;
         const deptName = deptData.name;
-        const searchKey = deptName.split(' ')[0]; 
+        const searchKey = deptName.split(' ')[0];
 
         const { data: students } = await _supabase.from('profiles').select('id').ilike('department', `%${searchKey}%`);
 
         if (students && students.length > 0) {
             const notifications = students.map(s => ({
                 user_id: s.id,
-                title: "New Material 📚",
-                message: `New: "${title}" added to ${deptName}.`
+                message: `📚 New material: "${title}" added to ${deptName}.`
             }));
             await _supabase.from('notifications').insert(notifications);
         }
     }
 </script>
 
-<style>
-@keyframes fadeIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
-</style>
-
 </body>
-</html>
+    </html>
+            
