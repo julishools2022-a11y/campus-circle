@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>My Profile | Campus Circle</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root { 
+            --primary: #2563eb; --primary-dark: #1e40af; 
+            --bg: #f8fafc; --surface: #ffffff;
+            --text: #1e293b; --text-light: #64748b;
+            --success: #10b981; --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); margin: 0; color: var(--text); padding-bottom: 50px; }
+
+        /* HEADER & PROFILE CARD */
+        .header { background: var(--surface); padding: 15px 20px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; border-bottom: 1px solid #e2e8f0; }
+        .back-btn { color: var(--text); font-size: 1.2rem; text-decoration: none; margin-right: 15px; }
+        .header-title { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+
+        .profile-card { background: var(--primary); color: white; padding: 40px 20px; text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.15); }
+        .avatar { width: 80px; height: 80px; background: white; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .user-name { font-size: 1.5rem; font-weight: 800; margin-bottom: 5px; }
+        .user-email { font-size: 0.95rem; opacity: 0.9; margin-bottom: 15px; }
+        .user-badge { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: inline-block; }
+
+        /* TABS */
+        .tabs-container { display: flex; justify-content: space-around; background: var(--surface); margin: -20px 20px 20px; border-radius: 16px; padding: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); position: relative; z-index: 10; border: 1px solid #e2e8f0; }
+        .tab-btn { flex: 1; text-align: center; padding: 12px 5px; font-weight: 600; color: var(--text-light); cursor: pointer; border-radius: 10px; transition: 0.3s; font-size: 0.95rem; }
+        .tab-btn.active { background: #eff6ff; color: var(--primary); }
+        .tab-btn i { margin-right: 5px; }
+
+        .tab-content { display: none; padding: 0 20px; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* LIBRARY GRID */
+        .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
+        .book-card { background: var(--surface); border: 1px solid #e2e8f0; border-radius: 16px; padding: 15px; text-align: center; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .book-icon { font-size: 2.5rem; color: var(--danger); margin-bottom: 10px; }
+        .book-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
+        .btn-read { background: var(--success); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.2s; }
+        .btn-read:hover { background: #059669; }
+
+        /* NOTIFICATIONS LIST */
+        .notif-list { display: flex; flex-direction: column; gap: 10px; }
+        .notif-card { background: var(--surface); border-left: 4px solid var(--primary); padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+        .notif-card.commission { border-left-color: var(--success); }
+        .notif-header { font-weight: 700; font-size: 0.95rem; margin-bottom: 5px; color: var(--text); display: flex; justify-content: space-between; }
+        .notif-time { font-size: 0.75rem; color: var(--text-light); font-weight: 400; }
+        .notif-body { font-size: 0.9rem; color: var(--text-light); line-height: 1.4; }
+
+        /* SETTINGS & LOGOUT */
+        .settings-menu { background: var(--surface); border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
+        .menu-item { padding: 18px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text); text-decoration: none; }
+        .menu-item:hover { background: #f8fafc; }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item.logout { color: var(--danger); }
+        
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-light); }
+        .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+        .empty-state h3 { color: var(--text); margin-bottom: 10px; }
+
+        /* VIEWER MODAL */
+        .viewer-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: #0f172a; flex-direction: column; }
+        .viewer-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; color: white; background: rgba(255,255,255,0.1); }
+        .viewer-body { flex: 1; display: flex; align-items: center; justify-content: center; }
+        iframe, img.view-img { width: 100%; height: 100%; border: none; object-fit: contain; }
+        .btn-secondary { background: #334155; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <header class="header">
+        <a href="resources.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+        <div class="header-title">My Dashboard</div>
+    </header>
+
+    <div class="profile-card">
+        <div class="avatar"><i class="fa-regular fa-user"></i></div>
+        <div class="user-name" id="display-name">Loading...</div>
+        <div class="user-email" id="display-email">...</div>
+        <div class="user-badge" id="display-role">Student Account</div>
+    </div>
+
+    <div class="tabs-container">
+        <div class="tab-btn active" onclick="switchTab('library')"><i class="fa-solid fa-book-bookmark"></i> Library</div>
+        <div class="tab-btn" onclick="switchTab('notifs')"><i class="fa-solid fa-bell"></i> Alerts</div>
+        <div class="tab-btn" onclick="switchTab('settings')"><i class="fa-solid fa-gear"></i> Settings</div>
+    </div>
+
+    <div id="tab-library" class="tab-content active">
+        <h3 style="margin-bottom: 15px;">Purchased Books</h3>
+        <div class="library-grid" id="my-books-container">
+            <div class="empty-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading your library...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-notifs" class="tab-content">
+        <h3 style="margin-bottom: 15px;">Inbox & History</h3>
+        <div class="notif-list" id="notifs-container">
+            <div class="empty-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading alerts...</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="tab-settings" class="tab-content">
+        <h3 style="margin-bottom: 15px;">Account</h3>
+        <div class="settings-menu">
+            <a href="resources.html" class="menu-item">
+                <span><i class="fa-solid fa-store" style="margin-right:10px; color:var(--primary);"></i> Browse Store</span>
+                <i class="fa-solid fa-chevron-right" style="color:#cbd5e1;"></i>
+            </a>
+            <a href="contact.html" class="menu-item">
+                <span><i class="fa-solid fa-headset" style="margin-right:10px; color:var(--success);"></i> Support & Help</span>
+                <i class="fa-solid fa-chevron-right" style="color:#cbd5e1;"></i>
+            </a>
+            <div class="menu-item logout" onclick="logout()">
+                <span><i class="fa-solid fa-arrow-right-from-bracket" style="margin-right:10px;"></i> Log Out</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="fileViewer" class="viewer-modal">
+        <div class="viewer-header">
+            <span id="view-title" style="font-weight:600">Reading Mode</span>
+            <button class="btn-secondary" onclick="closeViewer()">Close</button>
+        </div>
+        <div class="viewer-body" id="viewer-container"></div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        let currentUser = null;
+
+        async function initProfile() {
+            const { data: { user } } = await _supabase.auth.getUser();
+            if (!user) {
+                window.location.href = 'signin.html';
+                return;
+            }
+            currentUser = user;
+
+            // 1. Setup Profile Header
+            document.getElementById('display-email').innerText = user.email;
+            document.getElementById('display-name').innerText = user.email.split('@')[0].toUpperCase();
+
+            // Check if Admin/Course Rep
+            const { data: adminData } = await _supabase.from('admin_users').select('*').ilike('email', user.email).maybeSingle();
+            if(adminData) {
+                document.getElementById('display-role').innerText = "Admin / Course Rep";
+                document.getElementById('display-role').style.background = "#f59e0b";
+            }
+
+            // 2. Load Data
+            loadMyLibrary();
+            loadMyNotifications();
+        }
+
+        async function loadMyLibrary() {
+            const container = document.getElementById('my-books-container');
+            
+            // Step 1: Get all resource IDs this user has bought from the transactions table
+            const { data: transactions, error: txError } = await _supabase.from('transactions').select('resource_id').eq('buyer_id', currentUser.id);
+            
+            if (txError || !transactions || transactions.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <h3>Your library is empty</h3>
+                        <p>Books you purchase will appear here.</p>
+                        <button onclick="window.location.href='resources.html'" style="margin-top:15px; background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer;">Go to Store</button>
+                    </div>`;
+                return;
+            }
+
+            // Extract the IDs into an array
+            const resourceIds = transactions.map(t => t.resource_id);
+
+            // Step 2: Fetch the actual book details using those IDs
+            const { data: books, error: booksError } = await _supabase.from('academic_resources').select('*').in('id', resourceIds);
+
+            if (books && books.length > 0) {
+                container.innerHTML = books.map(book => {
+                    const isImg = book.file_url.match(/\.(jpeg|jpg|png|webp)$/i);
+                    const fileIcon = isImg ? "fa-camera" : "fa-file-pdf";
+                    
+                    return `
+                    <div class="book-card">
+                        <div class="book-icon"><i class="fa-solid ${fileIcon}"></i></div>
+                        <div class="book-title">${book.title}</div>
+                        <button class="btn-read" onclick="openReader('${book.file_url}', '${book.title.replace(/'/g,"")}')">
+                            <i class="fa-solid fa-book-open"></i> Read
+                        </button>
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        async function loadMyNotifications() {
+            const container = document.getElementById('notifs-container');
+            
+            const { data, error } = await _supabase.from('notifications')
+                .select('*')
+                .eq('user_id', currentUser.id)
+                .order('created_at', { ascending: false });
+
+            if (error || !data || data.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-regular fa-bell-slash"></i>
+                        <h3>No Alerts Yet</h3>
+                        <p>Your notifications and receipts will show up here.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = data.map(n => {
+                const dateObj = new Date(n.created_at);
+                const isCommission = n.message.includes("Cha-ching") || n.message.includes("earned");
+                const cardClass = isCommission ? "notif-card commission" : "notif-card";
+                const icon = isCommission ? `<i class="fa-solid fa-money-bill-wave" style="color:var(--success); margin-right:5px;"></i>` : `<i class="fa-solid fa-circle-check" style="color:var(--primary); margin-right:5px;"></i>`;
+                const title = isCommission ? "Commission Earned" : "System Update";
+
+                return `
+                <div class="${cardClass}">
+                    <div class="notif-header">
+                        <span>${icon} ${title}</span>
+                        <span class="notif-time">${dateObj.toLocaleDateString()}</span>
+                    </div>
+                    <div class="notif-body">${n.message}</div>
+                </div>`;
+            }).join('');
+        }
+
+        // Tab Switching Logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.currentTarget.classList.add('active');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        }
+
+        // PDF Reader Logic
+        function openReader(url, title) {
+            document.getElementById('view-title').innerText = title;
+            const container = document.getElementById('viewer-container');
+            container.innerHTML = url.match(/\.(jpeg|jpg|png|webp)$/i) ? `<img src="${url}" class="view-img" crossorigin="anonymous">` : `<iframe src="${url}#toolbar=0&navpanes=0&scrollbar=0"></iframe>`;
+            document.getElementById('fileViewer').style.display = 'flex';
+        }
+        function closeViewer() { document.getElementById('fileViewer').style.display = 'none'; }
+
+        async function logout() {
+            if(confirm("Are you sure you want to log out?")) {
+                await _supabase.auth.signOut();
+                window.location.href = 'index.html';
+            }
+        }
+
+        initProfile();
+    </script>
+</body>
+      </html>
+      
