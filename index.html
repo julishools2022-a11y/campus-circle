@@ -24,7 +24,6 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
         
-        /* STRICT MOBILE RESET */
         html, body { 
             width: 100%; max-width: 100%; overflow-x: hidden; 
             font-family: 'Roboto', sans-serif; color: var(--text-main); 
@@ -32,7 +31,7 @@
         }
         
         a { text-decoration: none; color: inherit; transition: 0.2s; cursor: pointer; }
-        button { cursor: pointer; }
+        button { cursor: pointer; font-family: inherit; }
 
         /* --- HEADER --- */
         .header {
@@ -43,14 +42,12 @@
             height: 75px; width: 100%;
         }
         
-        .logo-container { height: 100%; display: flex; align-items: center; gap: 10px; }
+        .logo-container { height: 100%; display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .brand-logo { height: 50px; width: auto; object-fit: contain; }
-        .logo-container span {
-            font-weight: 900; color: #2b5a9e; margin: 0; font-size: 1.5rem; letter-spacing: -0.5px;
-        }
+        .logo-container span { font-weight: 900; color: #2b5a9e; margin: 0; font-size: 1.5rem; letter-spacing: -0.5px; }
 
         .nav-links { display: flex; gap: 30px; align-items: center; }
-        .nav-item { font-weight: 600; font-size: 0.95rem; color: var(--text-main); position: relative; }
+        .nav-item { font-weight: 600; font-size: 0.95rem; color: var(--text-main); position: relative; cursor: pointer; }
         .nav-item:hover { color: var(--primary); }
         .badge-soon { font-size: 0.65rem; background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; position: absolute; top: -10px; right: -20px; font-weight: 700; }
 
@@ -64,8 +61,19 @@
         }
         .btn-signup:hover { background: #059669; transform: translateY(-1px); }
 
+        /* INSTALL BUTTON */
+        .btn-install {
+            background: var(--primary); color: white; padding: 10px 20px;
+            border-radius: 5px; font-weight: 700; font-size: 0.85rem;
+            display: none; align-items: center; gap: 8px; border: none;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);
+            transition: 0.2s;
+        }
+        .btn-install:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-install.visible { display: flex; }
+
         /* --- MOBILE MENU --- */
-        .mobile-menu-btn { display: none; font-size: 1.5rem; color: var(--text-main); }
+        .mobile-menu-btn { display: none; font-size: 1.5rem; color: var(--text-main); background: none; border: none; }
         .mobile-dropdown {
             display: none; position: fixed; top: 75px; left: 0; width: 100%;
             background: white; border-top: 1px solid #e5e7eb;
@@ -75,17 +83,23 @@
         .mobile-dropdown.active { display: flex; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- HERO SECTION --- */
+        /* MOBILE INSTALL BUTTON */
+        .mobile-install-btn {
+            display: none; align-items: center; justify-content: center; gap: 8px;
+            padding: 12px; background: var(--primary); color: white;
+            border-radius: 5px; font-weight: 700; border: none; width: 100%;
+            font-size: 0.95rem;
+        }
+        .mobile-install-btn.visible { display: flex; }
+
+        /* --- HERO --- */
         .hero {
             display: flex; align-items: center; justify-content: space-between;
             padding: 80px 5%; background: linear-gradient(to right, #f0f9ff, #e0f2fe);
             min-height: 600px; position: relative; width: 100%;
         }
         .hero-text { flex: 1; max-width: 600px; z-index: 2; }
-        .hero-title { 
-            font-size: 3.5rem; font-weight: 900; line-height: 1.1; 
-            margin-bottom: 20px; color: #111827; 
-        }
+        .hero-title { font-size: 3.5rem; font-weight: 900; line-height: 1.1; margin-bottom: 20px; color: #111827; }
         .hero-title span { color: var(--primary); }
         .hero-sub { font-size: 1.25rem; color: var(--text-sub); margin-bottom: 40px; font-weight: 300; }
         
@@ -94,86 +108,51 @@
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
             display: flex; width: 100%; max-width: 550px; border: 1px solid #e5e7eb;
         }
-        .search-input { 
-            flex: 1; border: none; padding: 7px 25px; font-size: 1.1rem; 
-            border-radius: 50px; color: var(--text-main); 
-        }
-        .search-btn { 
-            background: var(--primary); color: white; border: none; 
-            padding: 0 20px; border-radius: 50px; font-weight: 700; font-size: 1rem;
-            transition: 0.3s;
-        }
+        .search-input { flex: 1; border: none; padding: 7px 25px; font-size: 1.1rem; border-radius: 50px; color: var(--text-main); }
+        .search-btn { background: var(--primary); color: white; border: none; padding: 0 20px; border-radius: 50px; font-weight: 700; font-size: 1rem; transition: 0.3s; }
         .search-btn:hover { background: var(--primary-dark); }
 
-        .hero-img { 
-            flex: 1; display: flex; justify-content: flex-end; position: relative; 
-        }
-        .hero-img img { 
-            max-width: 100%; height: auto; border-radius: 20px; 
-            box-shadow: 20px 20px 0px rgba(37, 99, 235, 0.1); 
-            object-fit: cover; max-height: 500px;
-        }
+        .hero-img { flex: 1; display: flex; justify-content: flex-end; position: relative; }
+        .hero-img img { max-width: 100%; height: auto; border-radius: 20px; box-shadow: 20px 20px 0px rgba(37, 99, 235, 0.1); object-fit: cover; max-height: 500px; }
 
-        /* --- CATEGORIES --- */
+        /* --- SECTIONS --- */
         .section { padding: 100px 5%; width: 100%; }
         .section-header { text-align: center; margin-bottom: 60px; }
         .section-title { font-size: 2.5rem; font-weight: 900; margin-bottom: 15px; color: #111827; }
         .section-desc { font-size: 1.1rem; color: var(--text-sub); max-width: 700px; margin: 0 auto; }
 
+        /* --- CATEGORIES --- */
         .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; }
         .cat-card {
             background: white; border: 1px solid #e5e7eb; border-radius: 12px;
             padding: 35px 25px; text-align: center; transition: all 0.3s ease;
             cursor: pointer; position: relative; overflow: hidden;
         }
-        .cat-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px;
-            background: var(--primary); transform: scaleX(0); transition: 0.3s;
-        }
+        .cat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--primary); transform: scaleX(0); transition: 0.3s; }
         .cat-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-hover); }
         .cat-card:hover::before { transform: scaleX(1); }
-        
-        .cat-icon-box {
-            width: 70px; height: 70px; background: #eff6ff; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;
-            color: var(--primary); font-size: 1.8rem;
-        }
+        .cat-icon-box { width: 70px; height: 70px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: var(--primary); font-size: 1.8rem; }
         .cat-name { font-weight: 700; font-size: 1.1rem; color: var(--text-main); }
 
         /* --- FEATURES --- */
         .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
-        .feature-card {
-            background: white; border-radius: 16px; overflow: hidden;
-            box-shadow: var(--shadow-card); border: 1px solid #e5e7eb;
-            display: flex; flex-direction: column; transition: 0.3s;
-        }
+        .feature-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-card); border: 1px solid #e5e7eb; display: flex; flex-direction: column; transition: 0.3s; }
         .feature-card:hover { box-shadow: var(--shadow-hover); }
-        .feature-img { height: 220px; background: #e5e7eb; object-fit: cover; }
+        .feature-img { height: 220px; background: #e5e7eb; object-fit: cover; width: 100%; }
         .feature-content { padding: 30px; flex: 1; display: flex; flex-direction: column; }
-        .feature-label {
-            font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--primary);
-            letter-spacing: 1px; margin-bottom: 10px;
-        }
+        .feature-label { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--primary); letter-spacing: 1px; margin-bottom: 10px; }
         .feature-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 10px; line-height: 1.3; }
         .feature-text { font-size: 1rem; color: var(--text-sub); margin-bottom: 25px; flex: 1; }
-        .feature-btn {
-            padding: 12px 0; text-align: center; border: 2px solid var(--primary);
-            border-radius: 8px; color: var(--primary); font-weight: 700; transition: 0.2s;
-        }
+        .feature-btn { padding: 12px 0; text-align: center; border: 2px solid var(--primary); border-radius: 8px; color: var(--primary); font-weight: 700; transition: 0.2s; background: none; width: 100%; font-size: 1rem; }
         .feature-btn:hover { background: var(--primary); color: white; }
 
-        /* --- CTA BANNER --- */
+        /* --- CTA --- */
         .cta-section {
             background: #111827; color: white; padding: 80px 5%; text-align: center;
             background-image: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.2) 0%, transparent 20%);
-            margin: 0; width: 100%;
+            width: 100%;
         }
-        .cta-btn {
-            background: var(--secondary); color: white; padding: 18px 50px;
-            font-size: 1.2rem; font-weight: 700; border-radius: 50px;
-            display: inline-block; margin-top: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            transition: 0.3s;
-        }
+        .cta-btn { background: var(--secondary); color: white; padding: 18px 50px; font-size: 1.2rem; font-weight: 700; border-radius: 50px; display: inline-block; margin-top: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: 0.3s; border: none; }
         .cta-btn:hover { transform: translateY(-3px); background: #059669; }
 
         /* --- FOOTER --- */
@@ -181,9 +160,23 @@
         .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 40px; margin-bottom: 60px; }
         .footer-col h4 { color: white; margin-bottom: 20px; }
         .footer-col ul { list-style: none; }
-        .footer-col li { margin-bottom: 10px; }
+        .footer-col li { margin-bottom: 10px; cursor: pointer; }
         .footer-col a:hover { color: white; }
         .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; text-align: center; font-size: 0.9rem; }
+
+        /* --- INSTALL BANNER (shows at bottom on mobile) --- */
+        .install-banner {
+            display: none; position: fixed; bottom: 0; left: 0; width: 100%;
+            background: var(--primary); color: white; padding: 15px 20px;
+            z-index: 9998; align-items: center; justify-content: space-between;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.15);
+        }
+        .install-banner.visible { display: flex; }
+        .install-banner-text { font-size: 0.9rem; font-weight: 600; }
+        .install-banner-text span { display: block; font-size: 0.75rem; opacity: 0.85; font-weight: 400; }
+        .install-banner-btns { display: flex; gap: 10px; align-items: center; }
+        .install-banner-btn { background: white; color: var(--primary); padding: 8px 16px; border-radius: 6px; font-weight: 700; border: none; font-size: 0.85rem; cursor: pointer; }
+        .install-banner-dismiss { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; opacity: 0.7; }
 
         /* --- GATEKEEPER MODAL --- */
         .gatekeeper-modal {
@@ -193,7 +186,6 @@
             opacity: 0; transition: opacity 0.3s ease;
         }
         .gatekeeper-modal.show { display: flex; opacity: 1; }
-        
         .gatekeeper-content {
             background: white; width: 90%; max-width: 480px;
             padding: 50px 40px; border-radius: 16px; text-align: center;
@@ -201,55 +193,27 @@
             position: relative; transform: translateY(20px); transition: transform 0.3s;
         }
         .gatekeeper-modal.show .gatekeeper-content { transform: translateY(0); }
-
-        .close-gate {
-            position: absolute; top: 20px; right: 20px;
-            font-size: 1.5rem; color: #9ca3af; cursor: pointer;
-        }
+        .close-gate { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; color: #9ca3af; cursor: pointer; }
         .gate-img { width: 80px; margin-bottom: 20px; }
         .gate-title { font-size: 1.75rem; font-weight: 900; margin-bottom: 10px; color: #111827; }
         .gate-sub { color: var(--text-sub); margin-bottom: 30px; font-size: 1rem; line-height: 1.5; }
-        
-        .gate-btn-primary {
-            background: var(--primary); color: white; padding: 15px 0; width: 100%;
-            border-radius: 8px; font-weight: 700; display: block; margin-bottom: 15px;
-            font-size: 1.1rem; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
-        }
-        
-        .gate-btn-secondary {
-            background: transparent; color: var(--text-main); padding: 15px 0; width: 100%;
-            border-radius: 8px; font-weight: 700; display: block; border: 1px solid #e5e7eb;
-        }
+        .gate-btn-primary { background: var(--primary); color: white; padding: 15px 0; width: 100%; border-radius: 8px; font-weight: 700; display: block; margin-bottom: 15px; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3); }
+        .gate-btn-secondary { background: transparent; color: var(--text-main); padding: 15px 0; width: 100%; border-radius: 8px; font-weight: 700; display: block; border: 1px solid #e5e7eb; }
 
-        /* MOBILE OPTIMIZATIONS (FIXED) */
+        /* --- MOBILE --- */
         @media (max-width: 768px) {
             .nav-links, .auth-buttons { display: none; }
             .mobile-menu-btn { display: block; }
-            
-            .hero { 
-                flex-direction: column-reverse; 
-                padding: 40px 20px; /* Reduced padding to fit screen */
-                text-align: center; 
-            }
+            .hero { flex-direction: column-reverse; padding: 40px 20px; text-align: center; }
             .hero-title { font-size: 2.2rem; }
             .hero-sub { font-size: 1rem; }
             .search-container { margin: 0 auto; }
-            
-            .hero-img { 
-                width: 100%; 
-                margin-bottom: 30px; 
-                justify-content: center; /* Center image */
-            }
-            .hero-img img { 
-                max-height: 300px; 
-                width: 100%; 
-                box-shadow: 10px 10px 0px rgba(37, 99, 235, 0.1); /* Smaller shadow for mobile */
-            }
-            
-            .trust-stats { gap: 20px; }
-            .section { padding: 60px 20px; } /* Consistent side padding */
+            .hero-img { width: 100%; margin-bottom: 30px; justify-content: center; }
+            .hero-img img { max-height: 300px; width: 100%; box-shadow: 10px 10px 0px rgba(37, 99, 235, 0.1); }
+            .section { padding: 60px 20px; }
             .cta-section { padding: 60px 20px; }
             .footer { padding: 60px 20px 30px; }
+            body { padding-bottom: 80px; }
         }
     </style>
     <link rel="manifest" href="manifest.json">
@@ -263,29 +227,48 @@
         </div>
         
         <nav class="nav-links">
-             <div class="nav-item" onclick="handleNavigation('profile.html')">Profile</div>
+            <div class="nav-item" onclick="handleNavigation('profiles.html')">Profile</div>
             <div class="nav-item" onclick="handleNavigation('resources.html')">Library</div>
             <div class="nav-item" style="opacity:0.6; cursor:not-allowed;">AI Tutor <span class="badge-soon">SOON</span></div>
             <div class="nav-item" style="opacity:0.6; cursor:not-allowed;">Marketplace <span class="badge-soon">SOON</span></div>
-            <div>profile</div>
         </nav>
 
         <div class="auth-buttons" id="auth-section">
             <a href="sign up.html" class="btn-login">Log In</a>
             <a href="signin.html" class="btn-signup">Sign Up Free</a>
+            <button class="btn-install" id="install-btn" onclick="installApp()">
+                <i class="fa-solid fa-download"></i> Install App
+            </button>
         </div>
         
-        <i class="fa-solid fa-bars mobile-menu-btn" onclick="toggleMobileMenu()"></i>
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+            <i class="fa-solid fa-bars" id="menu-icon"></i>
+        </button>
     </header>
 
     <div class="mobile-dropdown" id="mobile-menu">
-        <div style="font-weight:700; padding:10px 0; border-bottom:1px solid #f3f4f6;" onclick="handleNavigation('profile.html')">Profile</div>
+        <div style="font-weight:700; padding:10px 0; border-bottom:1px solid #f3f4f6;" onclick="handleNavigation('Profiles.html')">Profile</div>
         <div style="font-weight:700; padding:10px 0; border-bottom:1px solid #f3f4f6;" onclick="handleNavigation('resources.html')">Library</div>
-        <div style="padding:10px 0; opacity:0.6;">AI Tutor (Coming Soon)</div>
-        <div style="padding:10px 0; opacity:0.6;">Marketplace (Coming Soon)</div>
-        <div id="mobile-auth-actions" style="margin-top:10px; display:flex; flex-direction:column; gap:10px;">
+        <div style="padding:10px 0; opacity:0.6; border-bottom:1px solid #f3f4f6;">AI Tutor (Coming Soon)</div>
+        <div style="padding:10px 0; opacity:0.6; border-bottom:1px solid #f3f4f6;">Marketplace (Coming Soon)</div>
+        <button class="mobile-install-btn" id="mobile-install-btn" onclick="installApp()">
+            <i class="fa-solid fa-download"></i> Install App
+        </button>
+        <div id="mobile-auth-actions" style="display:flex; flex-direction:column; gap:10px;">
             <a href="sign up.html" style="text-align:center; padding:10px; border:1px solid #e5e7eb; border-radius:5px; font-weight:700;">Log In</a>
             <a href="signin.html" style="text-align:center; padding:10px; background:var(--secondary); color:white; border-radius:5px; font-weight:700;">Sign Up Free</a>
+        </div>
+    </div>
+
+    <!-- INSTALL BANNER (bottom of screen on mobile) -->
+    <div class="install-banner" id="install-banner">
+        <div class="install-banner-text">
+            <i class="fa-solid fa-graduation-cap" style="margin-right:8px;"></i> Campus Circle
+            <span>Install for a better experience</span>
+        </div>
+        <div class="install-banner-btns">
+            <button class="install-banner-btn" onclick="installApp()">Install</button>
+            <button class="install-banner-dismiss" onclick="dismissBanner()">✕</button>
         </div>
     </div>
 
@@ -293,7 +276,6 @@
         <div class="hero-text">
             <h1 class="hero-title">Empower Your <br><span>Academic Journey</span></h1>
             <p class="hero-sub">Join thousands of students accessing free lecture notes, past questions, and success tools. Study smarter, not harder.</p>
-            
             <div class="search-container">
                 <input type="text" class="search-input" placeholder="What are you studying today?">
                 <button class="search-btn" onclick="handleNavigation('resources.html')">Search</button>
@@ -309,7 +291,6 @@
             <h2 class="section-title">Explore by Faculty</h2>
             <p class="section-desc">Find tailored materials specific to your department and level. We have organized everything to help you pass.</p>
         </div>
-        
         <div class="cat-grid">
             <div class="cat-card" onclick="handleNavigation('resources.html')">
                 <div class="cat-icon-box"><i class="fa-solid fa-flask"></i></div>
@@ -343,7 +324,6 @@
             <h2 class="section-title">Tools for Success</h2>
             <p class="section-desc">Unlock your potential with our suite of student-focused tools.</p>
         </div>
-
         <div class="features-grid">
             <div class="feature-card">
                 <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=500&q=60" class="feature-img">
@@ -354,7 +334,6 @@
                     <button class="feature-btn" onclick="handleNavigation('resources.html')">Start Reading</button>
                 </div>
             </div>
-
             <div class="feature-card" style="opacity: 0.8;">
                 <img src="rm373batch5-18a.jpg" class="feature-img" style="filter:grayscale(100%)">
                 <div class="feature-content">
@@ -364,7 +343,6 @@
                     <button class="feature-btn" style="border-color:#d1d5db; color:#9ca3af; cursor:not-allowed;">Join Waitlist</button>
                 </div>
             </div>
-
             <div class="feature-card" style="opacity: 0.8;">
                 <img src="pregnant-woman-looking-trendy-merchandise-stand-hangers.jpg" class="feature-img" style="filter:grayscale(100%)">
                 <div class="feature-content">
@@ -387,13 +365,12 @@
         <div class="footer-grid">
             <div class="footer-col">
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
-                    <img src="IMG_20260217_143421.jpg" style="height:40px;font-size:-7rem;">
-                     <span style="font-weight:900; font-size:15px; color:white;">Campus Circle</span>
+                    <img src="IMG_20260217_143421.jpg" style="height:40px;">
+                    <span style="font-weight:900; font-size:15px; color:white;">Campus Circle</span>
                 </div>
                 <p style="font-size:0.9rem; line-height:1.6; color:white;">Empowering students with accessible resources and technology for academic excellence.</p>
             </div>
-            <div class="footer-col">
-            </div>
+            <div class="footer-col"></div>
             <div class="footer-col">
                 <h4>Learn</h4>
                 <ul>
@@ -416,13 +393,13 @@
         </div>
     </footer>
 
+    <!-- GATEKEEPER MODAL -->
     <div class="gatekeeper-modal" id="gatekeeper">
         <div class="gatekeeper-content">
             <div class="close-gate" onclick="closeGatekeeper()">&times;</div>
             <img src="IMG_20260217_143421.jpg" class="gate-img" alt="Logo">
             <h3 class="gate-title">Join to Continue</h3>
             <p class="gate-sub">Unlock unlimited access to lecture notes, past questions, and study tools. It's free and takes less than a minute.</p>
-            
             <a href="signin.html" class="gate-btn-primary">Sign Up for Free</a>
             <a href="sign up.html" class="gate-btn-secondary">Already have an account? Log In</a>
         </div>
@@ -434,23 +411,74 @@
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         let isLoggedIn = false;
+        let deferredInstallPrompt = null;
 
+        // ── PWA INSTALL ────────────────────────────────────────────────────
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+
+            // Show install button in header
+            document.getElementById('install-btn').classList.add('visible');
+            document.getElementById('mobile-install-btn').classList.add('visible');
+
+            // Show bottom banner on mobile if not dismissed before
+            if (!localStorage.getItem('installBannerDismissed')) {
+                document.getElementById('install-banner').classList.add('visible');
+            }
+        });
+
+        async function installApp() {
+            if (!deferredInstallPrompt) {
+                alert('To install: tap your browser menu → "Add to Home Screen"');
+                return;
+            }
+            deferredInstallPrompt.prompt();
+            const { outcome } = await deferredInstallPrompt.userChoice;
+            if (outcome === 'accepted') {
+                document.getElementById('install-btn').classList.remove('visible');
+                document.getElementById('mobile-install-btn').classList.remove('visible');
+                document.getElementById('install-banner').classList.remove('visible');
+            }
+            deferredInstallPrompt = null;
+        }
+
+        function dismissBanner() {
+            document.getElementById('install-banner').classList.remove('visible');
+            localStorage.setItem('installBannerDismissed', '1');
+        }
+
+        // Hide install UI if already installed
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('install-btn').classList.remove('visible');
+            document.getElementById('mobile-install-btn').classList.remove('visible');
+            document.getElementById('install-banner').classList.remove('visible');
+        });
+
+        // ── AUTH ───────────────────────────────────────────────────────────
         async function checkAuth() {
             const { data: { user } } = await _supabase.auth.getUser();
-            
-            if(user) {
+            if (user) {
                 isLoggedIn = true;
-                const dashboardBtn = `<a href="resources.html" class="btn-signup" style="background:var(--primary);">Dashboard</a>`;
-                const logoutBtn = `<a href="#" onclick="logout()" style="font-weight:700; color:var(--text-main);">Log Out</a>`;
-                
-                document.getElementById('auth-section').innerHTML = logoutBtn + dashboardBtn;
+                document.getElementById('auth-section').innerHTML = `
+                    <a href="#" onclick="logout()" style="font-weight:700; color:var(--text-main);">Log Out</a>
+                    <a href="resources.html" class="btn-signup" style="background:var(--primary);">Dashboard</a>
+                    <button class="btn-install" id="install-btn" onclick="installApp()">
+                        <i class="fa-solid fa-download"></i> Install App
+                    </button>
+                `;
                 document.getElementById('mobile-auth-actions').innerHTML = `
                     <a href="resources.html" style="text-align:center; padding:12px; background:var(--primary); color:white; border-radius:5px; font-weight:700;">Go to Dashboard</a>
                     <a href="#" onclick="logout()" style="text-align:center; padding:10px; color:var(--text-sub);">Log Out</a>
                 `;
+                // Re-check install prompt visibility after DOM update
+                if (deferredInstallPrompt) {
+                    document.getElementById('install-btn').classList.add('visible');
+                }
             }
         }
 
+        // ── NAVIGATION ─────────────────────────────────────────────────────
         function handleNavigation(url) {
             if (isLoggedIn) {
                 window.location.href = url;
@@ -474,29 +502,22 @@
 
         function toggleMobileMenu() {
             const menu = document.getElementById('mobile-menu');
-            const btn = document.querySelector('.mobile-menu-btn');
-            
-            if(menu.classList.contains('active')) {
-                menu.classList.remove('active');
-                btn.classList.remove('fa-xmark');
-                btn.classList.add('fa-bars');
-            } else {
-                menu.classList.add('active');
-                btn.classList.remove('fa-bars');
-                btn.classList.add('fa-xmark');
-            }
+            const icon = document.getElementById('menu-icon');
+            menu.classList.toggle('active');
+            icon.className = menu.classList.contains('active') ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
         }
 
         checkAuth();
     </script>
-<script>
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./service-worker.js')
-                .then(reg => console.log('App Engine (SW) Registered!', reg.scope))
-                .catch(err => console.log('App Engine Failed:', err));
-        });
-    }
-</script>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(reg => console.log('SW Registered!', reg.scope))
+                    .catch(err => console.log('SW Failed:', err));
+            });
+        }
+    </script>
 </body>
 </html>
