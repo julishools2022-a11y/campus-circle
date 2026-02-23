@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <!-- iOS PWA meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Campus Circle">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <title>Campus Circle | Your Academic Success Partner</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -200,6 +205,21 @@
         .gate-btn-primary { background: var(--primary); color: white; padding: 15px 0; width: 100%; border-radius: 8px; font-weight: 700; display: block; margin-bottom: 15px; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3); }
         .gate-btn-secondary { background: transparent; color: var(--text-main); padding: 15px 0; width: 100%; border-radius: 8px; font-weight: 700; display: block; border: 1px solid #e5e7eb; }
 
+        /* --- iOS SAFARI FIXES --- */
+        /* Fix backdrop-filter for older iOS */
+        .gatekeeper-modal { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+        /* Fix sticky header on iOS */
+        .header { -webkit-overflow-scrolling: touch; }
+        /* Fix 100vh bug on iOS Safari (address bar) */
+        .gatekeeper-modal { height: 100vh; height: -webkit-fill-available; }
+        /* Fix tap highlight on iOS */
+        * { -webkit-tap-highlight-color: transparent; }
+        /* Fix input zoom on iOS (must be 16px+ to prevent auto-zoom) */
+        input, select, textarea { font-size: 16px !important; }
+        /* Safe area padding for iPhone notch/home indicator */
+        .install-banner { padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
+        body { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
+
         /* --- MOBILE --- */
         @media (max-width: 768px) {
             .nav-links, .auth-buttons { display: none; }
@@ -247,7 +267,7 @@
     </header>
 
     <div class="mobile-dropdown" id="mobile-menu">
-        <div style="font-weight:700; padding:10px 0; border-bottom:1px solid #f3f4f6;" onclick="handleNavigation('Profiles.html')">Profile</div>
+        <div style="font-weight:700; padding:10px 0; border-bottom:1px solid #f3f4f6;" onclick="handleNavigation('profiles.html')">Profile</div>
         <div style="font-weight:700; padding:10px 0; border-bottom:1px solid #f3f4f6;" onclick="handleNavigation('resources.html')">Library</div>
         <div style="padding:10px 0; opacity:0.6; border-bottom:1px solid #f3f4f6;">AI Tutor (Coming Soon)</div>
         <div style="padding:10px 0; opacity:0.6; border-bottom:1px solid #f3f4f6;">Marketplace (Coming Soon)</div>
@@ -413,22 +433,38 @@
         let isLoggedIn = false;
         let deferredInstallPrompt = null;
 
+        // ── DETECT iOS ─────────────────────────────────────────────────────
+        const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
+        const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
         // ── PWA INSTALL ────────────────────────────────────────────────────
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredInstallPrompt = e;
-
-            // Show install button in header
             document.getElementById('install-btn').classList.add('visible');
             document.getElementById('mobile-install-btn').classList.add('visible');
-
-            // Show bottom banner on mobile if not dismissed before
             if (!localStorage.getItem('installBannerDismissed')) {
                 document.getElementById('install-banner').classList.add('visible');
             }
         });
 
+        // ── iOS INSTALL PROMPT (manual instructions) ───────────────────────
+        if (isIos && !isInStandaloneMode && !localStorage.getItem('installBannerDismissed')) {
+            const banner = document.getElementById('install-banner');
+            banner.classList.add('visible');
+            banner.querySelector('.install-banner-text').innerHTML = `
+                <i class="fa-brands fa-apple" style="margin-right:8px;"></i> Install Campus Circle
+                <span>Tap <strong>Share</strong> <i class="fa-solid fa-arrow-up-from-bracket"></i> then <strong>"Add to Home Screen"</strong></span>
+            `;
+            // Hide the install button on iOS since beforeinstallprompt doesn't fire
+            banner.querySelector('.install-banner-btn').style.display = 'none';
+        }
+
         async function installApp() {
+            if (isIos) {
+                alert('To install on iPhone/iPad:\n1. Tap the Share button at the bottom of Safari\n2. Scroll down and tap "Add to Home Screen"\n3. Tap "Add"');
+                return;
+            }
             if (!deferredInstallPrompt) {
                 alert('To install: tap your browser menu → "Add to Home Screen"');
                 return;
@@ -448,7 +484,6 @@
             localStorage.setItem('installBannerDismissed', '1');
         }
 
-        // Hide install UI if already installed
         window.addEventListener('appinstalled', () => {
             document.getElementById('install-btn').classList.remove('visible');
             document.getElementById('mobile-install-btn').classList.remove('visible');
