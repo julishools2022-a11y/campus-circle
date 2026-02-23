@@ -9,15 +9,15 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/20260217_203012.jpg",
+      "src": "https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/20260223_011526.png",
       "sizes": "192x192",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/20260217_203012.jpg",
+      "src": "https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/20260223_011634.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]
