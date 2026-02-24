@@ -265,11 +265,15 @@
 
         // ─── EMAIL ──────────────────────────────────────────────────────────
         async function sendEmailNotification(toEmail, subject, message) {
-            try {
-                await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-                    to_email: toEmail, subject, message, to_name: "Admin/User"
-                });
-            } catch(e) { console.error("Email Error:", e); }
+    try {
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+            email: toEmail,        // changed from to_email → email
+            name: "Campus Circle", // matches {{name}} in template
+            to_name: toEmail,      // matches {{to_name}}
+            message: message,      // matches {{message}}
+            time: new Date().toLocaleString(), // matches {{time}}
+        });
+    } catch(e) { console.error("Email Error:", e); }
         }
 
         // ─── FETCHERS ───────────────────────────────────────────────────────
