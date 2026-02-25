@@ -2,10 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>My Profile | Campus Circle</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -20,11 +22,12 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
         body { font-family: 'Outfit', sans-serif; background: var(--bg); margin: 0; color: var(--text); padding-bottom: 50px; }
 
-        /* HEADER & PROFILE CARD */
+        /* HEADER */
         .header { background: var(--surface); padding: 15px 20px; position: sticky; top: 0; z-index: 100; display: flex; align-items: center; border-bottom: 1px solid #e2e8f0; }
         .back-btn { color: var(--text); font-size: 1.2rem; text-decoration: none; margin-right: 15px; }
         .header-title { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
 
+        /* PROFILE CARD */
         .profile-card { background: var(--primary); color: white; padding: 40px 20px; text-align: center; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.15); }
         .avatar { width: 80px; height: 80px; background: white; color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .user-name { font-size: 1.5rem; font-weight: 800; margin-bottom: 5px; }
@@ -41,39 +44,54 @@
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* LIBRARY GRID */
+        /* LIBRARY */
         .library-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
         .book-card { background: var(--surface); border: 1px solid #e2e8f0; border-radius: 16px; padding: 15px; text-align: center; display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
         .book-icon { font-size: 2.5rem; color: var(--danger); margin-bottom: 10px; }
         .book-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 15px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; flex: 1; }
-        .btn-read { background: var(--success); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.2s; }
+        .btn-read { background: var(--success); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; width: 100%; cursor: pointer; transition: 0.2s; font-family: inherit; }
         .btn-read:hover { background: #059669; }
+        .btn-read:active { transform: scale(0.97); }
 
-        /* NOTIFICATIONS LIST */
+        /* NOTIFICATIONS */
         .notif-list { display: flex; flex-direction: column; gap: 10px; }
         .notif-card { background: var(--surface); border-left: 4px solid var(--primary); padding: 15px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
         .notif-card.commission { border-left-color: var(--success); }
-        .notif-header { font-weight: 700; font-size: 0.95rem; margin-bottom: 5px; color: var(--text); display: flex; justify-content: space-between; }
-        .notif-time { font-size: 0.75rem; color: var(--text-light); font-weight: 400; }
+        .notif-card.new-material { border-left-color: #8b5cf6; }
+        .notif-card.purchase { border-left-color: var(--success); }
+        .notif-header { font-weight: 700; font-size: 0.95rem; margin-bottom: 5px; color: var(--text); display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+        .notif-time { font-size: 0.75rem; color: var(--text-light); font-weight: 400; flex-shrink: 0; }
         .notif-body { font-size: 0.9rem; color: var(--text-light); line-height: 1.4; }
 
-        /* SETTINGS & LOGOUT */
+        /* SETTINGS */
         .settings-menu { background: var(--surface); border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
         .menu-item { padding: 18px 20px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-weight: 600; cursor: pointer; transition: 0.2s; color: var(--text); text-decoration: none; }
         .menu-item:hover { background: #f8fafc; }
         .menu-item:last-child { border-bottom: none; }
         .menu-item.logout { color: var(--danger); }
-        
+
         .empty-state { text-align: center; padding: 40px 20px; color: var(--text-light); }
-        .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; }
+        .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; display: block; }
         .empty-state h3 { color: var(--text); margin-bottom: 10px; }
 
-        /* VIEWER MODAL */
+        /* PDF VIEWER */
         .viewer-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: #0f172a; flex-direction: column; }
-        .viewer-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; color: white; background: rgba(255,255,255,0.1); }
-        .viewer-body { flex: 1; display: flex; align-items: center; justify-content: center; }
-        iframe, img.view-img { width: 100%; height: 100%; border: none; object-fit: contain; }
-        .btn-secondary { background: #334155; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .viewer-modal.open { display: flex; }
+        .viewer-header { padding: 15px; padding-top: max(15px, env(safe-area-inset-top)); display: flex; justify-content: space-between; align-items: center; color: white; background: rgba(255,255,255,0.1); flex-shrink: 0; gap: 10px; }
+        .viewer-header-left { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; }
+        #view-title { font-weight: 600; font-size: 0.92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        #page-info { font-size: 0.78rem; color: rgba(255,255,255,0.5); flex-shrink: 0; }
+        .viewer-body { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; background: #525659; display: flex; flex-direction: column; align-items: center; padding: 6px 0; }
+        .viewer-body canvas { display: block; max-width: 100%; margin: 3px auto; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+        img.view-img { max-width: 100%; object-fit: contain; display: block; margin: auto; }
+        .btn-secondary { background: #334155; color: white; border: none; padding: 8px 15px; border-radius: 8px; font-weight: 600; cursor: pointer; font-family: inherit; flex-shrink: 0; }
+
+        /* VIEWER STATES */
+        .viewer-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; color: white; padding: 50px 30px; text-align: center; width: 100%; }
+        .viewer-loading i { font-size: 2.5rem; }
+        .viewer-error { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; color: white; padding: 40px 30px; text-align: center; width: 100%; }
+        .viewer-error i { font-size: 3rem; color: var(--danger); }
+        .viewer-error p { color: #94a3b8; font-size: 0.9rem; max-width: 280px; margin: 0; }
     </style>
 </head>
 <body oncontextmenu="return false;">
@@ -91,23 +109,25 @@
     </div>
 
     <div class="tabs-container">
-        <div class="tab-btn active" onclick="switchTab('library')"><i class="fa-solid fa-book-bookmark"></i> Library</div>
-        <div class="tab-btn" onclick="switchTab('notifs')"><i class="fa-solid fa-bell"></i> Alerts</div>
-        <div class="tab-btn" onclick="switchTab('settings')"><i class="fa-solid fa-gear"></i> Settings</div>
+        <div class="tab-btn active" onclick="switchTab('library', this)"><i class="fa-solid fa-book-bookmark"></i> Library</div>
+        <div class="tab-btn" onclick="switchTab('notifs', this)"><i class="fa-solid fa-bell"></i> Alerts</div>
+        <div class="tab-btn" onclick="switchTab('settings', this)"><i class="fa-solid fa-gear"></i> Settings</div>
     </div>
 
+    <!-- LIBRARY TAB -->
     <div id="tab-library" class="tab-content active">
-        <h3 style="margin-bottom: 15px;">Purchased Books</h3>
+        <h3 style="margin-bottom:15px;">Purchased Books</h3>
         <div class="library-grid" id="my-books-container">
-            <div class="empty-state">
+            <div class="empty-state" style="grid-column:1/-1;">
                 <i class="fa-solid fa-spinner fa-spin"></i>
                 <p>Loading your library...</p>
             </div>
         </div>
     </div>
 
+    <!-- NOTIFICATIONS TAB -->
     <div id="tab-notifs" class="tab-content">
-        <h3 style="margin-bottom: 15px;">Inbox & History</h3>
+        <h3 style="margin-bottom:15px;">Inbox & History</h3>
         <div class="notif-list" id="notifs-container">
             <div class="empty-state">
                 <i class="fa-solid fa-spinner fa-spin"></i>
@@ -116,8 +136,9 @@
         </div>
     </div>
 
+    <!-- SETTINGS TAB -->
     <div id="tab-settings" class="tab-content">
-        <h3 style="margin-bottom: 15px;">Account</h3>
+        <h3 style="margin-bottom:15px;">Account</h3>
         <div class="settings-menu">
             <a href="resources.html" class="menu-item">
                 <span><i class="fa-solid fa-store" style="margin-right:10px; color:var(--primary);"></i> Browse Store</span>
@@ -133,91 +154,97 @@
         </div>
     </div>
 
+    <!-- PDF VIEWER -->
     <div id="fileViewer" class="viewer-modal">
         <div class="viewer-header">
-            <span id="view-title" style="font-weight:600">Reading Mode</span>
+            <div class="viewer-header-left">
+                <span id="view-title">Reading Mode</span>
+                <span id="page-info"></span>
+            </div>
             <button class="btn-secondary" onclick="closeViewer()">Close</button>
         </div>
-        <div class="viewer-body" id="viewer-container"></div>
+        <div class="viewer-body" id="viewer-container">
+            <div class="viewer-loading">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Loading...</p>
+            </div>
+        </div>
     </div>
 
     <script>
-        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
+        const supabaseUrl      = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+        const supabaseKey      = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
+        const GEMINI_PROXY_URL = `${supabaseUrl}/functions/v1/gemini-proxy`;
+
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
         let currentUser = null;
 
+        // ── INIT ──────────────────────────────────────────────────────────────
         async function initProfile() {
             const { data: { user } } = await _supabase.auth.getUser();
-            if (!user) {
-                window.location.href = 'signin.html';
-                return;
-            }
+            if (!user) return window.location.href = 'index.html';
             currentUser = user;
 
-            // 1. Setup Profile Header
             document.getElementById('display-email').innerText = user.email;
             document.getElementById('display-name').innerText = user.email.split('@')[0].toUpperCase();
 
-            // Check if Admin/Course Rep
             const { data: adminData } = await _supabase.from('admin_users').select('*').ilike('email', user.email).maybeSingle();
-            if(adminData) {
+            if (adminData) {
                 document.getElementById('display-role').innerText = "Admin / Course Rep";
                 document.getElementById('display-role').style.background = "#f59e0b";
             }
 
-            // 2. Load Data
             loadMyLibrary();
             loadMyNotifications();
         }
 
+        // ── LIBRARY ───────────────────────────────────────────────────────────
         async function loadMyLibrary() {
             const container = document.getElementById('my-books-container');
-            
-            // Step 1: Get all resource IDs this user has bought from the transactions table
-            const { data: transactions, error: txError } = await _supabase.from('transactions').select('resource_id').eq('buyer_id', currentUser.id);
-            
-            if (txError || !transactions || transactions.length === 0) {
+            const { data: transactions, error } = await _supabase
+                .from('transactions').select('resource_id').eq('buyer_id', currentUser.id);
+
+            if (error || !transactions || transactions.length === 0) {
                 container.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1 / -1;">
+                    <div class="empty-state" style="grid-column:1/-1;">
                         <i class="fa-solid fa-folder-open"></i>
                         <h3>Your library is empty</h3>
                         <p>Books you purchase will appear here.</p>
-                        <button onclick="window.location.href='resources.html'" style="margin-top:15px; background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer;">Go to Store</button>
+                        <button onclick="window.location.href='resources.html'" style="margin-top:15px; background:var(--primary); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:700; cursor:pointer; font-family:inherit;">Go to Store</button>
                     </div>`;
                 return;
             }
 
-            // Extract the IDs into an array
             const resourceIds = transactions.map(t => t.resource_id);
+            const { data: books } = await _supabase.from('academic_resources').select('*').in('id', resourceIds);
 
-            // Step 2: Fetch the actual book details using those IDs
-            const { data: books, error: booksError } = await _supabase.from('academic_resources').select('*').in('id', resourceIds);
-
-            if (books && books.length > 0) {
+            if (books?.length > 0) {
                 container.innerHTML = books.map(book => {
-                    const isImg = book.file_url.match(/\.(jpeg|jpg|png|webp)$/i);
+                    const isImg    = /\.(jpeg|jpg|png|webp)$/i.test(book.file_url);
                     const fileIcon = isImg ? "fa-camera" : "fa-file-pdf";
-                    
+                    const safeUrl  = encodeURIComponent(book.file_url);
+                    const safeTitle= encodeURIComponent(book.title);
                     return `
                     <div class="book-card">
                         <div class="book-icon"><i class="fa-solid ${fileIcon}"></i></div>
                         <div class="book-title">${book.title}</div>
-                        <button class="btn-read" onclick="openReader('${book.file_url}', '${book.title.replace(/'/g,"")}')">
+                        <button class="btn-read" onclick="openReader('${safeUrl}','${safeTitle}')">
                             <i class="fa-solid fa-book-open"></i> Read
                         </button>
                     </div>`;
                 }).join('');
+            } else {
+                container.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><i class="fa-solid fa-folder-open"></i><h3>No books found</h3></div>`;
             }
         }
 
+        // ── NOTIFICATIONS ─────────────────────────────────────────────────────
         async function loadMyNotifications() {
             const container = document.getElementById('notifs-container');
-            
             const { data, error } = await _supabase.from('notifications')
-                .select('*')
-                .eq('user_id', currentUser.id)
+                .select('*').eq('user_id', currentUser.id)
                 .order('created_at', { ascending: false });
 
             if (error || !data || data.length === 0) {
@@ -232,42 +259,135 @@
 
             container.innerHTML = data.map(n => {
                 const dateObj = new Date(n.created_at);
-                const isCommission = n.message.includes("Cha-ching") || n.message.includes("earned");
-                const cardClass = isCommission ? "notif-card commission" : "notif-card";
-                const icon = isCommission ? `<i class="fa-solid fa-money-bill-wave" style="color:var(--success); margin-right:5px;"></i>` : `<i class="fa-solid fa-circle-check" style="color:var(--primary); margin-right:5px;"></i>`;
-                const title = isCommission ? "Commission Earned" : "System Update";
+                const msg     = n.message || '';
+                const titleField = n.title || '';
+
+                // Determine card type and icon based on title or message content
+                let cardClass = 'notif-card';
+                let icon      = `<i class="fa-solid fa-circle-check" style="color:var(--primary); margin-right:5px;"></i>`;
+                let displayTitle = titleField || 'Notification';
+
+                if (msg.includes('Cha-ching') || msg.includes('commission') || titleField.includes('Commission') || titleField.includes('Sale')) {
+                    cardClass    = 'notif-card commission';
+                    icon         = `<i class="fa-solid fa-money-bill-wave" style="color:var(--success); margin-right:5px;"></i>`;
+                    displayTitle = titleField || 'Commission Earned';
+                } else if (msg.includes('Payment successful') || msg.includes('Purchase') || titleField.includes('Purchase') || titleField.includes('Payment')) {
+                    cardClass    = 'notif-card purchase';
+                    icon         = `<i class="fa-solid fa-circle-check" style="color:var(--success); margin-right:5px;"></i>`;
+                    displayTitle = titleField || 'Purchase Successful';
+                } else if (msg.includes('New material') || msg.includes('added to') || titleField.includes('New Material')) {
+                    cardClass    = 'notif-card new-material';
+                    icon         = `<i class="fa-solid fa-book" style="color:#8b5cf6; margin-right:5px;"></i>`;
+                    displayTitle = titleField || 'New Material Available';
+                } else if (msg.includes('Order placed') || msg.includes('hardcopy') || titleField.includes('Order')) {
+                    icon         = `<i class="fa-solid fa-truck" style="color:var(--primary); margin-right:5px;"></i>`;
+                    displayTitle = titleField || 'Order Update';
+                }
 
                 return `
                 <div class="${cardClass}">
                     <div class="notif-header">
-                        <span>${icon} ${title}</span>
+                        <span>${icon}${displayTitle}</span>
                         <span class="notif-time">${dateObj.toLocaleDateString()}</span>
                     </div>
-                    <div class="notif-body">${n.message}</div>
+                    <div class="notif-body">${msg}</div>
                 </div>`;
             }).join('');
         }
 
-        // Tab Switching Logic
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            event.currentTarget.classList.add('active');
+        // ── TAB SWITCHING ─────────────────────────────────────────────────────
+        function switchTab(tabId, clickedBtn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            clickedBtn.classList.add('active');
             document.getElementById(`tab-${tabId}`).classList.add('active');
         }
 
-        // PDF Reader Logic
-        function openReader(url, title) {
-            document.getElementById('view-title').innerText = title;
-            const container = document.getElementById('viewer-container');
-            container.innerHTML = url.match(/\.(jpeg|jpg|png|webp)$/i) ? `<img src="${url}" class="view-img" crossorigin="anonymous">` : `<iframe src="${url}#toolbar=0&navpanes=0&scrollbar=0"></iframe>`;
-            document.getElementById('fileViewer').style.display = 'flex';
-        }
-        function closeViewer() { document.getElementById('fileViewer').style.display = 'none'; }
+        // ── PDF READER (in-app via backend, works on iOS) ─────────────────────
+        async function openReader(encodedUrl, encodedTitle) {
+            const url   = decodeURIComponent(encodedUrl);
+            const title = decodeURIComponent(encodedTitle);
 
+            document.getElementById('view-title').innerText = title;
+            document.getElementById('page-info').innerText = '';
+            const container = document.getElementById('viewer-container');
+            document.getElementById('fileViewer').classList.add('open');
+            document.body.style.overflow = 'hidden';
+
+            // Images: show directly
+            if (/\.(jpeg|jpg|png|webp|gif)$/i.test(url)) {
+                container.innerHTML = `<img class="view-img" src="${url}">`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="viewer-loading">
+                    <i class="fa-solid fa-spinner fa-spin"></i>
+                    <p>Fetching document...</p>
+                    <p style="font-size:0.8rem; opacity:0.5; margin-top:5px;">Large files may take a moment</p>
+                </div>`;
+
+            try {
+                const resp = await fetch(GEMINI_PROXY_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${supabaseKey}`,
+                    },
+                    body: JSON.stringify({ action: 'fetch_pdf', pdf_url: url }),
+                });
+
+                if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
+                const json = await resp.json();
+                if (!json.base64) throw new Error('No PDF data received');
+
+                // Decode base64 → bytes
+                const binary = atob(json.base64);
+                const bytes  = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+                // Render with PDF.js
+                container.innerHTML = '';
+                const pdf        = await pdfjsLib.getDocument({ data: bytes }).promise;
+                const totalPages = pdf.numPages;
+                document.getElementById('page-info').innerText = `${totalPages} pages`;
+
+                const maxWidth = Math.min(window.innerWidth, 800);
+                for (let p = 1; p <= totalPages; p++) {
+                    const page     = await pdf.getPage(p);
+                    const baseVp   = page.getViewport({ scale: 1 });
+                    const viewport = page.getViewport({ scale: maxWidth / baseVp.width });
+                    const canvas   = document.createElement('canvas');
+                    canvas.width   = viewport.width;
+                    canvas.height  = viewport.height;
+                    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                    container.appendChild(canvas);
+                    document.getElementById('page-info').innerText = `${p}/${totalPages}`;
+                }
+                document.getElementById('page-info').innerText = `${totalPages} pages`;
+
+            } catch(e) {
+                console.error('PDF load error:', e);
+                container.innerHTML = `
+                    <div class="viewer-error">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                        <h3 style="margin:0;">Could not load document</h3>
+                        <p>${e.message || 'Please try again'}</p>
+                        <button class="btn-secondary" style="margin-top:15px;" onclick="closeViewer()">Close</button>
+                    </div>`;
+            }
+        }
+
+        function closeViewer() {
+            document.getElementById('fileViewer').classList.remove('open');
+            document.getElementById('viewer-container').innerHTML = '';
+            document.getElementById('page-info').innerText = '';
+            document.body.style.overflow = '';
+        }
+
+        // ── LOGOUT ────────────────────────────────────────────────────────────
         async function logout() {
-            if(confirm("Are you sure you want to log out?")) {
+            if (confirm("Are you sure you want to log out?")) {
                 await _supabase.auth.signOut();
                 window.location.href = 'index.html';
             }
@@ -276,5 +396,4 @@
         initProfile();
     </script>
 </body>
-    </html>
-    
+</html>
