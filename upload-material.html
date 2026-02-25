@@ -6,6 +6,7 @@
     <title>Upload Material | Campus Circle</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
@@ -131,6 +132,7 @@
             cursor: pointer; 
             transition: transform 0.1s, box-shadow 0.2s;
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            font-family: inherit;
         }
         .btn-upload:active { transform: scale(0.98); }
         .btn-upload:disabled { background: var(--text-light); cursor: not-allowed; transform: none; box-shadow: none; }
@@ -204,6 +206,27 @@
         }
         .link-preview.show { display: flex; }
 
+        /* Progress */
+        .progress-box {
+            display: none;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .progress-box.show { display: block; }
+        .progress-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.88rem;
+            color: #166534;
+            margin-bottom: 6px;
+        }
+        .progress-step:last-child { margin-bottom: 0; }
+        .progress-step i { width: 16px; }
+
         @keyframes fadeIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
     </style>
 </head>
@@ -220,41 +243,42 @@
         <select id="faculty" onchange="loadDepartments()" required>
             <option value="" disabled selected>Select Faculty...</option>
         </select>
-        
+
         <label>Department</label>
         <select id="dept" disabled required>
             <option value="" disabled selected>Select Department...</option>
         </select>
-        
-        <label>Level / Category</label>
+
+        <label>Level</label>
         <select id="level" required>
-            <option value="100L">100L</option>
-            <option value="200L">200L</option>
-            <option value="300L">300L</option>
-            <option value="400L">400L</option>
-            <option value="500L">500L</option>
-            <option value="Q&A" style="font-weight:700;">Past Questions (Q&A)</option>
+            <option value="" disabled selected>Select Level...</option>
+            <option value="100L">100 Level</option>
+            <option value="200L">200 Level</option>
+            <option value="300L">300 Level</option>
+            <option value="400L">400 Level</option>
+            <option value="500L">500 Level</option>
+            <option value="Q&A">Past Questions (Q&A)</option>
         </select>
 
         <label>Material Title</label>
-        <input type="text" id="title" placeholder="e.g. GST 101 Textbook" required>
+        <input type="text" id="title" placeholder="e.g. Introduction to Political Science" required>
 
-        <label>Description</label>
-        <textarea id="desc" rows="3" placeholder="Brief details about this material..."></textarea>
+        <label>Description <span style="font-weight:400; color:var(--text-light)">(optional)</span></label>
+        <textarea id="desc" rows="3" placeholder="Brief description of the material..."></textarea>
 
-        <!-- GOOGLE DRIVE LINK SECTION -->
-        <label>Google Drive Link</label>
-        <input 
-            type="url" 
-            id="drive-link" 
-            placeholder="Paste Google Drive link here..." 
-            oninput="validateDriveLink(this.value)"
-            required
-        >
-
-        <div id="link-preview" class="link-preview">
-            <i class="fa-solid fa-circle-check"></i>
-            <span id="link-preview-text">Valid Google Drive link detected!</span>
+        <!-- FILE LINK -->
+        <div class="section-box">
+            <h4 style="margin:0 0 10px 0; color:var(--primary); font-size:1rem;">
+                <i class="fa-brands fa-google-drive"></i> Google Drive Link
+            </h4>
+            <input 
+                type="url" 
+                id="drive-link" 
+                placeholder="https://drive.google.com/file/d/..." 
+                oninput="validateDriveLink(this.value)"
+                required
+            >
+            <div class="link-preview" id="link-preview"></div>
         </div>
 
         <div class="drive-guide">
@@ -303,6 +327,19 @@
             </div>
         </div>
 
+        <!-- PROGRESS -->
+        <div class="progress-box" id="progress-box">
+            <div class="progress-step" id="step-save">
+                <i class="fa-solid fa-spinner fa-spin"></i> Saving material...
+            </div>
+            <div class="progress-step" id="step-notify" style="display:none;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Notifying students...
+            </div>
+            <div class="progress-step" id="step-email" style="display:none;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Sending emails...
+            </div>
+        </div>
+
         <button type="submit" class="btn-upload" id="btn">
             <i class="fa-solid fa-cloud-arrow-up"></i> UPLOAD MATERIAL
         </button>
@@ -310,11 +347,16 @@
 </div>
 
 <script>
-    const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
-    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const supabaseUrl    = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+    const supabaseKey    = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
+    const EMAILJS_PUBLIC_KEY  = "Y38V-Sq0IZSBfpHbR";
+    const EMAILJS_SERVICE_ID  = "service_kxffvki";
+    const EMAILJS_TEMPLATE_ID = "template_ztmcqtb";
 
-    // ─── ADMIN CHECK ────────────────────────────────────────────────────────
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+
+    // ─── ADMIN CHECK ─────────────────────────────────────────────────────────
     async function checkAdmin() {
         const { data: { user } } = await _supabase.auth.getUser();
         if (!user) return window.location.href = 'index.html';
@@ -323,16 +365,12 @@
     }
     checkAdmin();
 
-    // ─── GOOGLE DRIVE HELPERS ───────────────────────────────────────────────
-
+    // ─── DRIVE HELPERS ────────────────────────────────────────────────────────
     function extractDriveFileId(url) {
-        // Format 1: /file/d/FILE_ID/view
         let match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
         if (match) return match[1];
-        // Format 2: ?id=FILE_ID
         match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
         if (match) return match[1];
-        // Format 3: /open?id=FILE_ID
         match = url.match(/open\?id=([a-zA-Z0-9_-]+)/);
         if (match) return match[1];
         return null;
@@ -342,23 +380,15 @@
         return url.includes('drive.google.com') && extractDriveFileId(url) !== null;
     }
 
-    // Converts to a clean, consistent Drive URL for storage
     function normalizeDriveUrl(url) {
         const fileId = extractDriveFileId(url);
         if (!fileId) return url;
-        // Store as the standard shareable link format
         return `https://drive.google.com/file/d/${fileId}/view`;
     }
 
     function validateDriveLink(url) {
         const preview = document.getElementById('link-preview');
-        const previewText = document.getElementById('link-preview-text');
-
-        if (!url) {
-            preview.className = 'link-preview';
-            return;
-        }
-
+        if (!url) { preview.className = 'link-preview'; return; }
         if (isValidDriveUrl(url)) {
             const fileId = extractDriveFileId(url);
             preview.className = 'link-preview show';
@@ -372,105 +402,166 @@
         }
     }
 
-    // ─── FORM HELPERS ───────────────────────────────────────────────────────
+    // ─── FORM HELPERS ─────────────────────────────────────────────────────────
     function toggleHardcopy() {
         const isChecked = document.getElementById('is_hardcopy').checked;
         document.getElementById('hard-price-box').style.display = isChecked ? 'block' : 'none';
     }
 
+    function setStep(stepId, icon, done = false) {
+        const el = document.getElementById(stepId);
+        if (!el) return;
+        el.style.display = 'flex';
+        el.querySelector('i').className = done
+            ? 'fa-solid fa-circle-check'
+            : `fa-solid ${icon} fa-spin`;
+        if (done) el.querySelector('i').style.color = '#16a34a';
+    }
+
     async function loadFaculties() {
-        const { data } = await _supabase.from('faculties').select('*');
+        const { data } = await _supabase.from('faculties').select('*').order('name');
         const select = document.getElementById('faculty');
-        if(data) data.forEach(f => select.innerHTML += `<option value="${f.id}">${f.name}</option>`);
+        if (data) data.forEach(f => select.innerHTML += `<option value="${f.id}">${f.name}</option>`);
     }
     loadFaculties();
 
     window.loadDepartments = async function() {
         const facId = document.getElementById('faculty').value;
         const deptSelect = document.getElementById('dept');
-        deptSelect.innerHTML = '<option value="" disabled selected>Select Department...</option>'; 
+        deptSelect.innerHTML = '<option value="" disabled selected>Select Department...</option>';
         deptSelect.disabled = true;
-        const { data } = await _supabase.from('departments').select('*').eq('faculty_id', facId);
-        if (data && data.length > 0) {
+        const { data } = await _supabase.from('departments').select('*').eq('faculty_id', facId).order('name');
+        if (data?.length > 0) {
             data.forEach(d => deptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`);
             deptSelect.disabled = false;
         }
+    };
+
+    // ─── EMAIL ────────────────────────────────────────────────────────────────
+    async function sendEmail(toEmail, subject, message) {
+        try {
+            await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+                email:   toEmail,
+                name:    "Campus Circle",
+                to_name: toEmail,
+                subject: subject,
+                message: message,
+                time:    new Date().toLocaleString(),
+            });
+        } catch(e) {
+            console.warn("Email failed for", toEmail, e);
+        }
     }
 
-    // ─── FORM SUBMIT ────────────────────────────────────────────────────────
+    // ─── NOTIFY STUDENTS ──────────────────────────────────────────────────────
+    async function notifyStudents(deptId, deptName, title, level) {
+        // Search profiles by department name
+        const searchKey = deptName.replace('Department of', '').trim().split(' ')[0];
+        const { data: students } = await _supabase
+            .from('profiles')
+            .select('id, email')
+            .ilike('department', `%${searchKey}%`);
+
+        if (!students || students.length === 0) {
+            console.log('No students found for department:', deptName);
+            return 0;
+        }
+
+        // Insert in-app notifications for all matching students
+        const notifications = students.map(s => ({
+            user_id: s.id,
+            title: '📚 New Material Available!',
+            message: `A new ${level} material "${title}" has been added to ${deptName}. Open the Library to access it.`
+        }));
+
+        const { error } = await _supabase.from('notifications').insert(notifications);
+        if (error) console.error('Notification insert error:', error);
+
+        // Send emails — show email step
+        setStep('step-email', 'fa-envelope');
+        let emailsSent = 0;
+        for (const student of students) {
+            if (student.email) {
+                await sendEmail(
+                    student.email,
+                    '📚 New Material on Campus Circle',
+                    `Hello,\n\nA new ${level} material is now available in your department:\n\n"${title}" — ${deptName}\n\nOpen Campus Circle Library to access it now.\n\nRegards,\nCampus Circle Team`
+                );
+                emailsSent++;
+            }
+        }
+
+        return students.length;
+    }
+
+    // ─── FORM SUBMIT ──────────────────────────────────────────────────────────
     document.getElementById('upload-form').onsubmit = async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn');
-
         const driveLink = document.getElementById('drive-link').value.trim();
 
-        // Validate Drive link before submitting
         if (!isValidDriveUrl(driveLink)) {
             alert("Please enter a valid Google Drive link.");
             return;
         }
 
-        btn.disabled = true; 
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Uploading...';
+        document.getElementById('progress-box').classList.add('show');
+        setStep('step-save', 'fa-spinner');
 
         try {
-            // Normalize the Drive URL to a clean format
-            const fileUrl = normalizeDriveUrl(driveLink);
-
-            const deptId = document.getElementById('dept').value;
-            const title = document.getElementById('title').value;
+            const fileUrl  = normalizeDriveUrl(driveLink);
+            const deptId   = document.getElementById('dept').value;
+            const title    = document.getElementById('title').value.trim();
+            const level    = document.getElementById('level').value;
             const isHardcopy = document.getElementById('is_hardcopy').checked;
 
             const { data: { user } } = await _supabase.auth.getUser();
-            
+
+            // Insert resource
             const { error: dbErr } = await _supabase.from('academic_resources').insert({
-                department_id: deptId,
-                title: title,
-                description: document.getElementById('desc').value,
-                level: document.getElementById('level').value,
-                softcopy_price: document.getElementById('soft_price').value,
+                department_id:        deptId,
+                title:                title,
+                description:          document.getElementById('desc').value,
+                level:                level,
+                softcopy_price:       document.getElementById('soft_price').value,
                 is_hardcopy_available: isHardcopy,
-                hardcopy_price: isHardcopy ? document.getElementById('hard_price').value : null,
-                type: 'File',
-                file_url: fileUrl,
-                uploader_id: user.id
+                hardcopy_price:       isHardcopy ? document.getElementById('hard_price').value : null,
+                type:                 'File',
+                file_url:             fileUrl,
+                uploader_id:          user.id
             });
 
             if (dbErr) throw dbErr;
+            setStep('step-save', 'fa-spinner', true);
 
-            // Notify students in the department
-            await sendNotifications(deptId, title);
+            // Get department name for notifications
+            const { data: deptData } = await _supabase
+                .from('departments').select('name').eq('id', deptId).single();
+            const deptName = deptData?.name || 'your department';
 
-            alert("✅ Material uploaded successfully!");
-            window.location.reload();
+            // Notify students
+            setStep('step-notify', 'fa-spinner');
+            const count = await notifyStudents(deptId, deptName, title, level);
+            setStep('step-notify', 'fa-spinner', true);
+            setStep('step-email', 'fa-spinner', true);
 
-        } catch (err) {
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Done!';
+            setTimeout(() => {
+                alert(`✅ Material uploaded!\n📢 ${count} students in ${deptName} have been notified.`);
+                window.location.reload();
+            }, 800);
+
+        } catch(err) {
             console.error(err);
             alert("Error: " + err.message);
-            btn.disabled = false; 
+            btn.disabled = false;
             btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> UPLOAD MATERIAL';
+            document.getElementById('progress-box').classList.remove('show');
         }
     };
-
-    // ─── NOTIFICATIONS ──────────────────────────────────────────────────────
-    async function sendNotifications(deptId, title) {
-        const { data: deptData } = await _supabase.from('departments').select('name').eq('id', deptId).single();
-        if (!deptData) return;
-        const deptName = deptData.name;
-        const searchKey = deptName.split(' ')[0];
-
-        const { data: students } = await _supabase.from('profiles').select('id').ilike('department', `%${searchKey}%`);
-
-        if (students && students.length > 0) {
-            const notifications = students.map(s => ({
-                user_id: s.id,
-                message: `📚 New material: "${title}" added to ${deptName}.`
-            }));
-            await _supabase.from('notifications').insert(notifications);
-        }
-    }
 </script>
 
 </body>
-    </html>
-            
+</html>
