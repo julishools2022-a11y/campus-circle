@@ -303,7 +303,48 @@
             document.getElementById(`tab-${tabId}`).classList.add('active');
         }
 
-        // ── PDF READER (in-app via backend, works on iOS) ─────────────────────
+        // ── GOOGLE DRIVE HELPERS ──────────────────────────────────────────────
+        function extractDriveFileId(url) {
+            let match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+            if (match) return match[1];
+            match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+            if (match) return match[1];
+            return null;
+        }
+
+        function getDriveEmbedUrl(url) {
+            const id = extractDriveFileId(url);
+            return id ? `https://drive.google.com/file/d/${id}/preview` : null;
+        }
+
+        function showDriveFallback(url, container) {
+            const embedUrl = getDriveEmbedUrl(url);
+            const openUrl  = embedUrl || url;
+            if (embedUrl) {
+                // Try embedding Google Drive preview
+                container.innerHTML = `
+                    <iframe 
+                        src="${embedUrl}"
+                        style="width:100%;height:100%;border:none;"
+                        allow="autoplay">
+                    </iframe>`;
+            } else {
+                // Last resort — open link button
+                container.innerHTML = `
+                    <div class="viewer-error">
+                        <i class="fa-brands fa-google-drive" style="color:#4f46e5; font-size:3rem;"></i>
+                        <h3 style="margin:0; color:white;">Open in Google Drive</h3>
+                        <p>Tap below to read this material</p>
+                        <a href="${openUrl}" target="_blank" 
+                           style="background:#4f46e5;color:white;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:700;margin-top:10px;display:inline-block;">
+                            <i class="fa-solid fa-external-link-alt"></i> Open Material
+                        </a>
+                        <button class="btn-secondary" style="margin-top:10px;" onclick="closeViewer()">Close</button>
+                    </div>`;
+            }
+        }
+
+        // ── PDF READER ────────────────────────────────────────────────────────
         async function openReader(encodedUrl, encodedTitle) {
             const url   = decodeURIComponent(encodedUrl);
             const title = decodeURIComponent(encodedTitle);
@@ -368,13 +409,19 @@
 
             } catch(e) {
                 console.error('PDF load error:', e);
-                container.innerHTML = `
-                    <div class="viewer-error">
-                        <i class="fa-solid fa-circle-xmark"></i>
-                        <h3 style="margin:0;">Could not load document</h3>
-                        <p>${e.message || 'Please try again'}</p>
-                        <button class="btn-secondary" style="margin-top:15px;" onclick="closeViewer()">Close</button>
-                    </div>`;
+                // ── FALLBACK: try Google Drive embed instead of showing error
+                if (url.includes('drive.google.com')) {
+                    document.getElementById('page-info').innerText = 'via Google Drive';
+                    showDriveFallback(url, container);
+                } else {
+                    container.innerHTML = `
+                        <div class="viewer-error">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                            <h3 style="margin:0;">Could not load document</h3>
+                            <p>${e.message || 'Please try again'}</p>
+                            <button class="btn-secondary" style="margin-top:15px;" onclick="closeViewer()">Close</button>
+                        </div>`;
+                }
             }
         }
 
