@@ -222,24 +222,46 @@
 
         async function processSuccessfulPayment(resp,id,amount,title,uploaderId){
             try{
+                // RE-FETCH SESSION — fixes slow/old devices where currentUser can be null
+                if(!currentUser){
+                    const{data:{user}}=await _supabase.auth.getUser();
+                    if(!user){
+                        alert("Session expired. Payment went through! Show admin this ref: "+resp.reference);
+                        return;
+                    }
+                    currentUser=user;
+                }
+
+                // GRANT ACCESS IMMEDIATELY — before any DB calls
+                purchasedIds.add(id.toString());
+                loadResources();
+
                 // DUPLICATE CHECK — skip insert if already purchased
                 const{data:existing}=await _supabase.from('transactions').select('id').eq('buyer_id',currentUser.id).eq('resource_id',id).maybeSingle();
                 if(!existing){
                     const{error:txError}=await _supabase.from('transactions').insert([{buyer_id:currentUser.id,resource_id:id,amount_paid:amount}]);
-                    if(txError)throw new Error("Transaction failed: "+txError.message);
+                    // Log only — never block access
+                    if(txError)console.error("TX insert (non-fatal):",txError.message);
                 }
-                await _supabase.from('notifications').insert([{user_id:currentUser.id,title:'Purchase Successful',message:`Payment successful! You can now read "${title}" in your Library.`}]);
+
+                // Notifications — non-blocking
+                _supabase.from('notifications').insert([{user_id:currentUser.id,title:'Purchase Successful',message:`Payment successful! You can now read "${title}" in your Library.`}]).catch(()=>{});
                 if(uploaderId&&uploaderId.trim()!==""){
-                    await _supabase.from('notifications').insert([{user_id:uploaderId,title:'Sale Commission',message:`Cha-ching! A student just bought "${title}". You earned a commission from this N${amount} sale!`}]);
+                    _supabase.from('notifications').insert([{user_id:uploaderId,title:'Sale Commission',message:`Cha-ching! A student just bought "${title}". You earned a commission from this N${amount} sale!`}]).catch(()=>{});
                 }
+
+                // Emails — non-blocking
                 sendEmailNotification(ADMIN_EMAIL,"PDF Sold — Campus Circle",`New sale!\n\nBuyer: ${currentUser.email}\nMaterial: ${title}\nAmount: N${amount}\nRef: ${resp.reference}`);
                 sendEmailNotification(currentUser.email,"Purchase Confirmed — Campus Circle",`Hi!\n\nYour purchase was successful!\n\nMaterial: ${title}\nAmount Paid: N${amount}\n\nOpen Campus Circle Library to start reading.\n\nThank you!\nCampus Circle Team`);
-                purchasedIds.add(id.toString());
-                loadResources();loadNotifications();
+
+                loadNotifications();
                 alert("Payment Successful! The material has been added to your Library.");
             }catch(error){
                 console.error("Payment sync error:",error);
-                alert("Your payment went through, but we had an issue updating your library. Please contact admin with ref: "+resp.reference);
+                // Always give access even if something crashed
+                purchasedIds.add(id.toString());
+                loadResources();
+                alert("Payment received! Material added to Library. Ref: "+resp.reference);
             }
         }
 
