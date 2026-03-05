@@ -232,25 +232,34 @@
                     currentUser=user;
                 }
 
-                // GRANT ACCESS IMMEDIATELY — before any DB calls
+                // ✅ STEP 1 — Save payment log FIRST (permanent backup, always works)
+                _supabase.from('payment_logs').insert({
+                    paystack_ref: resp.reference,
+                    buyer_email:  currentUser.email,
+                    buyer_id:     currentUser.id,
+                    resource_id:  String(id),
+                    resource_title: title,
+                    amount:       amount
+                }).catch(e=>console.error("Log error:",e));
+
+                // ✅ STEP 2 — Grant access immediately before any DB calls
                 purchasedIds.add(id.toString());
                 loadResources();
 
-                // DUPLICATE CHECK — skip insert if already purchased
+                // ✅ STEP 3 — Insert transaction (duplicate-safe)
                 const{data:existing}=await _supabase.from('transactions').select('id').eq('buyer_id',currentUser.id).eq('resource_id',id).maybeSingle();
                 if(!existing){
                     const{error:txError}=await _supabase.from('transactions').insert([{buyer_id:currentUser.id,resource_id:id,amount_paid:amount}]);
-                    // Log only — never block access
                     if(txError)console.error("TX insert (non-fatal):",txError.message);
                 }
 
-                // Notifications — non-blocking
+                // ✅ STEP 4 — Notifications (non-blocking)
                 _supabase.from('notifications').insert([{user_id:currentUser.id,title:'Purchase Successful',message:`Payment successful! You can now read "${title}" in your Library.`}]).catch(()=>{});
                 if(uploaderId&&uploaderId.trim()!==""){
                     _supabase.from('notifications').insert([{user_id:uploaderId,title:'Sale Commission',message:`Cha-ching! A student just bought "${title}". You earned a commission from this N${amount} sale!`}]).catch(()=>{});
                 }
 
-                // Emails — non-blocking
+                // ✅ STEP 5 — Emails (non-blocking)
                 sendEmailNotification(ADMIN_EMAIL,"PDF Sold — Campus Circle",`New sale!\n\nBuyer: ${currentUser.email}\nMaterial: ${title}\nAmount: N${amount}\nRef: ${resp.reference}`);
                 sendEmailNotification(currentUser.email,"Purchase Confirmed — Campus Circle",`Hi!\n\nYour purchase was successful!\n\nMaterial: ${title}\nAmount Paid: N${amount}\n\nOpen Campus Circle Library to start reading.\n\nThank you!\nCampus Circle Team`);
 
