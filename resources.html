@@ -118,6 +118,28 @@
             </div>
         </div>
     </div>
+    <!-- REFUND POLICY MODAL -->
+    <div id="refundPolicyModal" class="modal" style="z-index:3000;">
+        <div class="modal-card" style="text-align:center;">
+            <div style="font-size:2.5rem;margin-bottom:10px;">📋</div>
+            <h3 style="margin:0 0 10px;color:#1e293b;">Refund Policy</h3>
+            <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;padding:15px;margin-bottom:15px;text-align:left;">
+                <p style="margin:0 0 8px;font-weight:700;color:#92400e;">⚠️ Please read before purchasing:</p>
+                <ul style="margin:0;padding-left:18px;color:#78350f;font-size:.9rem;line-height:1.8;">
+                    <li>All sales are <strong>final</strong> after purchase</li>
+                    <li>Refunds are only available within <strong>24 hours</strong> of payment</li>
+                    <li>No refunds after 24 hours — <strong>no exceptions</strong></li>
+                    <li>Ensure you select the correct material before paying</li>
+                </ul>
+            </div>
+            <p style="font-size:.85rem;color:#64748b;margin-bottom:15px;">By clicking "I Agree", you confirm you have read and accepted our refund policy.</p>
+            <div style="display:flex;gap:10px;">
+                <button class="btn btn-secondary" style="flex:1;" onclick="closeRefundPolicy()">Cancel</button>
+                <button class="btn btn-primary" style="flex:1;" onclick="acceptRefundPolicy()">I Agree ✅</button>
+            </div>
+        </div>
+    </div>
+
     <div id="fileViewer" class="viewer-modal">
         <div class="viewer-header">
             <div class="viewer-header-left">
@@ -206,7 +228,7 @@
                 const safeTitle=encodeURIComponent(res.title);
                 let btns=isOwned
                     ?`<button class="btn btn-success" onclick="openReader('${safeUrl}','${safeTitle}')"><i class="fa-solid fa-book-open"></i> Read</button>`
-                    :`<div class="btn-row"><button class="btn btn-primary" onclick="buySoftcopy('${res.id}','${price}','${res.title.replace(/'/g,"")}','${res.uploader_id||''}')"><i class="fa-solid fa-unlock"></i> PDF</button>${res.is_hardcopy_available?`<button class="btn btn-secondary" onclick="openOrderModal('${res.id}','${res.title.replace(/'/g,"")}','${res.hardcopy_price}')"><i class="fa-solid fa-truck"></i> Hardcopy</button>`:`<button class="btn btn-secondary" disabled style="opacity:.5">No Print</button>`}</div>`;
+                    :`<div class="btn-row"><button class="btn btn-primary" onclick="buySoftcopyWithPolicy('${res.id}','${price}','${res.title.replace(/'/g,"")}','${res.uploader_id||''}')"><i class="fa-solid fa-unlock"></i> PDF</button>${res.is_hardcopy_available?`<button class="btn btn-secondary" onclick="openOrderModal('${res.id}','${res.title.replace(/'/g,"")}','${res.hardcopy_price}')"><i class="fa-solid fa-truck"></i> Hardcopy</button>`:`<button class="btn btn-secondary" disabled style="opacity:.5">No Print</button>`}</div>`;
                 return`<div class="res-card">${res.is_hardcopy_available?`<div class="hardcopy-badge">Book Available</div>`:''}<div class="res-header"><div class="file-icon ${isImg?'doc':'pdf'}"><i class="fa-solid ${isImg?'fa-camera':'fa-file-pdf'}"></i></div><div><div class="res-title">${res.title}</div><span class="badge-level">${res.level}</span></div></div><div class="res-price-tag">&#8358;${isOwned?'PAID':Number(price).toLocaleString()}</div><div class="res-actions">${btns}</div>${isAdmin?`<button style="background:none;border:none;color:red;margin-top:5px;font-size:.7rem;align-self:flex-end;cursor:pointer;" onclick="deleteResource('${res.id}')">Delete</button>`:''}</div>`;
             }).join('');
         }
@@ -232,34 +254,25 @@
                     currentUser=user;
                 }
 
-                // ✅ STEP 1 — Save payment log FIRST (permanent backup, always works)
-                _supabase.from('payment_logs').insert({
-                    paystack_ref: resp.reference,
-                    buyer_email:  currentUser.email,
-                    buyer_id:     currentUser.id,
-                    resource_id:  String(id),
-                    resource_title: title,
-                    amount:       amount
-                }).catch(e=>console.error("Log error:",e));
-
-                // ✅ STEP 2 — Grant access immediately before any DB calls
+                // GRANT ACCESS IMMEDIATELY — before any DB calls
                 purchasedIds.add(id.toString());
                 loadResources();
 
-                // ✅ STEP 3 — Insert transaction (duplicate-safe)
+                // DUPLICATE CHECK — skip insert if already purchased
                 const{data:existing}=await _supabase.from('transactions').select('id').eq('buyer_id',currentUser.id).eq('resource_id',id).maybeSingle();
                 if(!existing){
                     const{error:txError}=await _supabase.from('transactions').insert([{buyer_id:currentUser.id,resource_id:id,amount_paid:amount}]);
+                    // Log only — never block access
                     if(txError)console.error("TX insert (non-fatal):",txError.message);
                 }
 
-                // ✅ STEP 4 — Notifications (non-blocking)
+                // Notifications — non-blocking
                 _supabase.from('notifications').insert([{user_id:currentUser.id,title:'Purchase Successful',message:`Payment successful! You can now read "${title}" in your Library.`}]).catch(()=>{});
                 if(uploaderId&&uploaderId.trim()!==""){
                     _supabase.from('notifications').insert([{user_id:uploaderId,title:'Sale Commission',message:`Cha-ching! A student just bought "${title}". You earned a commission from this N${amount} sale!`}]).catch(()=>{});
                 }
 
-                // ✅ STEP 5 — Emails (non-blocking)
+                // Emails — non-blocking
                 sendEmailNotification(ADMIN_EMAIL,"PDF Sold — Campus Circle",`New sale!\n\nBuyer: ${currentUser.email}\nMaterial: ${title}\nAmount: N${amount}\nRef: ${resp.reference}`);
                 sendEmailNotification(currentUser.email,"Purchase Confirmed — Campus Circle",`Hi!\n\nYour purchase was successful!\n\nMaterial: ${title}\nAmount Paid: N${amount}\n\nOpen Campus Circle Library to start reading.\n\nThank you!\nCampus Circle Team`);
 
@@ -351,6 +364,30 @@
         }
 
         function closeViewer(){document.getElementById('fileViewer').classList.remove('open');document.getElementById('viewer-container').innerHTML='';document.getElementById('page-info').innerText='';document.body.style.overflow='';}
+
+        // ── REFUND POLICY ─────────────────────────────────────────────────────
+        let pendingPurchase = null;
+
+        function buySoftcopyWithPolicy(id, price, title, uploaderId) {
+            // Show policy on EVERY purchase
+            pendingPurchase = { id, price, title, uploaderId };
+            document.getElementById('refundPolicyModal').style.display = 'flex';
+        }
+
+        function closeRefundPolicy() {
+            document.getElementById('refundPolicyModal').style.display = 'none';
+            pendingPurchase = null;
+        }
+
+        function acceptRefundPolicy() {
+            sessionStorage.setItem('refund_policy_accepted', 'true');
+            document.getElementById('refundPolicyModal').style.display = 'none';
+            if (pendingPurchase) {
+                const { id, price, title, uploaderId } = pendingPurchase;
+                pendingPurchase = null;
+                buySoftcopy(id, price, title, uploaderId);
+            }
+        }
 
         init();
     </script>
