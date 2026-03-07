@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin | Campus Circle</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #3d72b4;
+            --primary-dark: #2d5a8e;
+            --primary-light: #dbeafe;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #0f1923;
+            --surface: #1a2535;
+            --surface2: #212f42;
+            --border: #2a3d54;
+            --text: #e8f0fe;
+            --muted: #6b8cae;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        /* LOGIN */
+        #login-screen {
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f1923 0%, #1a2d47 100%);
+        }
+        .login-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px 32px;
+            width: 100%; max-width: 380px;
+            text-align: center;
+        }
+        .login-logo-placeholder {
+            width: 64px; height: 64px; border-radius: 16px;
+            background: var(--primary);
+            margin: 0 auto 16px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; font-weight: 900; color: white;
+        }
+        .login-box h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 4px; }
+        .login-box p { color: var(--muted); font-size: .9rem; margin-bottom: 28px; }
+        .input-group { margin-bottom: 16px; text-align: left; }
+        .input-group label { font-size: .78rem; font-weight: 700; color: var(--muted); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+        .input-group input {
+            width: 100%; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 10px; padding: 12px 16px; color: var(--text);
+            font-family: 'Outfit', sans-serif; font-size: .95rem; outline: none; transition: border-color .2s;
+        }
+        .input-group input:focus { border-color: var(--primary); }
+        .btn-login {
+            width: 100%; background: var(--primary); color: white; border: none;
+            border-radius: 10px; padding: 14px; font-family: 'Outfit', sans-serif;
+            font-size: 1rem; font-weight: 700; cursor: pointer; transition: background .2s, transform .1s; margin-top: 4px;
+        }
+        .btn-login:hover { background: var(--primary-dark); }
+        .btn-login:active { transform: scale(.98); }
+        .login-error { color: var(--danger); font-size: .85rem; margin-top: 12px; display: none; }
+
+        /* MAIN LAYOUT */
+        #admin-screen { display: none; }
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: 220px;
+            background: var(--surface); border-right: 1px solid var(--border);
+            padding: 20px 0; z-index: 100; display: flex; flex-direction: column;
+        }
+        .sidebar-logo {
+            display: flex; align-items: center; gap: 10px;
+            padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px;
+        }
+        .sidebar-logo-icon {
+            width: 36px; height: 36px; border-radius: 8px; background: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 900; color: white; font-size: 1rem;
+        }
+        .sidebar-brand { font-weight: 800; font-size: .95rem; }
+        .sidebar-brand span { display: block; font-size: .7rem; font-weight: 500; color: var(--muted); }
+        .nav-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 11px 20px; cursor: pointer; color: var(--muted);
+            font-weight: 500; font-size: .9rem; border-left: 3px solid transparent; transition: all .15s;
+        }
+        .nav-item:hover { background: var(--surface2); color: var(--text); }
+        .nav-item.active { background: rgba(61,114,180,0.15); color: var(--primary); border-left-color: var(--primary); font-weight: 700; }
+        .nav-item i { width: 18px; text-align: center; }
+        .sidebar-bottom { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); }
+        .admin-badge {
+            background: rgba(61,114,180,0.15); border: 1px solid rgba(61,114,180,0.3);
+            border-radius: 8px; padding: 10px 12px; font-size: .8rem;
+        }
+        .admin-badge span { display: block; font-weight: 700; color: var(--primary); }
+        .admin-badge small { color: var(--muted); font-size: .75rem; }
+
+        .main { margin-left: 220px; min-height: 100vh; }
+        .topbar {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 16px 24px; display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 50;
+        }
+        .topbar h1 { font-size: 1.1rem; font-weight: 800; }
+        .btn-logout {
+            background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+            color: var(--danger); padding: 7px 14px; border-radius: 8px;
+            font-size: .8rem; font-weight: 600; cursor: pointer; font-family: 'Outfit', sans-serif; transition: background .2s;
+        }
+        .btn-logout:hover { background: rgba(239,68,68,0.2); }
+        .content { padding: 24px; }
+
+        /* TABS */
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* STATS */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 24px; }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+        .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-bottom: 12px; }
+        .stat-num { font-size: 1.8rem; font-weight: 900; line-height: 1; margin-bottom: 4px; }
+        .stat-label { font-size: .78rem; color: var(--muted); font-weight: 500; }
+
+        /* TABLE */
+        .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
+        .table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .table-title { font-weight: 700; font-size: .95rem; }
+        .table-count { background: var(--primary-light); color: var(--primary); padding: 2px 10px; border-radius: 50px; font-size: .75rem; font-weight: 700; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 10px 16px; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); background: var(--surface2); border-bottom: 1px solid var(--border); }
+        td { padding: 12px 16px; font-size: .85rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        .badge { padding: 3px 10px; border-radius: 50px; font-size: .72rem; font-weight: 700; display: inline-block; }
+        .badge-success { background: rgba(16,185,129,0.15); color: var(--success); }
+        .badge-warning { background: rgba(245,158,11,0.15); color: var(--warning); }
+        .badge-danger { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .badge-blue { background: rgba(61,114,180,0.15); color: var(--primary); }
+
+        /* BUTTONS */
+        .btn { padding: 7px 14px; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; border: none; font-family: 'Outfit', sans-serif; transition: opacity .2s, transform .1s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn:active { transform: scale(.97); }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { opacity: .9; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { opacity: .9; }
+        .btn-danger { background: rgba(239,68,68,0.15); color: var(--danger); border: 1px solid rgba(239,68,68,0.2); }
+        .btn-danger:hover { background: rgba(239,68,68,0.25); }
+        .btn-sm { padding: 5px 10px; font-size: .75rem; }
+
+        /* FORMS */
+        .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
+        .form-card h3 { font-weight: 700; margin-bottom: 6px; font-size: 1rem; }
+        .form-card .form-desc { font-size: .85rem; color: var(--muted); margin-bottom: 18px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { font-size: .78rem; font-weight: 700; color: var(--muted); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; background: var(--bg); border: 1px solid var(--border);
+            border-radius: 10px; padding: 10px 14px; color: var(--text);
+            font-family: 'Outfit', sans-serif; font-size: .9rem; outline: none; transition: border-color .2s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+        .form-group textarea { resize: vertical; min-height: 90px; }
+        .form-group select option { background: var(--surface); }
+        .full-width { grid-column: 1 / -1; }
+
+        /* PARTNER CARDS */
+        .partners-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+        .partner-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: transform .2s, border-color .2s; }
+        .partner-card:hover { transform: translateY(-3px); border-color: var(--primary); }
+        .partner-photo-wrap { width: 100%; height: 140px; background: var(--surface2); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .partner-photo-wrap img { width: 100%; height: 140px; object-fit: cover; }
+        .partner-info { padding: 16px; }
+        .partner-name { font-weight: 700; font-size: .95rem; margin-bottom: 3px; }
+        .partner-role { font-size: .8rem; color: var(--muted); margin-bottom: 10px; }
+        .partner-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        /* TOAST */
+        .toast {
+            position: fixed; bottom: 24px; right: 24px; background: var(--surface);
+            border: 1px solid var(--border); border-radius: 12px; padding: 14px 20px;
+            font-size: .9rem; font-weight: 600; box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+            transform: translateY(100px); opacity: 0; transition: all .3s; z-index: 999;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-color: var(--success); color: var(--success); }
+        .toast.error { border-color: var(--danger); color: var(--danger); }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 420px; }
+        .modal h3 { font-weight: 800; margin-bottom: 12px; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+        /* MISC */
+        .loading { text-align: center; padding: 40px; color: var(--muted); font-size: .9rem; }
+        .spinner { display: inline-block; width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .6s linear infinite; margin-bottom: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+        .empty i { font-size: 2.5rem; margin-bottom: 12px; opacity: .3; display: block; }
+        .empty p { font-size: .9rem; }
+        .search-bar {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+            padding: 10px 14px; color: var(--text); font-family: 'Outfit', sans-serif;
+            font-size: .875rem; outline: none; width: 100%; margin-bottom: 16px; transition: border-color .2s;
+        }
+        .search-bar:focus { border-color: var(--primary); }
+
+        /* MOBILE */
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; height: auto; position: fixed; bottom: 0; top: auto; flex-direction: row; padding: 0; border-right: none; border-top: 1px solid var(--border); overflow-x: auto; }
+            .sidebar-logo, .sidebar-bottom { display: none; }
+            .nav-item { flex-direction: column; gap: 4px; padding: 10px 14px; font-size: .63rem; border-left: none; border-top: 3px solid transparent; white-space: nowrap; }
+            .nav-item.active { border-top-color: var(--primary); border-left-color: transparent; }
+            .nav-item i { width: auto; font-size: 1.1rem; }
+            .main { margin-left: 0; padding-bottom: 75px; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .form-grid { grid-template-columns: 1fr; }
+            table { font-size: .8rem; }
+            th, td { padding: 8px 10px; }
+            .content { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ════════════ LOGIN ════════════ -->
+<div id="login-screen">
+    <div class="login-box">
+        <img src="1000367752.jpg" alt="Campus Circle" style="width:64px;height:64px;border-radius:16px;object-fit:cover;margin:0 auto 16px;display:block;">
+        <h2>Admin Panel</h2>
+        <p>Campus Circle — Restricted Access</p>
+        <div class="input-group">
+            <label>Email</label>
+            <input type="email" id="login-email" placeholder="your@email.com">
+        </div>
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="btn-login" onclick="doLogin()">Sign In</button>
+        <div class="login-error" id="login-error">Invalid email or password</div>
+    </div>
+</div>
+
+<!-- ════════════ ADMIN ════════════ -->
+<div id="admin-screen">
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <img src="1000367752.jpg" alt="CC" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;">
+            <div class="sidebar-brand">Campus Circle <span>Admin Panel</span></div>
+        </div>
+        <div class="nav-item active" onclick="showTab('dashboard', this)"><i class="fa-solid fa-gauge"></i> Dashboard</div>
+        <div class="nav-item" onclick="showTab('users', this)"><i class="fa-solid fa-users"></i> Users</div>
+        <div class="nav-item" onclick="showTab('transactions', this)"><i class="fa-solid fa-receipt"></i> Transactions</div>
+        <div class="nav-item" onclick="showTab('access', this)"><i class="fa-solid fa-key"></i> Grant Access</div>
+        <div class="nav-item" onclick="showTab('partners', this)"><i class="fa-solid fa-handshake"></i> Partners</div>
+        <div class="nav-item" onclick="showTab('announce', this)"><i class="fa-solid fa-bullhorn"></i> Announce</div>
+        <div class="sidebar-bottom">
+            <div class="admin-badge">
+                <span id="admin-name">Admin</span>
+                <small>Signed in as admin</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="topbar">
+            <h1 id="topbar-title">Dashboard</h1>
+            <button class="btn-logout" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+        </div>
+        <div class="content">
+
+            <!-- DASHBOARD -->
+            <div class="tab-panel active" id="tab-dashboard">
+                <div class="stats-grid">
+                    <div class="stat-card" style="border-left:4px solid var(--primary)">
+                        <div class="stat-icon" style="background:rgba(61,114,180,0.15);color:var(--primary)"><i class="fa-solid fa-users"></i></div>
+                        <div class="stat-num" id="stat-users" style="color:var(--primary)">—</div>
+                        <div class="stat-label">Registered Users</div>
+                    </div>
+                    <div class="stat-card" style="border-left:4px solid var(--success)">
+                        <div class="stat-icon" style="background:rgba(16,185,129,0.15);color:var(--success)"><i class="fa-solid fa-receipt"></i></div>
+                        <div class="stat-num" id="stat-txns" style="color:var(--success)">—</div>
+                        <div class="stat-label">Total Sales</div>
+                    </div>
+                    <div class="stat-card" style="border-left:4px solid var(--warning);grid-column:1/-1">
+                        <div style="display:flex;align-items:center;justify-content:space-between">
+                            <div>
+                                <div class="stat-label" style="margin-bottom:6px">Total Revenue</div>
+                                <div class="stat-num" id="stat-revenue" style="color:var(--warning);font-size:2.2rem">—</div>
+                            </div>
+                            <div class="stat-icon" style="background:rgba(245,158,11,0.15);color:var(--warning);width:52px;height:52px;font-size:1.4rem"><i class="fa-solid fa-naira-sign"></i></div>
+                        </div>
+                    </div>
+                    <div class="stat-card" style="border-left:4px solid #8b5cf6">
+                        <div class="stat-icon" style="background:rgba(139,92,246,0.15);color:#8b5cf6"><i class="fa-solid fa-handshake"></i></div>
+                        <div class="stat-num" id="stat-partners" style="color:#8b5cf6">—</div>
+                        <div class="stat-label">Partners</div>
+                    </div>
+                    <div class="stat-card" style="border-left:4px solid var(--danger)">
+                        <div class="stat-icon" style="background:rgba(239,68,68,0.15);color:var(--danger)"><i class="fa-solid fa-book"></i></div>
+                        <div class="stat-num" id="stat-resources" style="color:var(--danger)">—</div>
+                        <div class="stat-label">Materials Listed</div>
+                    </div>
+                </div>
+                <div class="table-card">
+                    <div class="table-header"><span class="table-title">Recent Transactions</span></div>
+                    <div id="recent-txns-body"><div class="loading"><div class="spinner"></div><br>Loading...</div></div>
+                </div>
+            </div>
+
+            <!-- USERS -->
+            <div class="tab-panel" id="tab-users">
+                <input class="search-bar" type="text" placeholder="🔍  Search by email or name..." oninput="filterUsers(this.value)">
+                <div class="table-card">
+                    <div class="table-header">
+                        <span class="table-title">All Registered Users</span>
+                        <span class="table-count" id="users-count">0</span>
+                    </div>
+                    <div id="users-body"><div class="loading"><div class="spinner"></div><br>Loading...</div></div>
+                </div>
+            </div>
+
+            <!-- TRANSACTIONS -->
+            <div class="tab-panel" id="tab-transactions">
+                <input class="search-bar" type="text" placeholder="🔍  Search by email or material..." oninput="filterTxns(this.value)">
+                <div class="table-card">
+                    <div class="table-header">
+                        <span class="table-title">All Transactions</span>
+                        <span class="table-count" id="txns-count">0</span>
+                    </div>
+                    <div id="txns-body"><div class="loading"><div class="spinner"></div><br>Loading...</div></div>
+                </div>
+            </div>
+
+            <!-- GRANT ACCESS -->
+            <div class="tab-panel" id="tab-access">
+                <div class="form-card">
+                    <h3><i class="fa-solid fa-key" style="color:var(--primary)"></i> Manually Grant Access</h3>
+                    <p class="form-desc">Use this when a student paid but didn't get access. Enter their email and select the material.</p>
+                    <div class="form-group">
+                        <label>Student Email</label>
+                        <input type="email" id="grant-email" placeholder="student@gmail.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Material</label>
+                        <select id="grant-resource"><option value="">— Select material —</option></select>
+                    </div>
+                    <button class="btn btn-success" onclick="grantAccess()"><i class="fa-solid fa-circle-check"></i> Grant Access Now</button>
+                </div>
+
+                <div class="form-card">
+                    <h3><i class="fa-solid fa-rotate" style="color:var(--primary)"></i> Auto-Recovery</h3>
+                    <p class="form-desc">Scans payment_logs and automatically grants access to students who paid but have no transaction record.</p>
+                    <button class="btn btn-primary" onclick="runRecovery()"><i class="fa-solid fa-rotate"></i> Run Auto-Recovery</button>
+                    <div id="recovery-result" style="margin-top:14px;font-size:.85rem;"></div>
+                </div>
+            </div>
+
+            <!-- PARTNERS -->
+            <div class="tab-panel" id="tab-partners">
+                <div class="form-card">
+                    <h3><i class="fa-solid fa-user-plus" style="color:var(--primary)"></i> Add New Partner</h3>
+                    <p class="form-desc">Add a partner manually. For photo, paste a direct image link (Google Drive share link or Imgur).</p>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="p-name" placeholder="e.g. John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label>Role</label>
+                            <input type="text" id="p-role" placeholder="e.g. SUG President">
+                        </div>
+                        <div class="form-group">
+                            <label>Department</label>
+                            <input type="text" id="p-dept" placeholder="e.g. Law">
+                        </div>
+                        <div class="form-group">
+                            <label>WhatsApp</label>
+                            <input type="text" id="p-whatsapp" placeholder="+2348...">
+                        </div>
+                        <div class="form-group">
+                            <label>Commission Rate (%)</label>
+                            <input type="number" id="p-commission" value="10" min="0" max="100">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="p-status">
+                                <option value="approved">Approved ✅</option>
+                                <option value="pending">Pending ⏳</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Photo URL</label>
+                            <input type="text" id="p-photo" placeholder="https://... (direct image link)">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="addPartner()"><i class="fa-solid fa-plus"></i> Add Partner</button>
+                </div>
+                <div id="partners-grid" class="partners-grid">
+                    <div class="loading" style="grid-column:1/-1"><div class="spinner"></div><br>Loading...</div>
+                </div>
+            </div>
+
+            <!-- ANNOUNCE -->
+            <div class="tab-panel" id="tab-announce">
+                <div class="form-card">
+                    <h3><i class="fa-solid fa-bullhorn" style="color:var(--primary)"></i> Send Announcement</h3>
+                    <p class="form-desc">Creates a notification that all users see when they open Campus Circle.</p>
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" id="ann-title" placeholder="e.g. New materials available!">
+                    </div>
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea id="ann-message" placeholder="Write your announcement here..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select id="ann-type">
+                            <option value="info">ℹ️ Info</option>
+                            <option value="success">✅ Good News</option>
+                            <option value="warning">⚠️ Warning</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="sendAnnouncement()"><i class="fa-solid fa-paper-plane"></i> Send to All Students</button>
+                    <div id="ann-result" style="margin-top:14px;font-size:.85rem;"></div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-header"><span class="table-title">Recent Announcements</span></div>
+                    <div id="ann-history"><div class="loading"><div class="spinner"></div><br>Loading...</div></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+        <h3 id="modal-title">Confirm</h3>
+        <p id="modal-body" style="color:var(--muted);font-size:.9rem;line-height:1.5;"></p>
+        <div class="modal-actions">
+            <button class="btn" style="background:var(--surface2);color:var(--text)" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-danger" id="modal-confirm-btn">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let allUsers = [], allTxns = [];
+
+// ── AUTH ──
+async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pass = document.getElementById('login-password').value;
+    const err = document.getElementById('login-error');
+    err.style.display = 'none';
+
+    // Sign in first
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) { err.textContent = error.message; err.style.display = 'block'; return; }
+
+    // Check admin_users table in Supabase
+    const { data: adminRow } = await sb.from('admin_users').select('email').eq('email', email).maybeSingle();
+    if (!adminRow) {
+        await sb.auth.signOut();
+        err.textContent = 'Access denied. You are not an admin.';
+        err.style.display = 'block'; return;
+    }
+    enterAdmin(email);
+}
+
+function enterAdmin(email) {
+    document.getElementById('admin-name').textContent = email.split('@')[0];
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-screen').style.display = 'block';
+    loadAll();
+}
+
+async function doLogout() {
+    await sb.auth.signOut();
+    location.reload();
+}
+
+// ── NAV ──
+const tabTitles = { dashboard:'Dashboard', users:'Users', transactions:'Transactions', access:'Grant Access', partners:'Partners', announce:'Announcements' };
+function showTab(tab, el) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    el.classList.add('active');
+    document.getElementById('topbar-title').textContent = tabTitles[tab];
+}
+
+// ── LOAD ALL ──
+async function loadAll() {
+    await Promise.all([loadDashboard(), loadUsers(), loadTransactions(), loadResources(), loadPartners(), loadAnnouncements()]);
+}
+
+// ── DASHBOARD ──
+async function loadDashboard() {
+    const [{ count: uc }, { count: tc }, { data: rev }, { count: pc }, { count: rc }] = await Promise.all([
+        sb.from('profiles').select('*', { count: 'exact', head: true }),
+        sb.from('transactions').select('*', { count: 'exact', head: true }),
+        sb.from('transactions').select('amount_paid'),
+        sb.from('partners').select('*', { count: 'exact', head: true }),
+        sb.from('academic_resources').select('*', { count: 'exact', head: true })
+    ]);
+    document.getElementById('stat-users').textContent = uc || 0;
+    document.getElementById('stat-txns').textContent = tc || 0;
+    const total = (rev || []).reduce((s, r) => s + (r.amount_paid || 0), 0);
+    document.getElementById('stat-revenue').textContent = '\u20a6' + total.toLocaleString();
+    document.getElementById('stat-partners').textContent = pc || 0;
+    document.getElementById('stat-resources').textContent = rc || 0;
+
+    // Join transactions -> academic_resources, then match buyer_id to profiles.id
+    const { data: recent } = await sb.from('transactions')
+        .select('id, amount_paid, created_at, buyer_id, academic_resources(title)')
+        .order('created_at', { ascending: false }).limit(8);
+
+    // Fetch buyer emails from profiles using buyer_id
+    const buyerIds = [...new Set((recent||[]).map(t => t.buyer_id).filter(Boolean))];
+    let profileMap = {};
+    if (buyerIds.length) {
+        const { data: profs } = await sb.from('profiles').select('id, email').in('id', buyerIds);
+        (profs||[]).forEach(p => profileMap[p.id] = p.email);
+    }
+
+    const el = document.getElementById('recent-txns-body');
+    if (!recent || !recent.length) { el.innerHTML = '<div class="empty"><i class="fa-solid fa-receipt"></i><p>No transactions yet</p></div>'; return; }
+    el.innerHTML = `<table><thead><tr><th>Student</th><th>Material</th><th>Amount</th><th>Date</th></tr></thead><tbody>
+        ${recent.map(t => `<tr>
+            <td style="font-size:.82rem">${profileMap[t.buyer_id] || t.buyer_id?.slice(0,8)+'...' || '—'}</td>
+            <td>${t.academic_resources?.title || '—'}</td>
+            <td style="color:var(--success);font-weight:700">\u20a6${(t.amount_paid||0).toLocaleString()}</td>
+            <td style="color:var(--muted)">${new Date(t.created_at).toLocaleDateString()}</td>
+        </tr>`).join('')}
+    </tbody></table>`;
+}
+
+// ── USERS ──
+async function loadUsers() {
+    const { data } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
+    allUsers = data || [];
+    renderUsers(allUsers);
+}
+function renderUsers(users) {
+    document.getElementById('users-count').textContent = users.length;
+    const el = document.getElementById('users-body');
+    if (!users.length) { el.innerHTML = '<div class="empty"><i class="fa-solid fa-users"></i><p>No users found</p></div>'; return; }
+    el.innerHTML = `<table><thead><tr><th>Email</th><th>Name</th><th>Joined</th></tr></thead><tbody>
+        ${users.map(u => `<tr>
+            <td style="font-size:.82rem">${u.email || '—'}</td>
+            <td>${u.full_name || u.name || '—'}</td>
+            <td style="color:var(--muted)">${new Date(u.created_at).toLocaleDateString()}</td>
+        </tr>`).join('')}
+    </tbody></table>`;
+}
+function filterUsers(q) {
+    renderUsers(allUsers.filter(u => (u.email||'').toLowerCase().includes(q.toLowerCase()) || (u.full_name||'').toLowerCase().includes(q.toLowerCase())));
+}
+
+// ── TRANSACTIONS ──
+async function loadTransactions() {
+    const { data } = await sb.from('transactions')
+        .select('id, amount_paid, created_at, buyer_id, academic_resources(title)')
+        .order('created_at', { ascending: false });
+
+    const buyerIds = [...new Set((data||[]).map(t => t.buyer_id).filter(Boolean))];
+    let profileMap = {};
+    if (buyerIds.length) {
+        const { data: profs } = await sb.from('profiles').select('id, email').in('id', buyerIds);
+        (profs||[]).forEach(p => profileMap[p.id] = p.email);
+    }
+    allTxns = (data || []).map(t => ({ ...t, studentEmail: profileMap[t.buyer_id] || '—' }));
+    renderTxns(allTxns);
+}
+function renderTxns(txns) {
+    document.getElementById('txns-count').textContent = txns.length;
+    const el = document.getElementById('txns-body');
+    if (!txns.length) { el.innerHTML = '<div class="empty"><i class="fa-solid fa-receipt"></i><p>No transactions yet</p></div>'; return; }
+    el.innerHTML = `<table><thead><tr><th>Student</th><th>Material</th><th>Amount</th><th>Date</th></tr></thead><tbody>
+        ${txns.map(t => `<tr>
+            <td style="font-size:.82rem">${t.studentEmail}</td>
+            <td>${t.academic_resources?.title || '—'}</td>
+            <td style="color:var(--success);font-weight:700">\u20a6${(t.amount_paid||0).toLocaleString()}</td>
+            <td style="color:var(--muted)">${new Date(t.created_at).toLocaleDateString()}</td>
+        </tr>`).join('')}
+    </tbody></table>`;
+}
+function filterTxns(q) {
+    renderTxns(allTxns.filter(t =>
+        (t.studentEmail||'').toLowerCase().includes(q.toLowerCase()) ||
+        (t.academic_resources?.title||'').toLowerCase().includes(q.toLowerCase())
+    ));
+}
+
+// ── RESOURCES ──
+async function loadResources() {
+    const { data } = await sb.from('academic_resources').select('id, title').order('title');
+    const sel = document.getElementById('grant-resource');
+    sel.innerHTML = '<option value="">— Select material —</option>';
+    (data || []).forEach(r => sel.innerHTML += `<option value="${r.id}">${r.title}</option>`);
+}
+
+// ── GRANT ACCESS ──
+async function grantAccess() {
+    const email = document.getElementById('grant-email').value.trim();
+    const resourceId = document.getElementById('grant-resource').value;
+    if (!email || !resourceId) { showToast('Fill in all fields', 'error'); return; }
+
+    const { data: profile } = await sb.from('profiles').select('id').eq('email', email).single();
+    if (!profile) { showToast('Student not found: ' + email, 'error'); return; }
+
+    const { error } = await sb.from('transactions').insert({ buyer_id: profile.id, resource_id: parseInt(resourceId), amount_paid: 1500 });
+    if (error && !error.message.includes('duplicate')) { showToast('Error: ' + error.message, 'error'); return; }
+    showToast('Access granted to ' + email + ' ✅', 'success');
+    document.getElementById('grant-email').value = '';
+    document.getElementById('grant-resource').value = '';
+    loadTransactions(); loadDashboard();
+}
+
+// ── RECOVERY ──
+async function runRecovery() {
+    const result = document.getElementById('recovery-result');
+    result.innerHTML = '<span style="color:var(--muted)">Running recovery scan...</span>';
+    const { data: logs } = await sb.from('payment_logs').select('*').not('buyer_id', 'is', null);
+    if (!logs || !logs.length) { result.innerHTML = '<span style="color:var(--success)">✅ No unmatched payments found.</span>'; return; }
+    let fixed = 0;
+    for (const log of logs) {
+        const { data: exists } = await sb.from('transactions').select('id').eq('buyer_id', log.buyer_id).eq('resource_id', parseInt(log.resource_id)).maybeSingle();
+        if (!exists) {
+            await sb.from('transactions').insert({ buyer_id: log.buyer_id, resource_id: parseInt(log.resource_id), amount_paid: log.amount });
+            fixed++;
+        }
+    }
+    result.innerHTML = `<span style="color:var(--success)">✅ Recovery done — ${fixed} access record(s) fixed out of ${logs.length} payment logs.</span>`;
+    loadDashboard(); loadTransactions();
+}
+
+// ── PARTNERS ──
+async function loadPartners() {
+    const { data } = await sb.from('partners').select('*').order('created_at', { ascending: false });
+    renderPartners(data || []);
+}
+function renderPartners(partners) {
+    const grid = document.getElementById('partners-grid');
+    if (!partners.length) {
+        grid.innerHTML = '<div class="empty" style="grid-column:1/-1"><i class="fa-solid fa-handshake"></i><p>No partners yet. Add your first one above.</p></div>';
+        return;
+    }
+    grid.innerHTML = partners.map(p => `
+        <div class="partner-card">
+            <div class="partner-photo-wrap">
+                ${p.photo_url
+                    ? `<img src="${p.photo_url}" alt="${p.name}" onerror="this.parentElement.innerHTML='<span style=font-size:3rem;color:var(--muted)>👤</span>'">`
+                    : '<span style="font-size:3rem;color:var(--muted)">👤</span>'}
+            </div>
+            <div class="partner-info">
+                <div class="partner-name">${p.name}</div>
+                <div class="partner-role">${p.role || ''}${p.department ? ' · ' + p.department : ''}</div>
+                <div style="margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap">
+                    <span class="badge ${p.status === 'approved' ? 'badge-success' : 'badge-warning'}">${p.status}</span>
+                    <span class="badge badge-blue">${p.commission_rate}% comm.</span>
+                </div>
+                <div class="partner-actions">
+                    ${p.status === 'pending' ? `<button class="btn btn-success btn-sm" onclick="approvePartner('${p.id}')"><i class="fa-solid fa-check"></i> Approve</button>` : ''}
+                    <button class="btn btn-danger btn-sm" onclick="deletePartner('${p.id}', '${p.name.replace(/'/g,"\\'")}')"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>
+        </div>`).join('');
+}
+async function addPartner() {
+    const name = document.getElementById('p-name').value.trim();
+    if (!name) { showToast('Enter partner name', 'error'); return; }
+    const { error } = await sb.from('partners').insert({
+        name,
+        role: document.getElementById('p-role').value.trim(),
+        department: document.getElementById('p-dept').value.trim(),
+        whatsapp: document.getElementById('p-whatsapp').value.trim(),
+        commission_rate: parseFloat(document.getElementById('p-commission').value) || 10,
+        status: document.getElementById('p-status').value,
+        photo_url: document.getElementById('p-photo').value.trim() || null
+    });
+    if (error) { showToast('Error: ' + error.message, 'error'); return; }
+    showToast(name + ' added ✅', 'success');
+    ['p-name','p-role','p-dept','p-whatsapp','p-photo'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('p-commission').value = '10';
+    loadPartners(); loadDashboard();
+}
+async function approvePartner(id) {
+    await sb.from('partners').update({ status: 'approved' }).eq('id', id);
+    showToast('Partner approved ✅', 'success');
+    loadPartners();
+}
+function deletePartner(id, name) {
+    openModal('Remove Partner', `Are you sure you want to remove ${name} from the partners list?`, async () => {
+        await sb.from('partners').delete().eq('id', id);
+        showToast(name + ' removed', 'success');
+        loadPartners(); loadDashboard();
+    });
+}
+
+// ── ANNOUNCEMENTS ──
+async function sendAnnouncement() {
+    const title = document.getElementById('ann-title').value.trim();
+    const message = document.getElementById('ann-message').value.trim();
+    const type = document.getElementById('ann-type').value;
+    const result = document.getElementById('ann-result');
+    if (!title || !message) { showToast('Fill in title and message', 'error'); return; }
+
+    const { data: profiles } = await sb.from('profiles').select('id');
+    if (!profiles || !profiles.length) { result.innerHTML = '<span style="color:var(--muted)">No users to notify.</span>'; return; }
+
+    const { error } = await sb.from('notifications').insert(
+        profiles.map(p => ({ user_id: p.id, type, message: `${title}: ${message}`, is_read: false }))
+    );
+    if (error) { showToast('Error: ' + error.message, 'error'); return; }
+    showToast(`Sent to ${profiles.length} students ✅`, 'success');
+    document.getElementById('ann-title').value = '';
+    document.getElementById('ann-message').value = '';
+    result.innerHTML = `<span style="color:var(--success)">✅ Announcement sent to ${profiles.length} students</span>`;
+    loadAnnouncements();
+}
+async function loadAnnouncements() {
+    const { data } = await sb.from('notifications').select('*').order('created_at', { ascending: false }).limit(30);
+    const el = document.getElementById('ann-history');
+    if (!data || !data.length) { el.innerHTML = '<div class="empty"><i class="fa-solid fa-bullhorn"></i><p>No announcements sent yet</p></div>'; return; }
+    const seen = new Set();
+    const unique = data.filter(n => { const k = n.message + n.created_at?.slice(0,16); if (seen.has(k)) return false; seen.add(k); return true; });
+    el.innerHTML = `<table><thead><tr><th>Message</th><th>Type</th><th>Date</th></tr></thead><tbody>
+        ${unique.map(n => `<tr>
+            <td style="font-size:.82rem">${n.message}</td>
+            <td><span class="badge ${n.type==='success'?'badge-success':n.type==='warning'?'badge-warning':'badge-blue'}">${n.type}</span></td>
+            <td style="color:var(--muted)">${new Date(n.created_at).toLocaleDateString()}</td>
+        </tr>`).join('')}
+    </tbody></table>`;
+}
+
+// ── TOAST ──
+function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ── MODAL ──
+let modalCallback = null;
+function openModal(title, body, cb) {
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-body').textContent = body;
+    document.getElementById('modal-overlay').classList.add('show');
+    modalCallback = cb;
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); modalCallback = null; }
+document.getElementById('modal-confirm-btn').onclick = () => { if (modalCallback) { modalCallback(); } closeModal(); };
+
+// ── AUTO-LOGIN CHECK ──
+sb.auth.getSession().then(async ({ data }) => {
+    if (data.session) {
+        const email = data.session.user.email;
+        const { data: adminRow } = await sb.from('admin_users').select('email').eq('email', email).maybeSingle();
+        if (adminRow) enterAdmin(email);
+    }
+});
+</script>
+</body>
+</html>
