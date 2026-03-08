@@ -3,290 +3,457 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <!-- iOS PWA meta tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Campus Circle">
     <link rel="apple-touch-icon" href="icon-192.png">
     <title>Campus Circle | Your Academic Success Partner</title>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
-            --primary: #2563eb; 
-            --primary-dark: #1e40af;
-            --secondary: #10b981; 
-            --text-main: #1f2937;
-            --text-sub: #6b7280;
-            --bg-light: #f3f4f6;
-            --white: #ffffff;
-            --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --bg: #0a1628;
+            --surface: #112236;
+            --surface2: #1a2f4a;
+            --surface3: #0f1e35;
+            --border: rgba(61,114,180,0.2);
+            --primary: #3d72b4;
+            --primary-bright: #5b9bd5;
+            --accent: #64b5f6;
+            --text: #e2eaf4;
+            --text-muted: #7a9cc0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; }
-        
-        html, body { 
-            width: 100%; max-width: 100%; overflow-x: hidden; 
-            font-family: 'Roboto', sans-serif; color: var(--text-main); 
-            background-color: var(--white); line-height: 1.6;
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+
+        html, body {
+            width: 100%; max-width: 100%; overflow-x: hidden;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+            background-color: var(--bg);
+            line-height: 1.6;
         }
-        
+
         a { text-decoration: none; color: inherit; transition: 0.2s; cursor: pointer; }
         button { cursor: pointer; font-family: inherit; }
+        input, select, textarea { font-size: 16px !important; }
 
-        /* --- HEADER --- */
+        /* ── HEADER ── */
         .header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0 5%; background: var(--white);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 0 5%;
+            background: rgba(10,22,40,0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
             position: sticky; top: 0; z-index: 1000;
-            height: 75px; width: 100%;
+            height: 70px; width: 100%;
         }
-        
+
         .logo-container { height: 40px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .brand-logo { height: 50px; width: auto; object-fit: contain; }
-        .logo-container span { font-weight: 900; color: #2b5a9e; margin: 0; font-size: 1.5rem; letter-spacing: -0.5px; }
+        .brand-logo { height: 46px; width: auto; object-fit: contain; }
+        .logo-text { font-weight: 900; color: var(--text); font-size: 1.4rem; letter-spacing: -0.5px; }
+        .logo-text span { color: var(--accent); }
 
-        .nav-links { display: flex; gap: 30px; align-items: center; }
-        .nav-item { font-weight: 600; font-size: 0.95rem; color: var(--text-main); position: relative; cursor: pointer; }
-        .nav-item:hover { color: var(--primary); }
-        .badge-soon { font-size: 0.65rem; background: #f59e0b; color: white; padding: 2px 6px; border-radius: 4px; position: absolute; top: -10px; right: -20px; font-weight: 700; }
-
-        .auth-buttons { display: flex; gap: 15px; align-items: center; }
-        .btn-login { font-weight: 700; color: var(--text-main); }
-        .btn-login:hover { color: var(--primary); }
-        .btn-signup { 
-            background: var(--secondary); color: white; padding: 10px 24px; 
-            border-radius: 5px; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px;
-            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+        .nav-links { display: flex; gap: 28px; align-items: center; }
+        .nav-item {
+            font-weight: 600; font-size: 0.92rem; color: var(--text-muted);
+            position: relative; cursor: pointer; transition: color 0.2s;
         }
-        .btn-signup:hover { background: #059669; transform: translateY(-1px); }
+        .nav-item:hover { color: var(--accent); }
+        .badge-soon {
+            font-size: 0.6rem; background: var(--warning); color: #78350f;
+            padding: 2px 6px; border-radius: 4px;
+            position: absolute; top: -10px; right: -22px; font-weight: 800;
+        }
 
-        /* INSTALL BUTTON */
+        .auth-buttons { display: flex; gap: 12px; align-items: center; }
+        .btn-login { font-weight: 700; color: var(--text-muted); font-size: 0.9rem; }
+        .btn-login:hover { color: var(--accent); }
+        .btn-signup {
+            background: linear-gradient(135deg, var(--primary), var(--primary-bright));
+            color: white; padding: 9px 22px;
+            border-radius: 8px; font-weight: 700;
+            font-size: 0.88rem; letter-spacing: 0.3px;
+            box-shadow: 0 4px 12px rgba(61,114,180,0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-signup:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(61,114,180,0.4); }
+
         .btn-install {
-            background: var(--primary); color: white; padding: 10px 20px;
-            border-radius: 5px; font-weight: 700; font-size: 0.85rem;
-            display: none; align-items: center; gap: 8px; border: none;
-            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.25);
+            background: var(--surface2); color: var(--accent);
+            border: 1px solid var(--border);
+            padding: 9px 18px; border-radius: 8px;
+            font-weight: 700; font-size: 0.85rem;
+            display: none; align-items: center; gap: 8px;
             transition: 0.2s;
         }
-        .btn-install:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .btn-install:hover { border-color: var(--primary); background: rgba(61,114,180,0.1); }
         .btn-install.visible { display: flex; }
 
-        /* --- MOBILE MENU --- */
-        .mobile-menu-btn { display: none; font-size: 1.5rem; color: var(--text-main); background: none; border: none; }
+        /* ── MOBILE MENU ── */
+        .mobile-menu-btn { display: none; font-size: 1.4rem; color: var(--text-muted); background: none; border: none; }
         .mobile-dropdown {
-            display: none; position: fixed; top: 75px; left: 0; width: 100%;
-            background: white; border-top: 1px solid #e5e7eb;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1); padding: 20px; z-index: 999;
-            flex-direction: column; gap: 15px; animation: slideDown 0.3s ease-out;
+            display: none; position: fixed; top: 70px; left: 0; width: 100%;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+            padding: 16px 20px; z-index: 999;
+            flex-direction: column; gap: 4px;
+            animation: slideDown 0.25s ease-out;
         }
         .mobile-dropdown.active { display: flex; }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        .mobile-nav-item {
+            font-weight: 700; padding: 13px 14px;
+            border-radius: 10px; color: var(--text-muted);
+            transition: background 0.15s, color 0.15s;
+        }
+        .mobile-nav-item:hover { background: var(--surface2); color: var(--accent); }
+        .mobile-nav-divider { height: 1px; background: var(--border); margin: 4px 0; }
 
-        /* MOBILE INSTALL BUTTON */
         .mobile-install-btn {
             display: none; align-items: center; justify-content: center; gap: 8px;
-            padding: 12px; background: var(--primary); color: white;
-            border-radius: 5px; font-weight: 700; border: none; width: 100%;
-            font-size: 0.95rem;
+            padding: 12px; background: var(--surface2);
+            color: var(--accent); border: 1px solid var(--border);
+            border-radius: 10px; font-weight: 700; width: 100%; font-size: 0.93rem;
+            margin-top: 4px;
         }
         .mobile-install-btn.visible { display: flex; }
 
-        /* --- HERO --- */
+        /* ── HERO ── */
         .hero {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 80px 5%; background: linear-gradient(to right, #f0f9ff, #e0f2fe);
-            min-height: 600px; position: relative; width: 100%;
+            padding: 90px 5%;
+            min-height: 620px;
+            position: relative; width: 100%; overflow: hidden;
         }
-        .hero-text { flex: 1; max-width: 600px; z-index: 2; }
-        .hero-title { font-size: 3.5rem; font-weight: 900; line-height: 1.1; margin-bottom: 20px; color: #111827; }
-        .hero-title span { color: var(--primary); }
-        .hero-sub { font-size: 1.25rem; color: var(--text-sub); margin-bottom: 40px; font-weight: 300; }
-        
+
+        /* Background grid + glow */
+        .hero::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(61,114,180,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(61,114,180,0.06) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+        }
+        .hero::after {
+            content: '';
+            position: absolute; top: -100px; left: -100px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(61,114,180,0.14) 0%, transparent 65%);
+            pointer-events: none;
+        }
+
+        .hero-text { flex: 1; max-width: 580px; z-index: 2; }
+        .hero-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(61,114,180,0.12);
+            border: 1px solid rgba(61,114,180,0.3);
+            color: var(--accent); padding: 6px 14px;
+            border-radius: 20px; font-size: 0.82rem; font-weight: 700;
+            margin-bottom: 20px; letter-spacing: 0.5px;
+        }
+        .hero-title {
+            font-size: 3.4rem; font-weight: 900; line-height: 1.08;
+            margin-bottom: 20px; color: var(--text);
+        }
+        .hero-title span { color: var(--accent); }
+        .hero-sub { font-size: 1.15rem; color: var(--text-muted); margin-bottom: 38px; font-weight: 400; line-height: 1.7; }
+
         .search-container {
-            background: white; padding: 8px; border-radius: 50px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            display: flex; width: 100%; max-width: 550px; border: 1px solid #e5e7eb;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            padding: 7px; border-radius: 14px;
+            display: flex; width: 100%; max-width: 520px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transition: border-color 0.2s;
         }
-        .search-input { flex: 1; border: none; padding: 7px 25px; font-size: 1.1rem; border-radius: 50px; color: var(--text-main); }
-        .search-btn { background: var(--primary); color: white; border: none; padding: 0 20px; border-radius: 50px; font-weight: 700; font-size: 1rem; transition: 0.3s; }
-        .search-btn:hover { background: var(--primary-dark); }
+        .search-container:focus-within { border-color: var(--primary); }
+        .search-input {
+            flex: 1; border: none; padding: 10px 18px;
+            font-size: 0.95rem; border-radius: 10px;
+            color: var(--text); background: transparent;
+            font-family: inherit;
+        }
+        .search-input::placeholder { color: var(--text-muted); opacity: 0.7; }
+        .search-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-bright));
+            color: white; border: none; padding: 10px 22px;
+            border-radius: 10px; font-weight: 700; font-size: 0.93rem;
+            transition: opacity 0.2s; white-space: nowrap;
+        }
+        .search-btn:hover { opacity: 0.9; }
 
-        .hero-img { flex: 1; display: flex; justify-content: flex-end; position: relative; }
-        .hero-img img { max-width: 100%; height: auto; border-radius: 20px; box-shadow: 20px 20px 0px rgba(37, 99, 235, 0.1); object-fit: cover; max-height: 500px; }
+        .hero-stats {
+            display: flex; gap: 24px; margin-top: 32px;
+        }
+        .stat { text-align: center; }
+        .stat-num { font-size: 1.4rem; font-weight: 900; color: var(--accent); display: block; }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
-        /* --- SECTIONS --- */
-        .section { padding: 100px 5%; width: 100%; }
-        .section-header { text-align: center; margin-bottom: 60px; }
-        .section-title { font-size: 2.5rem; font-weight: 900; margin-bottom: 15px; color: #111827; }
-        .section-desc { font-size: 1.1rem; color: var(--text-sub); max-width: 700px; margin: 0 auto; }
+        .hero-img { flex: 1; display: flex; justify-content: flex-end; position: relative; z-index: 2; }
+        .hero-img img {
+            max-width: 100%; height: auto; border-radius: 20px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(61,114,180,0.2);
+            object-fit: cover; max-height: 460px;
+        }
 
-        /* --- CATEGORIES --- */
-        .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; }
+        /* ── SECTIONS ── */
+        .section { padding: 90px 5%; width: 100%; }
+        .section-alt { background: var(--surface3); }
+        .section-header { text-align: center; margin-bottom: 55px; }
+        .section-eyebrow {
+            display: inline-block; font-size: 0.75rem; font-weight: 800;
+            color: var(--accent); text-transform: uppercase; letter-spacing: 1.5px;
+            margin-bottom: 12px;
+        }
+        .section-title { font-size: 2.2rem; font-weight: 900; margin-bottom: 14px; color: var(--text); }
+        .section-desc { font-size: 1rem; color: var(--text-muted); max-width: 600px; margin: 0 auto; line-height: 1.7; }
+
+        /* ── CATEGORY CARDS ── */
+        .cat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
         .cat-card {
-            background: white; border: 1px solid #e5e7eb; border-radius: 12px;
-            padding: 35px 25px; text-align: center; transition: all 0.3s ease;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px; padding: 30px 20px;
+            text-align: center; transition: all 0.25s ease;
             cursor: pointer; position: relative; overflow: hidden;
         }
-        .cat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--primary); transform: scaleX(0); transition: 0.3s; }
-        .cat-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-hover); }
-        .cat-card:hover::before { transform: scaleX(1); }
-        .cat-icon-box { width: 70px; height: 70px; background: #eff6ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: var(--primary); font-size: 1.8rem; }
-        .cat-name { font-weight: 700; font-size: 1.1rem; color: var(--text-main); }
-
-        /* --- FEATURES --- */
-        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
-        .feature-card { background: white; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-card); border: 1px solid #e5e7eb; display: flex; flex-direction: column; transition: 0.3s; }
-        .feature-card:hover { box-shadow: var(--shadow-hover); }
-        .feature-img { height: 220px; background: #e5e7eb; object-fit: cover; width: 100%; }
-        .feature-content { padding: 30px; flex: 1; display: flex; flex-direction: column; }
-        .feature-label { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--primary); letter-spacing: 1px; margin-bottom: 10px; }
-        .feature-title { font-size: 1.5rem; font-weight: 800; margin-bottom: 10px; line-height: 1.3; }
-        .feature-text { font-size: 1rem; color: var(--text-sub); margin-bottom: 25px; flex: 1; }
-        .feature-btn { padding: 12px 0; text-align: center; border: 2px solid var(--primary); border-radius: 8px; color: var(--primary); font-weight: 700; transition: 0.2s; background: none; width: 100%; font-size: 1rem; }
-        .feature-btn:hover { background: var(--primary); color: white; }
-
-        /* --- CTA --- */
-        .cta-section {
-            background: #111827; color: white; padding: 80px 5%; text-align: center;
-            background-image: radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.2) 0%, transparent 20%);
-            width: 100%;
+        .cat-card::before {
+            content: ''; position: absolute; top: 0; left: 0;
+            width: 100%; height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transform: scaleX(0); transition: 0.3s;
         }
-        .cta-btn { background: var(--secondary); color: white; padding: 18px 50px; font-size: 1.2rem; font-weight: 700; border-radius: 50px; display: inline-block; margin-top: 30px; box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: 0.3s; border: none; }
-        .cta-btn:hover { transform: translateY(-3px); background: #059669; }
+        .cat-card:hover { transform: translateY(-6px); border-color: rgba(61,114,180,0.5); box-shadow: 0 12px 30px rgba(0,0,0,0.25); }
+        .cat-card:hover::before { transform: scaleX(1); }
+        .cat-icon-box {
+            width: 60px; height: 60px;
+            background: rgba(61,114,180,0.12);
+            border: 1px solid rgba(61,114,180,0.2);
+            border-radius: 14px; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 16px; color: var(--accent); font-size: 1.5rem;
+        }
+        .cat-name { font-weight: 800; font-size: 0.95rem; color: var(--text); }
 
-        /* --- FOOTER --- */
-        .footer { background: #113D69; color: #9ca3af; padding: 60px 5% 20px; width: 100%; }
-        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 40px; margin-bottom: 60px; }
-        .footer-col h4 { color: white; margin-bottom: 20px; }
+        /* ── FEATURE CARDS ── */
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; }
+        .feature-card {
+            background: var(--surface); border-radius: 18px; overflow: hidden;
+            border: 1px solid var(--border);
+            display: flex; flex-direction: column; transition: 0.3s;
+        }
+        .feature-card:hover { border-color: rgba(61,114,180,0.5); box-shadow: 0 12px 35px rgba(0,0,0,0.25); transform: translateY(-4px); }
+        .feature-img { height: 210px; object-fit: cover; width: 100%; }
+        .feature-content { padding: 26px; flex: 1; display: flex; flex-direction: column; }
+        .feature-label {
+            font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+            color: var(--accent); letter-spacing: 1px; margin-bottom: 8px;
+        }
+        .feature-label.soon { color: var(--warning); }
+        .feature-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 10px; line-height: 1.3; color: var(--text); }
+        .feature-text { font-size: 0.92rem; color: var(--text-muted); margin-bottom: 22px; flex: 1; line-height: 1.6; }
+        .feature-btn {
+            padding: 12px 0; text-align: center;
+            border: 1.5px solid var(--primary);
+            border-radius: 10px; color: var(--accent);
+            font-weight: 700; transition: 0.2s;
+            background: none; width: 100%; font-size: 0.92rem; font-family: inherit;
+        }
+        .feature-btn:hover { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; border-color: transparent; }
+        .feature-btn.disabled { border-color: var(--border); color: var(--text-muted); cursor: not-allowed; }
+        .feature-btn.disabled:hover { background: none; color: var(--text-muted); border-color: var(--border); }
+
+        /* ── CTA SECTION ── */
+        .cta-section {
+            background: linear-gradient(135deg, #0d1f3c 0%, #1a3259 50%, #0f2444 100%);
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 90px 5%; text-align: center;
+            position: relative; overflow: hidden; width: 100%;
+        }
+        .cta-section::before {
+            content: ''; position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 800px; height: 400px;
+            background: radial-gradient(ellipse, rgba(61,114,180,0.15) 0%, transparent 65%);
+            pointer-events: none;
+        }
+        .cta-section h2 { font-size: 2.4rem; font-weight: 900; margin-bottom: 16px; color: var(--text); position: relative; z-index: 1; }
+        .cta-section p { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; position: relative; z-index: 1; }
+        .cta-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-bright));
+            color: white; padding: 16px 48px;
+            font-size: 1.1rem; font-weight: 800;
+            border-radius: 50px; display: inline-block;
+            box-shadow: 0 10px 30px rgba(61,114,180,0.4);
+            transition: 0.3s; border: none; font-family: inherit;
+            position: relative; z-index: 1;
+        }
+        .cta-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(61,114,180,0.5); }
+
+        /* ── FOOTER ── */
+        .footer {
+            background: var(--surface3);
+            border-top: 1px solid var(--border);
+            color: var(--text-muted); padding: 60px 5% 20px; width: 100%;
+        }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 40px; margin-bottom: 50px; }
+        .footer-col h4 { color: var(--text); margin-bottom: 18px; font-size: 0.9rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
         .footer-col ul { list-style: none; }
-        .footer-col li { margin-bottom: 10px; cursor: pointer; }
-        .footer-col a:hover { color: white; }
-        .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; text-align: center; font-size: 0.9rem; }
+        .footer-col li { margin-bottom: 10px; font-size: 0.88rem; }
+        .footer-col a:hover { color: var(--accent); }
+        .footer-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 20px; text-align: center;
+            font-size: 0.85rem; color: var(--text-muted);
+        }
 
-        /* --- INSTALL BANNER (shows at bottom on mobile) --- */
+        /* ── INSTALL BANNER ── */
         .install-banner {
             display: none; position: fixed; bottom: 0; left: 0; width: 100%;
-            background: var(--primary); color: white; padding: 15px 20px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            color: var(--text); padding: 14px 20px;
             z-index: 9998; align-items: center; justify-content: space-between;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.15);
+            box-shadow: 0 -8px 25px rgba(0,0,0,0.3);
+            padding-bottom: calc(14px + env(safe-area-inset-bottom));
         }
         .install-banner.visible { display: flex; }
-        .install-banner-text { font-size: 0.9rem; font-weight: 600; }
-        .install-banner-text span { display: block; font-size: 0.75rem; opacity: 0.85; font-weight: 400; }
+        .install-banner-text { font-size: 0.88rem; font-weight: 600; }
+        .install-banner-text span { display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 400; margin-top: 2px; }
         .install-banner-btns { display: flex; gap: 10px; align-items: center; }
-        .install-banner-btn { background: white; color: var(--primary); padding: 8px 16px; border-radius: 6px; font-weight: 700; border: none; font-size: 0.85rem; cursor: pointer; }
-        .install-banner-dismiss { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; opacity: 0.7; }
+        .install-banner-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-bright));
+            color: white; padding: 8px 18px;
+            border-radius: 8px; font-weight: 700; border: none; font-size: 0.85rem; cursor: pointer;
+        }
+        .install-banner-dismiss { background: none; border: none; color: var(--text-muted); font-size: 1.3rem; cursor: pointer; }
 
-        /* --- GATEKEEPER MODAL --- */
+        /* ── GATEKEEPER MODAL ── */
         .gatekeeper-modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(8px);
+            display: none; position: fixed; top: 0; left: 0; width: 100%;
+            height: 100vh; height: -webkit-fill-available;
+            background: rgba(5,12,24,0.88);
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
             z-index: 9999; align-items: center; justify-content: center;
             opacity: 0; transition: opacity 0.3s ease;
         }
         .gatekeeper-modal.show { display: flex; opacity: 1; }
         .gatekeeper-content {
-            background: white; width: 90%; max-width: 480px;
-            padding: 50px 40px; border-radius: 16px; text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            width: 90%; max-width: 460px;
+            padding: 44px 36px; border-radius: 20px; text-align: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
             position: relative; transform: translateY(20px); transition: transform 0.3s;
         }
         .gatekeeper-modal.show .gatekeeper-content { transform: translateY(0); }
-        .close-gate { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; color: #9ca3af; cursor: pointer; }
-        .gate-img { width: 80px; margin-bottom: 20px; }
-        .gate-title { font-size: 1.75rem; font-weight: 900; margin-bottom: 10px; color: #111827; }
-        .gate-sub { color: var(--text-sub); margin-bottom: 30px; font-size: 1rem; line-height: 1.5; }
-        .gate-btn-primary { background: var(--primary); color: white; padding: 15px 0; width: 100%; border-radius: 8px; font-weight: 700; display: block; margin-bottom: 15px; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3); }
-        .gate-btn-secondary { background: transparent; color: var(--text-main); padding: 15px 0; width: 100%; border-radius: 8px; font-weight: 700; display: block; border: 1px solid #e5e7eb; }
+        .close-gate { position: absolute; top: 18px; right: 18px; font-size: 1.3rem; color: var(--text-muted); cursor: pointer; }
+        .close-gate:hover { color: var(--text); }
+        .gate-img { width: 72px; margin-bottom: 18px; }
+        .gate-title { font-size: 1.6rem; font-weight: 900; margin-bottom: 10px; color: var(--text); }
+        .gate-sub { color: var(--text-muted); margin-bottom: 28px; font-size: 0.95rem; line-height: 1.6; }
+        .gate-btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-bright));
+            color: white; padding: 14px 0; width: 100%;
+            border-radius: 12px; font-weight: 800; display: block;
+            margin-bottom: 12px; font-size: 1rem;
+            box-shadow: 0 6px 18px rgba(61,114,180,0.35);
+        }
+        .gate-btn-secondary {
+            background: var(--surface2); color: var(--text-muted);
+            padding: 14px 0; width: 100%; border-radius: 12px;
+            font-weight: 700; display: block;
+            border: 1px solid var(--border); font-size: 0.93rem;
+            transition: color 0.2s;
+        }
+        .gate-btn-secondary:hover { color: var(--text); border-color: var(--primary); }
 
-        /* --- iOS SAFARI FIXES --- */
-        /* Fix backdrop-filter for older iOS */
-        .gatekeeper-modal { -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
-        /* Fix sticky header on iOS */
-        .header { -webkit-overflow-scrolling: touch; }
-        /* Fix 100vh bug on iOS Safari (address bar) */
-        .gatekeeper-modal { height: 100vh; height: -webkit-fill-available; }
-        /* Fix tap highlight on iOS */
-        * { -webkit-tap-highlight-color: transparent; }
-        /* Fix input zoom on iOS (must be 16px+ to prevent auto-zoom) */
-        input, select, textarea { font-size: 16px !important; }
-        /* Safe area padding for iPhone notch/home indicator */
-        .install-banner { padding-bottom: calc(15px + env(safe-area-inset-bottom)); }
-        body { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
-
-        /* --- MOBILE --- */
+        /* ── MOBILE ── */
         @media (max-width: 768px) {
             .nav-links, .auth-buttons { display: none; }
             .mobile-menu-btn { display: block; }
-            .hero { flex-direction: column-reverse; padding: 40px 20px; text-align: center; }
-            .hero-title { font-size: 2.2rem; }
-            .hero-sub { font-size: 1rem; }
+            .hero { flex-direction: column-reverse; padding: 40px 20px; text-align: center; min-height: auto; }
+            .hero-title { font-size: 2.1rem; }
+            .hero-sub { font-size: 0.98rem; }
+            .hero-eyebrow { margin: 0 auto 18px; }
             .search-container { margin: 0 auto; }
-            .hero-img { width: 100%; margin-bottom: 30px; justify-content: center; }
-            .hero-img img { max-height: 300px; width: 100%; box-shadow: 10px 10px 0px rgba(37, 99, 235, 0.1); }
+            .hero-img { width: 100%; margin-bottom: 28px; justify-content: center; }
+            .hero-img img { max-height: 260px; width: 100%; }
+            .hero-stats { justify-content: center; }
             .section { padding: 60px 20px; }
             .cta-section { padding: 60px 20px; }
-            .footer { padding: 60px 20px 30px; }
-            body { padding-bottom: 80px; }
+            .footer { padding: 50px 20px 20px; }
+            body { padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
         }
+
         img { background: transparent; }
     </style>
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
 
+    <!-- HEADER -->
     <header class="header">
         <div class="logo-container" onclick="window.location.reload()">
-            <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000387646-removebg-preview.png" alt="Campus Circle Logo" class="brand-logo">
-            <span>Campus Circle</span>
+            <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png" alt="Campus Circle Logo" class="brand-logo">
+            <span class="logo-text">Campus <span>Circle</span></span>
         </div>
-        
+
         <nav class="nav-links">
             <div class="nav-item" onclick="handleNavigation('Profiles.html')">Profile</div>
             <div class="nav-item" onclick="handleNavigation('resources.html')">Library</div>
             <div class="nav-item" onclick="handleNavigation('admin.html')">Admin</div>
-            <div class="nav-item" style="opacity:0.6; cursor:not-allowed;">AI Tutor <span class="badge-soon">SOON</span></div>
-            <div class="nav-item" style="opacity:0.6; cursor:not-allowed;">Marketplace <span class="badge-soon">SOON</span></div>
+            <div class="nav-item" style="opacity:0.5;cursor:not-allowed;">AI Tutor <span class="badge-soon">SOON</span></div>
+            <div class="nav-item" style="opacity:0.5;cursor:not-allowed;">Marketplace <span class="badge-soon">SOON</span></div>
         </nav>
 
         <div class="auth-buttons" id="auth-section">
             <a href="Login.html" class="btn-login">Log In</a>
             <a href="signin.html" class="btn-signup">Sign Up Free</a>
             <button class="btn-install" id="install-btn" onclick="installApp()">
-                <i class="fa-solid fa-download"></i> Install App
+                <i class="fa-solid fa-download"></i> Install
             </button>
         </div>
-        
+
         <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
             <i class="fa-solid fa-bars" id="menu-icon"></i>
         </button>
     </header>
 
+    <!-- MOBILE DROPDOWN -->
     <div class="mobile-dropdown" id="mobile-menu">
-        <div style="font-weight:700; padding:10px 0; border-bottom:1px solid #f3f4f6;" onclick="handleNavigation('Profiles.html')">Profile</div>
-        <div style="font-weight:700; padding:10px 0; border-bottom:1px solid #f3f4f6;" onclick="handleNavigation('resources.html')">Library</div>
-        <div style="font-weight:700; padding:10px 0; border-bottom:1px solid #f3f4f6;" onclick="handleNavigation('admin.html')">Admin</div>
-        <div style="padding:10px 0; opacity:0.6; border-bottom:1px solid #f3f4f6;">AI Tutor (Coming Soon)</div>
-        <div style="padding:10px 0; opacity:0.6; border-bottom:1px solid #f3f4f6;">Marketplace (Coming Soon)</div>
+        <div class="mobile-nav-item" onclick="handleNavigation('Profiles.html')"><i class="fa-regular fa-circle-user" style="margin-right:10px;color:var(--accent);"></i>Profile</div>
+        <div class="mobile-nav-item" onclick="handleNavigation('resources.html')"><i class="fa-solid fa-book-bookmark" style="margin-right:10px;color:var(--accent);"></i>Library</div>
+        <div class="mobile-nav-item" onclick="handleNavigation('admin.html')"><i class="fa-solid fa-shield-halved" style="margin-right:10px;color:var(--accent);"></i>Admin</div>
+        <div class="mobile-nav-divider"></div>
+        <div style="padding:10px 14px;font-size:0.85rem;color:var(--text-muted);opacity:0.6;"><i class="fa-solid fa-robot" style="margin-right:8px;"></i>AI Tutor (Coming Soon)</div>
+        <div style="padding:10px 14px;font-size:0.85rem;color:var(--text-muted);opacity:0.6;"><i class="fa-solid fa-store" style="margin-right:8px;"></i>Marketplace (Coming Soon)</div>
+        <div class="mobile-nav-divider"></div>
         <button class="mobile-install-btn" id="mobile-install-btn" onclick="installApp()">
             <i class="fa-solid fa-download"></i> Install App
         </button>
-        <div id="mobile-auth-actions" style="display:flex; flex-direction:column; gap:10px;">
-            <a href="Login.html" style="text-align:center; padding:10px; border:1px solid #e5e7eb; border-radius:5px; font-weight:700;">Log In</a>
-            <a href="signin.html" style="text-align:center; padding:10px; background:var(--secondary); color:white; border-radius:5px; font-weight:700;">Sign Up Free</a>
+        <div id="mobile-auth-actions" style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+            <a href="Login.html" style="text-align:center;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;font-weight:700;color:var(--text);">Log In</a>
+            <a href="signin.html" style="text-align:center;padding:12px;background:linear-gradient(135deg,var(--primary),var(--primary-bright));color:white;border-radius:10px;font-weight:700;">Sign Up Free</a>
         </div>
     </div>
 
-    <!-- INSTALL BANNER (bottom of screen on mobile) -->
+    <!-- INSTALL BANNER -->
     <div class="install-banner" id="install-banner">
         <div class="install-banner-text">
-            <i class="fa-solid fa-graduation-cap" style="margin-right:8px;"></i> Campus Circle
+            <i class="fa-solid fa-graduation-cap" style="margin-right:8px;color:var(--accent);"></i> Campus Circle
             <span>Install for a better experience</span>
         </div>
         <div class="install-banner-btns">
@@ -295,24 +462,35 @@
         </div>
     </div>
 
+    <!-- HERO -->
     <section class="hero">
         <div class="hero-text">
+            <div class="hero-eyebrow"><i class="fa-solid fa-graduation-cap"></i> UNIZIK Student Platform</div>
             <h1 class="hero-title">Empower Your <br><span>Academic Journey</span></h1>
-            <p class="hero-sub">Join thousands of students accessing free lecture notes, past questions, and success tools. Study smarter, not harder.</p>
+            <p class="hero-sub">Join thousands of UNIZIK students accessing lecture notes, past questions, and AI-powered study tools. Study smarter, not harder.</p>
             <div class="search-container">
                 <input type="text" class="search-input" placeholder="What are you studying today?">
-                <button class="search-btn" onclick="handleNavigation('resources.html')">Search</button>
+                <button class="search-btn" onclick="handleNavigation('resources.html')">
+                    <i class="fa-solid fa-search"></i> Search
+                </button>
+            </div>
+            <div class="hero-stats">
+                <div class="stat"><span class="stat-num">500+</span><span class="stat-label">Materials</span></div>
+                <div class="stat"><span class="stat-num">1000+</span><span class="stat-label">Students</span></div>
+                <div class="stat"><span class="stat-num">20+</span><span class="stat-label">Departments</span></div>
             </div>
         </div>
         <div class="hero-img">
-            <img src="photo-1583026411217-9d05a70d5230.jpeg" alt="African Students Studying Group">
+            <img src="photo-1583026411217-9d05a70d5230.jpeg" alt="Students Studying">
         </div>
     </section>
 
-    <section class="section">
+    <!-- CATEGORIES -->
+    <section class="section section-alt">
         <div class="section-header">
+            <div class="section-eyebrow">Browse</div>
             <h2 class="section-title">Explore by Faculty</h2>
-            <p class="section-desc">Find tailored materials specific to your department and level. We have organized everything to help you pass.</p>
+            <p class="section-desc">Find tailored materials specific to your department and level. Organized and ready to read.</p>
         </div>
         <div class="cat-grid">
             <div class="cat-card" onclick="handleNavigation('resources.html')">
@@ -342,56 +520,60 @@
         </div>
     </section>
 
-    <section class="section" style="background: #f9fafb;">
+    <!-- FEATURES -->
+    <section class="section">
         <div class="section-header">
-            <h2 class="section-title">Tools for Success</h2>
-            <p class="section-desc">Unlock your potential with our suite of student-focused tools.</p>
+            <div class="section-eyebrow">Tools</div>
+            <h2 class="section-title">Built for Student Success</h2>
+            <p class="section-desc">Unlock your potential with our suite of student-focused tools built specifically for UNIZIK.</p>
         </div>
         <div class="features-grid">
             <div class="feature-card">
                 <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=500&q=60" class="feature-img">
                 <div class="feature-content">
-                    <span class="feature-label">Available Now</span>
+                    <span class="feature-label">✅ Available Now</span>
                     <h3 class="feature-title">Digital Library</h3>
-                    <p class="feature-text">Unlimited access to handouts, textbooks, and past questions. Organized and ready for download.</p>
-                    <button class="feature-btn" onclick="handleNavigation('resources.html')">Start Reading</button>
+                    <p class="feature-text">Unlimited access to handouts, textbooks, and past questions. Organized, affordable and ready to read in-app.</p>
+                    <button class="feature-btn" onclick="handleNavigation('resources.html')">Start Reading →</button>
                 </div>
             </div>
-            <div class="feature-card" style="opacity: 0.8;">
-                <img src="rm373batch5-18a.jpg" class="feature-img" style="filter:grayscale(100%)">
+            <div class="feature-card" style="opacity:0.75;">
+                <img src="rm373batch5-18a.jpg" class="feature-img" style="filter:grayscale(60%)brightness(0.7)">
                 <div class="feature-content">
-                    <span class="feature-label" style="color:#f59e0b;">Coming Soon</span>
+                    <span class="feature-label soon">🔜 Coming Soon</span>
                     <h3 class="feature-title">AI Study Partner</h3>
                     <p class="feature-text">An intelligent tutor that summarizes your handouts and creates practice quizzes instantly.</p>
-                    <button class="feature-btn" style="border-color:#d1d5db; color:#9ca3af; cursor:not-allowed;">Join Waitlist</button>
+                    <button class="feature-btn disabled" disabled>Join Waitlist</button>
                 </div>
             </div>
-            <div class="feature-card" style="opacity: 0.8;">
-                <img src="pregnant-woman-looking-trendy-merchandise-stand-hangers.jpg" class="feature-img" style="filter:grayscale(100%)">
+            <div class="feature-card" style="opacity:0.75;">
+                <img src="pregnant-woman-looking-trendy-merchandise-stand-hangers.jpg" class="feature-img" style="filter:grayscale(60%)brightness(0.7)">
                 <div class="feature-content">
-                    <span class="feature-label" style="color:#f59e0b;">Coming Soon</span>
+                    <span class="feature-label soon">🔜 Coming Soon</span>
                     <h3 class="feature-title">Marketplace</h3>
                     <p class="feature-text">A safe space for students to buy and sell gadgets, books, and hostel essentials.</p>
-                    <button class="feature-btn" style="border-color:#d1d5db; color:#9ca3af; cursor:not-allowed;">Join Waitlist</button>
+                    <button class="feature-btn disabled" disabled>Join Waitlist</button>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- CTA -->
     <section class="cta-section">
-        <h2 style="font-size:2.5rem; margin-bottom:20px;">Don't Study Alone</h2>
-        <p style="font-size:1.2rem; opacity:0.9;">Join the fastest growing student community in UNIZIK.</p>
+        <h2>Don't Study Alone 🎓</h2>
+        <p>Join the fastest growing student community in UNIZIK. It's free.</p>
         <button class="cta-btn" onclick="handleNavigation('resources.html')">Get Started for Free</button>
     </section>
 
+    <!-- FOOTER -->
     <footer class="footer">
         <div class="footer-grid">
             <div class="footer-col">
-                <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
-                    <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000387646-removebg-preview.png" style="height:40px;">
-                    <span style="font-weight:900; font-size:15px; color:white;">Campus Circle</span>
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                    <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000387646-removebg-preview.png" style="height:38px;">
+                    <span style="font-weight:900;font-size:1rem;color:var(--text);">Campus Circle</span>
                 </div>
-                <p style="font-size:0.9rem; line-height:1.6; color:white;">Empowering students with accessible resources and technology for academic excellence.</p>
+                <p style="font-size:0.87rem;line-height:1.7;color:var(--text-muted);">Empowering UNIZIK students with accessible resources and technology for academic excellence.</p>
             </div>
             <div class="footer-col"></div>
             <div class="footer-col">
@@ -419,24 +601,23 @@
     <!-- GATEKEEPER MODAL -->
     <div class="gatekeeper-modal" id="gatekeeper">
         <div class="gatekeeper-content">
-            <div class="close-gate" onclick="closeGatekeeper()">&times;</div>
+            <div class="close-gate" onclick="closeGatekeeper()">✕</div>
             <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png" class="gate-img" alt="Logo">
             <h3 class="gate-title">Join to Continue</h3>
             <p class="gate-sub">Unlock unlimited access to lecture notes, past questions, and study tools. It's free and takes less than a minute.</p>
-            <a href="signin.html" class="gate-btn-primary">Sign Up for Free</a>
+            <a href="signin.html" class="gate-btn-primary">Sign Up for Free 🚀</a>
             <a href="Login.html" class="gate-btn-secondary">Already have an account? Log In</a>
         </div>
     </div>
 
     <script>
         const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
         let isLoggedIn = false;
         let deferredInstallPrompt = null;
 
-        // ── DETECT iOS ─────────────────────────────────────────────────────
         const isIos = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
         const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
@@ -451,15 +632,13 @@
             }
         });
 
-        // ── iOS INSTALL PROMPT (manual instructions) ───────────────────────
         if (isIos && !isInStandaloneMode && !localStorage.getItem('installBannerDismissed')) {
             const banner = document.getElementById('install-banner');
             banner.classList.add('visible');
             banner.querySelector('.install-banner-text').innerHTML = `
-                <i class="fa-brands fa-apple" style="margin-right:8px;"></i> Install Campus Circle
+                <i class="fa-brands fa-apple" style="margin-right:8px;color:var(--accent);"></i> Install Campus Circle
                 <span>Tap <strong>Share</strong> <i class="fa-solid fa-arrow-up-from-bracket"></i> then <strong>"Add to Home Screen"</strong></span>
             `;
-            // Hide the install button on iOS since beforeinstallprompt doesn't fire
             banner.querySelector('.install-banner-btn').style.display = 'none';
         }
 
@@ -499,17 +678,16 @@
             if (user) {
                 isLoggedIn = true;
                 document.getElementById('auth-section').innerHTML = `
-                    <a href="#" onclick="logout()" style="font-weight:700; color:var(--text-main);">Log Out</a>
-                    <a href="resources.html" class="btn-signup" style="background:var(--primary);">Dashboard</a>
+                    <a href="#" onclick="logout()" style="font-weight:700;color:var(--text-muted);font-size:0.9rem;">Log Out</a>
+                    <a href="resources.html" class="btn-signup">Dashboard</a>
                     <button class="btn-install" id="install-btn" onclick="installApp()">
-                        <i class="fa-solid fa-download"></i> Install App
+                        <i class="fa-solid fa-download"></i> Install
                     </button>
                 `;
                 document.getElementById('mobile-auth-actions').innerHTML = `
-                    <a href="resources.html" style="text-align:center; padding:12px; background:var(--primary); color:white; border-radius:5px; font-weight:700;">Go to Dashboard</a>
-                    <a href="#" onclick="logout()" style="text-align:center; padding:10px; color:var(--text-sub);">Log Out</a>
+                    <a href="resources.html" style="text-align:center;padding:12px;background:linear-gradient(135deg,var(--primary),var(--primary-bright));color:white;border-radius:10px;font-weight:700;">Go to Dashboard</a>
+                    <a href="#" onclick="logout()" style="text-align:center;padding:10px;color:var(--text-muted);font-size:0.9rem;">Log Out</a>
                 `;
-                // Re-check install prompt visibility after DOM update
                 if (deferredInstallPrompt) {
                     document.getElementById('install-btn').classList.add('visible');
                 }
