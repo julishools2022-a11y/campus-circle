@@ -335,6 +335,10 @@
             document.getElementById(`tab-${tabId}`).classList.add('active');
         }
 
+        function isGoogleDriveUrl(u) { return u && u.includes('drive.google.com'); }
+        function extractDriveFileId(u) { let m = u.match(/\/file\/d\/([a-zA-Z0-9_-]+)/); if (m) return m[1]; m = u.match(/[?&]id=([a-zA-Z0-9_-]+)/); if (m) return m[1]; m = u.match(/open\?id=([a-zA-Z0-9_-]+)/); if (m) return m[1]; return null; }
+        function getDriveOpenUrl(u) { const id = extractDriveFileId(u); return id ? `https://drive.google.com/file/d/${id}/preview?rm=minimal` : u; }
+
         async function openReader(encodedUrl, encodedTitle) {
             const url = decodeURIComponent(encodedUrl);
             const title = decodeURIComponent(encodedTitle);
@@ -343,23 +347,92 @@
             const container = document.getElementById('viewer-container');
             document.getElementById('fileViewer').classList.add('open');
             document.body.style.overflow = 'hidden';
-            if (/\.(jpeg|jpg|png|webp|gif)$/i.test(url)) { container.innerHTML = `<img class="view-img" src="${url}">`; return; }
-            container.innerHTML = `<div class="viewer-loading"><i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;color:var(--accent)"></i><p>Fetching document...</p></div>`;
+
+            // Images: show directly
+            if (/\.(jpeg|jpg|png|webp|gif)$/i.test(url)) {
+                container.innerHTML = `<img class="view-img" src="${url}">`;
+                return;
+            }
+
+            container.innerHTML = `<div class="viewer-loading"><i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;color:var(--accent)"></i><p>Fetching document...</p><p style="font-size:0.8rem;opacity:0.5;margin-top:5px;">Large files may take a moment</p></div>`;
+
             try {
-                const resp = await fetch(GEMINI_PROXY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` }, body: JSON.stringify({ action: 'fetch_pdf', pdf_url: url }) });
+                const resp = await fetch(GEMINI_PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` },
+                    body: JSON.stringify({ action: 'fetch_pdf', pdf_url: url })
+                });
                 if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
                 const json = await resp.json();
                 if (!json.base64) throw new Error('No PDF data received');
-                const binary = atob(json.base64); const bytes = new Uint8Array(binary.length); for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+                const binary = atob(json.base64);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
                 container.innerHTML = '';
                 const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
                 const totalPages = pdf.numPages;
                 document.getElementById('page-info').innerText = `${totalPages} pages`;
                 const maxWidth = Math.min(window.innerWidth, 800);
-                for (let p = 1; p <= totalPages; p++) { const page = await pdf.getPage(p); const baseVp = page.getViewport({ scale: 1 }); const viewport = page.getViewport({ scale: maxWidth / baseVp.width }); const canvas = document.createElement('canvas'); canvas.width = viewport.width; canvas.height = viewport.height; await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise; container.appendChild(canvas); document.getElementById('page-info').innerText = `${p}/${totalPages}`; }
+                for (let p = 1; p <= totalPages; p++) {
+                    const page = await pdf.getPage(p);
+                    const baseVp = page.getViewport({ scale: 1 });
+                    const viewport = page.getViewport({ scale: maxWidth / baseVp.width });
+                    const canvas = document.createElement('canvas');
+                    canvas.width = viewport.width; canvas.height = viewport.height;
+                    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+                    container.appendChild(canvas);
+                    document.getElementById('page-info').innerText = `${p}/${totalPages}`;
+                }
                 document.getElementById('page-info').innerText = `${totalPages} pages`;
+
             } catch (e) {
-                container.innerHTML = `<div class="viewer-error"><i class="fa-solid fa-circle-xmark"></i><h3 style="margin:0;">Could not load document</h3><p>${e.message || 'Please try again'}</p><button class="btn-close-viewer" style="margin-top:15px;" onclick="closeViewer()">Close</button></div>`;
+                console.error('PDF load error:', e);
+                // Google Drive fallback — iframe with iOS timeout fallback
+                if (isGoogleDriveUrl(url)) {
+                    const fileId = extractDriveFileId(url);
+                    const embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+                    const openUrl = `https://drive.google.com/file/d/${fileId}/preview?rm=minimal`;
+                    container.style.padding = "0";
+                    container.style.position = "relative";
+                    container.innerHTML = `
+                        <iframe
+                            id="drive-iframe"
+                            src="${embedUrl}"
+                            style="width:100%;height:100%;min-height:80vh;border:none;display:block;"
+                            allow="autoplay"
+                            sandbox="allow-scripts allow-same-origin allow-popups allow-forms">
+                        </iframe>
+                        <div id="iframe-fallback" style="display:none;position:absolute;inset:0;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:40px 30px;">
+                            <i class="fa-brands fa-google-drive" style="font-size:3.5rem;color:var(--accent);"></i>
+                            <h3 style="margin:0;color:var(--text);">Open to Read</h3>
+                            <p style="color:var(--text-muted);font-size:0.9rem;max-width:260px;">Your browser blocked the inline viewer. Tap below to read — it opens inside this tab.</p>
+                            <a href="${openUrl}" target="_blank" style="background:linear-gradient(135deg,var(--primary),var(--primary-bright));color:white;padding:14px 28px;border-radius:12px;font-weight:700;font-size:1rem;text-decoration:none;display:flex;align-items:center;gap:8px;">
+                                <i class="fa-solid fa-book-open"></i> Read Material
+                            </a>
+                            <button onclick="closeViewer()" style="background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);padding:10px 22px;border-radius:10px;font-weight:600;cursor:pointer;font-family:inherit;">Close</button>
+                        </div>`;
+
+                    // Detect iframe block — if it fails to load within 6s show fallback button
+                    let iframeLoaded = false;
+                    const iframeEl = document.getElementById("drive-iframe");
+                    iframeEl.onload = () => { iframeLoaded = true; };
+                    setTimeout(() => {
+                        if (!iframeLoaded) {
+                            const fallback = document.getElementById("iframe-fallback");
+                            if (fallback) { fallback.style.display = "flex"; }
+                        }
+                    }, 6000);
+                } else {
+                    container.innerHTML = `
+                        <div class="viewer-error">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                            <h3 style="margin:0;">Could not load document</h3>
+                            <p>${e.message || 'Please try again'}</p>
+                            <button class="btn-close-viewer" style="margin-top:15px;" onclick="closeViewer()">Close</button>
+                        </div>`;
+                }
             }
         }
 
