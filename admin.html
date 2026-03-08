@@ -497,11 +497,6 @@ function enterAdmin(email) {
     loadAll();
 }
 
-async function logout() {
-            if (confirm("Are you sure you want to log out?")) {
-                await _supabase.auth.signOut();
-                window.location.href = 'index.html';
-
 // ── NAV ──
 const tabTitles = { dashboard:'Dashboard', users:'Users', transactions:'Transactions', access:'Grant Access', partners:'Partners', announce:'Announcements' };
 function showTab(tab, el) {
@@ -783,7 +778,12 @@ sb.auth.getSession().then(async ({ data }) => {
         const { data: adminRow } = await sb.from('admin_users').select('email').eq('email', email).maybeSingle();
         if (adminRow) enterAdmin(email);
     }
+    async function logout() {
+            if (confirm("Are you sure you want to log out?")) {
+                await _supabase.auth.signOut();
+                window.location.href = 'index.html';
 });
+    
 </script>
 </body>
 </html>
