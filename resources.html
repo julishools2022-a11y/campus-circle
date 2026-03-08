@@ -12,67 +12,156 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root{--primary:#4f46e5;--primary-dark:#4338ca;--bg:#f8fafc;--surface:#fff;--text:#1e293b;--text-light:#64748b;--success:#10b981;--warning:#f59e0b;--danger:#ef4444;}
-        *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;outline:none;}
-        body{font-family:'Outfit',sans-serif;background:var(--bg);margin:0;display:flex;flex-direction:column;height:100vh;color:var(--text);overflow-x:hidden;}
-        .header{background:rgba(255,255,255,.95);backdrop-filter:blur(10px);padding:15px 20px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e8f0;}
-        .header-title{font-size:1.25rem;font-weight:700;color:var(--primary);display:flex;align-items:center;gap:10px;}
-        .back-btn{color:var(--text);font-size:1.2rem;text-decoration:none;}
-        .header-actions{display:flex;align-items:center;gap:20px;}
-        .profile-btn{color:var(--text-light);font-size:1.4rem;text-decoration:none;}
-        .notif-btn{position:relative;cursor:pointer;font-size:1.3rem;color:var(--text-light);}
-        .badge-dot{position:absolute;top:0;right:0;width:10px;height:10px;background:var(--danger);border-radius:50%;border:2px solid white;display:none;animation:pulse 2s infinite;}
-        @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,.7);}70%{box-shadow:0 0 0 6px rgba(239,68,68,0);}100%{box-shadow:0 0 0 0 rgba(239,68,68,0);}}
-        .notif-dropdown{display:none;position:absolute;top:60px;right:20px;width:300px;background:white;border-radius:16px;box-shadow:0 15px 40px rgba(0,0,0,.15);z-index:5000;overflow:hidden;border:1px solid #e2e8f0;}
-        .notif-item{padding:15px;border-bottom:1px solid #f1f5f9;font-size:.85rem;}
-        .notif-title{font-weight:700;color:var(--primary);margin-bottom:4px;}
-        .notif-time{font-size:.7rem;color:var(--text-light);margin-top:5px;display:block;text-align:right;}
-        .filter-container{padding:20px;background:var(--surface);margin:15px 15px 0;border-radius:16px;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);}
-        .filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-        select{width:100%;padding:12px 15px;border:1px solid #e2e8f0;border-radius:10px;font-size:.95rem;background:#f8fafc;color:var(--text);appearance:none;font-family:inherit;}
-        .resources-grid{padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:15px;flex:1;align-content:start;overflow-y:auto;padding-bottom:100px;}
-        .res-card{background:var(--surface);border-radius:16px;padding:16px;border:1px solid #e2e8f0;box-shadow:0 2px 4px rgba(0,0,0,.03);position:relative;display:flex;flex-direction:column;min-height:220px;}
-        .res-header{display:flex;gap:15px;margin-bottom:12px;}
-        .file-icon{width:50px;height:50px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;}
-        .file-icon.pdf{background:#fee2e2;color:var(--danger);}
-        .file-icon.doc{background:#eff6ff;color:var(--primary);}
-        .res-title{font-weight:700;font-size:1rem;margin-bottom:4px;line-height:1.3;}
-        .badge-level{background:#f1f5f9;padding:2px 8px;border-radius:6px;font-weight:600;font-size:.75rem;color:var(--text-light);}
-        .res-price-tag{font-size:1.1rem;font-weight:800;color:var(--primary);margin-top:auto;padding-top:10px;border-top:1px solid #f1f5f9;}
-        .res-actions{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
-        .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-        .btn{border:none;padding:12px;border-radius:10px;font-size:.9rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;text-decoration:none;font-family:inherit;transition:transform .1s;}
-        .btn:active{transform:scale(.97);}
-        .btn-primary{background:var(--primary);color:white;box-shadow:0 2px 5px rgba(79,70,229,.3);}
-        .btn-secondary{background:#f1f5f9;color:var(--text);border:1px solid #e2e8f0;}
-        .btn-success{background:var(--success);color:white;}
-        .hardcopy-badge{position:absolute;top:0;right:0;background:var(--warning);color:#78350f;font-size:.65rem;font-weight:800;padding:4px 10px;border-bottom-left-radius:10px;}
-        .empty-state{grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--text-light);}
-        .fab{position:fixed;bottom:30px;right:20px;width:56px;height:56px;background:var(--text);border-radius:50%;color:white;display:none;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(0,0,0,.3);z-index:100;font-size:24px;text-decoration:none;}
-        .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:2000;background:rgba(0,0,0,.6);align-items:center;justify-content:center;backdrop-filter:blur(4px);}
-        .modal-card{background:white;width:90%;max-width:400px;padding:25px;border-radius:20px;}
-        .form-input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #e2e8f0;border-radius:8px;font-family:inherit;font-size:.95rem;}
-        .viewer-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:2000;background:#0f172a;flex-direction:column;}
-        .viewer-modal.open{display:flex;}
-        .viewer-header{padding:15px;padding-top:max(15px,env(safe-area-inset-top));display:flex;justify-content:space-between;align-items:center;color:white;background:rgba(255,255,255,.1);flex-shrink:0;gap:10px;}
-        .viewer-header-left{display:flex;align-items:center;gap:10px;flex:1;overflow:hidden;}
-        #view-title{font-weight:600;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-        #page-info{font-size:.78rem;color:rgba(255,255,255,.5);flex-shrink:0;}
-        .viewer-body{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;background:#525659;display:flex;flex-direction:column;align-items:center;padding:6px 0;}
-        .viewer-body canvas{display:block;max-width:100%;margin:3px auto;box-shadow:0 2px 8px rgba(0,0,0,.3);}
-        img.view-img{max-width:100%;object-fit:contain;display:block;margin:auto;}
-        .btn-close-viewer{background:#334155;color:white;border:none;padding:8px 15px;border-radius:8px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0;}
-        .viewer-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;color:white;padding:50px 30px;text-align:center;width:100%;}
-        .drive-fallback{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;color:white;text-align:center;padding:30px;width:100%;}
-        .drive-fallback i{font-size:4rem;color:#4f46e5;}
-        .btn-open-drive{background:#4f46e5;color:white;padding:14px 28px;border-radius:12px;border:none;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:8px;text-decoration:none;font-family:inherit;}
+        :root {
+            --bg: #0a1628;
+            --surface: #112236;
+            --surface2: #1a2f4a;
+            --surface3: #0f1e35;
+            --border: rgba(61,114,180,0.2);
+            --primary: #3d72b4;
+            --primary-bright: #5b9bd5;
+            --accent: #64b5f6;
+            --text: #e2eaf4;
+            --text-muted: #7a9cc0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); margin: 0; display: flex; flex-direction: column; height: 100vh; color: var(--text); overflow-x: hidden; }
+
+        /* HEADER */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 18px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(10px);
+        }
+        .header-left { display: flex; align-items: center; gap: 12px; }
+        .back-btn { color: var(--text-muted); font-size: 1.1rem; text-decoration: none; }
+        .header-title { font-size: 1.15rem; font-weight: 800; color: var(--text); }
+        .header-title span { color: var(--accent); }
+        .header-actions { display: flex; align-items: center; gap: 18px; }
+        .profile-btn { color: var(--text-muted); font-size: 1.3rem; text-decoration: none; transition: color 0.2s; }
+        .profile-btn:hover { color: var(--accent); }
+        .notif-btn { position: relative; cursor: pointer; font-size: 1.2rem; color: var(--text-muted); transition: color 0.2s; }
+        .notif-btn:hover { color: var(--accent); }
+        .badge-dot { position: absolute; top: -2px; right: -2px; width: 9px; height: 9px; background: var(--danger); border-radius: 50%; border: 2px solid var(--surface); display: none; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,.7); } 70% { box-shadow: 0 0 0 6px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
+
+        /* NOTIFICATIONS DROPDOWN */
+        .notif-dropdown { display: none; position: absolute; top: 60px; right: 18px; width: 300px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); z-index: 5000; overflow: hidden; }
+        .notif-item { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 0.85rem; color: var(--text); }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-title { font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+        .notif-time { font-size: 0.7rem; color: var(--text-muted); margin-top: 5px; display: block; text-align: right; }
+
+        /* FILTER */
+        .filter-container { padding: 16px; background: var(--surface3); border-bottom: 1px solid var(--border); }
+        .filter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+        select {
+            width: 100%;
+            padding: 11px 14px;
+            background: var(--surface2);
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: var(--text);
+            font-family: inherit;
+            appearance: none;
+            transition: border-color 0.2s;
+        }
+        select:focus { border-color: var(--primary); }
+        select option { background: var(--surface2); }
+        select:disabled { opacity: 0.5; }
+
+        /* RESOURCE GRID */
+        .resources-grid { padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; flex: 1; align-content: start; overflow-y: auto; padding-bottom: 100px; }
+
+        .res-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 16px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 210px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .res-card:hover { border-color: rgba(61,114,180,0.5); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+
+        .res-header { display: flex; gap: 14px; margin-bottom: 12px; }
+        .file-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+        .file-icon.pdf { background: rgba(239,68,68,0.15); color: var(--danger); }
+        .file-icon.doc { background: rgba(61,114,180,0.15); color: var(--primary-bright); }
+        .res-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 4px; line-height: 1.35; color: var(--text); }
+        .badge-level { background: rgba(61,114,180,0.15); color: var(--accent); padding: 2px 9px; border-radius: 6px; font-weight: 700; font-size: 0.72rem; display: inline-block; }
+
+        .res-price-tag { font-size: 1.1rem; font-weight: 800; color: var(--accent); margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); }
+        .res-price-tag.paid { color: var(--success); }
+
+        .res-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+        .btn { border: none; padding: 11px; border-radius: 10px; font-size: 0.88rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; text-decoration: none; font-family: inherit; transition: transform 0.1s, opacity 0.2s; }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; box-shadow: 0 3px 10px rgba(61,114,180,0.3); }
+        .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+        .btn-success { background: linear-gradient(135deg, #059669, var(--success)); color: white; box-shadow: 0 3px 10px rgba(16,185,129,0.25); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .hardcopy-badge { position: absolute; top: 0; right: 0; background: var(--warning); color: #78350f; font-size: 0.62rem; font-weight: 800; padding: 4px 10px; border-bottom-left-radius: 10px; border-top-right-radius: 15px; }
+        .empty-state { grid-column: 1/-1; text-align: center; padding: 50px 20px; color: var(--text-muted); }
+        .empty-state i { font-size: 3rem; margin-bottom: 15px; display: block; opacity: 0.4; }
+        .empty-state h3 { color: var(--text); margin-bottom: 8px; }
+
+        /* FAB */
+        .fab { position: fixed; bottom: 28px; right: 20px; width: 54px; height: 54px; background: linear-gradient(135deg, var(--primary), var(--primary-bright)); border-radius: 50%; color: white; display: none; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(61,114,180,0.4); z-index: 100; font-size: 22px; text-decoration: none; transition: transform 0.2s; }
+        .fab:active { transform: scale(0.94); }
+
+        /* MODAL */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: rgba(0,0,0,0.7); align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+        .modal-card { background: var(--surface); border: 1px solid var(--border); width: 90%; max-width: 400px; padding: 24px; border-radius: 20px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .modal-card h3 { color: var(--text); margin: 0 0 8px 0; }
+        .modal-card p { color: var(--text-muted); font-size: 0.9rem; margin: 0 0 16px 0; }
+        .form-input { width: 100%; padding: 12px 14px; margin-bottom: 10px; background: var(--surface2); border: 1.5px solid var(--border); border-radius: 10px; font-family: inherit; font-size: 0.93rem; color: var(--text); }
+        .form-input::placeholder { color: var(--text-muted); }
+        .form-input:focus { border-color: var(--primary); outline: none; }
+
+        /* PDF VIEWER */
+        .viewer-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: #070f1d; flex-direction: column; }
+        .viewer-modal.open { display: flex; }
+        .viewer-header { padding: 14px 16px; padding-top: max(14px, env(safe-area-inset-top)); display: flex; justify-content: space-between; align-items: center; color: white; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; gap: 10px; }
+        .viewer-header-left { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; }
+        #view-title { font-weight: 700; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+        #page-info { font-size: 0.75rem; color: var(--text-muted); flex-shrink: 0; }
+        .viewer-body { flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; background: #1a1a2e; display: flex; flex-direction: column; align-items: center; padding: 6px 0; }
+        .viewer-body canvas { display: block; max-width: 100%; margin: 3px auto; box-shadow: 0 2px 12px rgba(0,0,0,0.5); }
+        img.view-img { max-width: 100%; object-fit: contain; display: block; margin: auto; }
+        .btn-close-viewer { background: var(--surface2); color: var(--text); border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: inherit; flex-shrink: 0; font-size: 0.88rem; }
+        .viewer-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; color: var(--text); padding: 50px 30px; text-align: center; width: 100%; }
+        .drive-fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; color: var(--text); text-align: center; padding: 30px; width: 100%; }
+        .drive-fallback i { font-size: 4rem; color: var(--accent); }
+        .btn-open-drive { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; padding: 14px 28px; border-radius: 12px; border: none; font-size: 1rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none; font-family: inherit; }
+
+        /* REFUND POLICY */
+        .refund-banner { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; padding: 10px 14px; margin: 0 16px 0; font-size: 0.8rem; color: var(--warning); display: flex; align-items: center; gap: 8px; cursor: pointer; }
     </style>
 </head>
 <body oncontextmenu="return false;">
+
     <header class="header">
-        <div class="header-title">
+        <div class="header-left">
             <a href="index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
-            <span>Campus Library</span>
+            <div class="header-title">Campus <span>Library</span></div>
         </div>
         <div class="header-actions">
             <a href="Profiles.html" class="profile-btn"><i class="fa-regular fa-circle-user"></i></a>
@@ -82,57 +171,42 @@
             </div>
         </div>
     </header>
+
     <div class="notif-dropdown" id="notif-list">
-        <div style="padding:20px;text-align:center;color:#94a3b8;">No new notifications</div>
+        <div style="padding:20px;text-align:center;color:var(--text-muted);">No new notifications</div>
     </div>
+
     <div class="filter-container">
         <div class="filter-grid">
             <select id="faculty-select" onchange="loadDepartments()"><option value="">Select Faculty...</option></select>
             <select id="dept-select" disabled onchange="checkSelections()"><option value="">Select Department...</option></select>
         </div>
-        <div style="margin-top:12px;">
-            <select id="level-select" disabled onchange="loadResources()">
-                <option value="">All Levels</option>
-                <option value="100L">100L</option>
-                <option value="200L">200L</option>
-                <option value="300L">300L</option>
-                <option value="400L">400L</option>
-                <option value="500L">500L</option>
-                <option value="Q&A">Past Questions (Q&A)</option>
-            </select>
-        </div>
+        <select id="level-select" disabled onchange="loadResources()">
+            <option value="">All Levels</option>
+            <option value="100L">100L</option>
+            <option value="200L">200L</option>
+            <option value="300L">300L</option>
+            <option value="400L">400L</option>
+            <option value="500L">500L</option>
+            <option value="Q&A">Past Questions (Q&A)</option>
+        </select>
     </div>
-    <div id="resources-list" class="resources-grid">
-        <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><h3>Loading Library...</h3></div>
-    </div>
-    <a href="upload-material.html" class="fab" id="admin-fab"><i class="fa-solid fa-plus"></i></a>
-    <div id="orderModal" class="modal">
-        <div class="modal-card">
-            <h3><i class="fa-solid fa-truck-fast" style="color:var(--warning)"></i> Order Hardcopy</h3>
-            <p>Get <b><span id="modal-book-title">Book</span></b> delivered.</p>
-            <input type="text" id="order-address" class="form-input" placeholder="Delivery Location (e.g. Hostel A)">
-            <input type="tel" id="order-phone" class="form-input" placeholder="Phone Number">
-            <div style="display:flex;gap:10px;margin-top:10px;">
-                <button class="btn btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button>
-                <button class="btn btn-primary" style="flex:1" onclick="processHardcopyPayment()">Pay &amp; Order</button>
-            </div>
-        </div>
-    </div>
+
     <!-- REFUND POLICY MODAL -->
     <div id="refundPolicyModal" class="modal" style="z-index:3000;">
-        <div class="modal-card" style="text-align:center;">
-            <div style="font-size:2.5rem;margin-bottom:10px;">📋</div>
-            <h3 style="margin:0 0 10px;color:#1e293b;">Refund Policy</h3>
-            <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;padding:15px;margin-bottom:15px;text-align:left;">
-                <p style="margin:0 0 8px;font-weight:700;color:#92400e;">⚠️ Please read before purchasing:</p>
-                <ul style="margin:0;padding-left:18px;color:#78350f;font-size:.9rem;line-height:1.8;">
-                    <li>All sales are <strong>final</strong> after purchase</li>
-                    <li>Refunds are only available within <strong>24 hours</strong> of payment</li>
-                    <li>No refunds after 24 hours — <strong>no exceptions</strong></li>
+        <div class="modal-card">
+            <div style="text-align:center;font-size:2.2rem;margin-bottom:10px;">📋</div>
+            <h3 style="margin:0 0 10px;color:var(--text);text-align:center;">Refund Policy</h3>
+            <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.35);border-radius:12px;padding:15px;margin-bottom:15px;">
+                <p style="margin:0 0 8px;font-weight:700;color:var(--warning);">⚠️ Please read before purchasing:</p>
+                <ul style="margin:0;padding-left:18px;color:var(--text-muted);font-size:.88rem;line-height:1.9;">
+                    <li>All sales are <strong style="color:var(--text);">final</strong> after purchase</li>
+                    <li>Refunds only within <strong style="color:var(--text);">24 hours</strong> of payment</li>
+                    <li>No refunds after 24 hours — <strong style="color:var(--text);">no exceptions</strong></li>
                     <li>Ensure you select the correct material before paying</li>
                 </ul>
             </div>
-            <p style="font-size:.85rem;color:#64748b;margin-bottom:15px;">By clicking "I Agree", you confirm you have read and accepted our refund policy.</p>
+            <p style="font-size:.83rem;color:var(--text-muted);margin-bottom:16px;text-align:center;">By clicking "I Agree", you accept our refund policy.</p>
             <div style="display:flex;gap:10px;">
                 <button class="btn btn-secondary" style="flex:1;" onclick="closeRefundPolicy()">Cancel</button>
                 <button class="btn btn-primary" style="flex:1;" onclick="acceptRefundPolicy()">I Agree ✅</button>
@@ -140,236 +214,62 @@
         </div>
     </div>
 
+    <div id="resources-list" class="resources-grid">
+        <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><h3>Loading Library...</h3></div>
+    </div>
+
+    <a href="upload-material.html" class="fab" id="admin-fab"><i class="fa-solid fa-plus"></i></a>
+
+    <!-- ORDER MODAL -->
+    <div id="orderModal" class="modal">
+        <div class="modal-card">
+            <h3><i class="fa-solid fa-truck-fast" style="color:var(--warning)"></i> Order Hardcopy</h3>
+            <p>Get <b><span id="modal-book-title">Book</span></b> delivered to you.</p>
+            <input type="text" id="order-address" class="form-input" placeholder="Delivery Location (e.g. Hostel A)">
+            <input type="tel" id="order-phone" class="form-input" placeholder="Phone Number">
+            <div style="display:flex;gap:10px;margin-top:10px;">
+                <button class="btn btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" style="flex:1" onclick="processHardcopyPayment()">Pay & Order</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF VIEWER -->
     <div id="fileViewer" class="viewer-modal">
         <div class="viewer-header">
             <div class="viewer-header-left">
                 <span id="view-title">Reading Mode</span>
                 <span id="page-info"></span>
             </div>
-            <button class="btn-close-viewer" onclick="closeViewer()">Close</button>
+            <button class="btn-close-viewer" onclick="closeViewer()">✕ Close</button>
         </div>
         <div class="viewer-body" id="viewer-container"></div>
     </div>
+
     <script>
-        const ADMIN_EMAIL="campuscircle26@gmail.com";
-        const supabaseUrl='https://nijjgpgxdhsrtftuqcoy.supabase.co';
-        const supabaseKey='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
-        const PAYSTACK_KEY='pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5';
-        const EMAILJS_PUBLIC_KEY="Y38V-Sq0IZSBfpHbR";
-        const EMAILJS_SERVICE_ID="service_kxffvki";
-        const EMAILJS_TEMPLATE_ID="template_ztmcqtb";
-        const GEMINI_PROXY_URL=`${supabaseUrl}/functions/v1/gemini-proxy`;
-        const _supabase=supabase.createClient(supabaseUrl,supabaseKey);
-        pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        if(typeof emailjs!=='undefined')emailjs.init(EMAILJS_PUBLIC_KEY);
-        let isAdmin=false,purchasedIds=new Set(),currentOrder=null,currentUser=null;
+        const ADMIN_EMAIL = "campuscircle26@gmail.com";
+        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
+        const PAYSTACK_KEY = 'pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5';
+        const EMAILJS_PUBLIC_KEY = "Y38V-Sq0IZSBfpHbR";
+        const EMAILJS_SERVICE_ID = "service_kxffvki";
+        const EMAILJS_TEMPLATE_ID = "template_ztmcqtb";
+        const GEMINI_PROXY_URL = `${supabaseUrl}/functions/v1/gemini-proxy`;
+        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        if (typeof emailjs !== 'undefined') emailjs.init(EMAILJS_PUBLIC_KEY);
+        let isAdmin = false, purchasedIds = new Set(), currentOrder = null, currentUser = null;
 
-        function isGoogleDriveUrl(u){return u&&u.includes('drive.google.com');}
-        function isImageUrl(u){return u&&/\.(jpeg|jpg|png|webp|gif)$/i.test(u);}
-        function extractDriveFileId(u){let m=u.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);if(m)return m[1];m=u.match(/[?&]id=([a-zA-Z0-9_-]+)/);if(m)return m[1];m=u.match(/open\?id=([a-zA-Z0-9_-]+)/);if(m)return m[1];return null;}
-        function getDriveEmbedUrl(u){const id=extractDriveFileId(u);return id?`https://drive.google.com/file/d/${id}/preview`:u;}
-        function getDriveOpenUrl(u){const id=extractDriveFileId(u);return id?`https://drive.google.com/file/d/${id}/preview?rm=minimal`:u;}
-
-        async function init(){
-            try{
-                const{data:{user}}=await _supabase.auth.getUser();
-                if(!user)return window.location.href='index.html';
-                currentUser=user;
-                const[adminReq,paymentsReq,facultiesReq,profileReq]=await Promise.all([
-                    _supabase.from('admin_users').select('*').ilike('email',user.email).maybeSingle(),
-                    _supabase.from('transactions').select('resource_id').eq('buyer_id',user.id),
-                    _supabase.from('faculties').select('id,name').order('name'),
-                    _supabase.from('profiles').select('department').eq('id',user.id).single()
-                ]);
-                if(adminReq.data){isAdmin=true;document.getElementById('admin-fab').style.display='flex';}
-                if(paymentsReq.data)paymentsReq.data.forEach(p=>purchasedIds.add(p.resource_id.toString()));
-                const sel=document.getElementById('faculty-select');
-                sel.innerHTML='<option value="">Select Faculty...</option>';
-                if(facultiesReq.data)facultiesReq.data.forEach(f=>sel.innerHTML+=`<option value="${f.id}">${f.name}</option>`);
-                if(profileReq.data?.department){
-                    const{data:dd}=await _supabase.from('departments').select('*').ilike('name',`%${profileReq.data.department.replace("Department of","").trim()}%`).limit(1);
-                    if(dd?.length>0){const d=dd[0];document.getElementById('faculty-select').value=d.faculty_id;await loadDepartments();document.getElementById('dept-select').value=d.id;document.getElementById('dept-select').disabled=false;document.getElementById('level-select').disabled=false;loadResources();}
-                }
-                loadNotifications();
-            }catch(e){console.error("Init Error",e);}
-        }
-
-        async function sendEmailNotification(toEmail,subject,message){
-            try{await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{email:toEmail,name:"Campus Circle",to_name:toEmail,subject:subject,message:message,time:new Date().toLocaleString()});}
-            catch(e){console.error("Email Error:",e);}
-        }
-
-        async function loadDepartments(){
-            const facId=document.getElementById('faculty-select').value;
-            const ds=document.getElementById('dept-select');
-            ds.innerHTML='<option value="">Loading...</option>';
-            if(!facId)return;
-            const{data}=await _supabase.from('departments').select('id,name').eq('faculty_id',facId).order('name');
-            ds.innerHTML='<option value="">Select Department...</option>';
-            if(data){data.forEach(d=>ds.innerHTML+=`<option value="${d.id}">${d.name}</option>`);ds.disabled=false;}
-        }
-
-        function checkSelections(){if(document.getElementById('dept-select').value){document.getElementById('level-select').disabled=false;loadResources();}}
-
-        async function loadResources(){
-            const deptId=document.getElementById('dept-select').value;
-            const level=document.getElementById('level-select').value;
-            const list=document.getElementById('resources-list');
-            list.innerHTML=`<div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><h3>Searching...</h3></div>`;
-            let query=_supabase.from('academic_resources').select('*').eq('department_id',deptId);
-            if(level)query=query.eq('level',level);
-            const{data,error}=await query;
-            if(error||!data||data.length===0){list.innerHTML=`<div class="empty-state"><i class="fa-regular fa-folder-open"></i><h3>No Materials Found</h3></div>`;return;}
-            list.innerHTML=data.map(res=>{
-                const isOwned=purchasedIds.has(res.id.toString())||isAdmin;
-                const price=res.softcopy_price||100;
-                const isImg=isImageUrl(res.file_url);
-                const safeUrl=encodeURIComponent(res.file_url);
-                const safeTitle=encodeURIComponent(res.title);
-                let btns=isOwned
-                    ?`<button class="btn btn-success" onclick="openReader('${safeUrl}','${safeTitle}')"><i class="fa-solid fa-book-open"></i> Read</button>`
-                    :`<div class="btn-row"><button class="btn btn-primary" onclick="buySoftcopyWithPolicy('${res.id}','${price}','${res.title.replace(/'/g,"")}','${res.uploader_id||''}')"><i class="fa-solid fa-unlock"></i> PDF</button>${res.is_hardcopy_available?`<button class="btn btn-secondary" onclick="openOrderModal('${res.id}','${res.title.replace(/'/g,"")}','${res.hardcopy_price}')"><i class="fa-solid fa-truck"></i> Hardcopy</button>`:`<button class="btn btn-secondary" disabled style="opacity:.5">No Print</button>`}</div>`;
-                return`<div class="res-card">${res.is_hardcopy_available?`<div class="hardcopy-badge">Book Available</div>`:''}<div class="res-header"><div class="file-icon ${isImg?'doc':'pdf'}"><i class="fa-solid ${isImg?'fa-camera':'fa-file-pdf'}"></i></div><div><div class="res-title">${res.title}</div><span class="badge-level">${res.level}</span></div></div><div class="res-price-tag">&#8358;${isOwned?'PAID':Number(price).toLocaleString()}</div><div class="res-actions">${btns}</div>${isAdmin?`<button style="background:none;border:none;color:red;margin-top:5px;font-size:.7rem;align-self:flex-end;cursor:pointer;" onclick="deleteResource('${res.id}')">Delete</button>`:''}</div>`;
-            }).join('');
-        }
-
-        function buySoftcopy(id,price,title,uploaderId){
-            if(!currentUser)return alert("Login first");
-            const numericPrice=Number(String(price).replace(/[^0-9.-]+/g,""));
-            PaystackPop.setup({key:PAYSTACK_KEY,email:currentUser.email,amount:Math.ceil(numericPrice*100),ref:'SOFT-'+Date.now(),
-                callback:function(resp){processSuccessfulPayment(resp,id,numericPrice,title,uploaderId);},
-                onClose:function(){alert('Transaction cancelled');}
-            }).openIframe();
-        }
-
-        async function processSuccessfulPayment(resp,id,amount,title,uploaderId){
-            try{
-                // RE-FETCH SESSION — fixes slow/old devices where currentUser can be null
-                if(!currentUser){
-                    const{data:{user}}=await _supabase.auth.getUser();
-                    if(!user){
-                        alert("Session expired. Payment went through! Show admin this ref: "+resp.reference);
-                        return;
-                    }
-                    currentUser=user;
-                }
-
-                // GRANT ACCESS IMMEDIATELY — before any DB calls
-                purchasedIds.add(id.toString());
-                loadResources();
-
-                // DUPLICATE CHECK — skip insert if already purchased
-                const{data:existing}=await _supabase.from('transactions').select('id').eq('buyer_id',currentUser.id).eq('resource_id',id).maybeSingle();
-                if(!existing){
-                    const{error:txError}=await _supabase.from('transactions').insert([{buyer_id:currentUser.id,resource_id:id,amount_paid:amount}]);
-                    // Log only — never block access
-                    if(txError)console.error("TX insert (non-fatal):",txError.message);
-                }
-
-                // Notifications — non-blocking
-                _supabase.from('notifications').insert([{user_id:currentUser.id,title:'Purchase Successful',message:`Payment successful! You can now read "${title}" in your Library.`}]).catch(()=>{});
-                if(uploaderId&&uploaderId.trim()!==""){
-                    _supabase.from('notifications').insert([{user_id:uploaderId,title:'Sale Commission',message:`Cha-ching! A student just bought "${title}". You earned a commission from this N${amount} sale!`}]).catch(()=>{});
-                }
-
-                // Emails — non-blocking
-                sendEmailNotification(ADMIN_EMAIL,"PDF Sold — Campus Circle",`New sale!\n\nBuyer: ${currentUser.email}\nMaterial: ${title}\nAmount: N${amount}\nRef: ${resp.reference}`);
-                sendEmailNotification(currentUser.email,"Purchase Confirmed — Campus Circle",`Hi!\n\nYour purchase was successful!\n\nMaterial: ${title}\nAmount Paid: N${amount}\n\nOpen Campus Circle Library to start reading.\n\nThank you!\nCampus Circle Team`);
-
-                loadNotifications();
-                alert("Payment Successful! The material has been added to your Library.");
-            }catch(error){
-                console.error("Payment sync error:",error);
-                // Always give access even if something crashed
-                purchasedIds.add(id.toString());
-                loadResources();
-                alert("Payment received! Material added to Library. Ref: "+resp.reference);
-            }
-        }
-
-        async function processHardcopyPayment(){
-            if(!currentUser)return alert("Please log in.");
-            const address=document.getElementById('order-address').value;
-            const phone=document.getElementById('order-phone').value;
-            if(!address||!phone)return alert("Please enter delivery details.");
-            const numericPrice=parseFloat(String(currentOrder.price).replace(/[^0-9.]/g,""));
-            if(isNaN(numericPrice)||numericPrice<=0)return alert("Invalid price error.");
-            PaystackPop.setup({key:PAYSTACK_KEY,email:currentUser.email,amount:Math.ceil(numericPrice*100),ref:'HARD-'+Math.floor(Math.random()*1000000000),
-                callback:async function(resp){
-                    const{error}=await _supabase.from('hardcopy_orders').insert({user_id:currentUser.id,resource_id:currentOrder.id,amount:numericPrice,delivery_address:address,phone_number:phone,payment_ref:resp.reference});
-                    if(!error){
-                        sendEmailNotification(ADMIN_EMAIL,"New Hardcopy Order",`Item: ${currentOrder.title}\nAmount: N${numericPrice}\nStudent: ${currentUser.email}\nAddress: ${address}\nPhone: ${phone}`);
-                        sendEmailNotification(currentUser.email,"Order Confirmation",`You ordered ${currentOrder.title}. Delivery to: ${address}`);
-                        await _supabase.from('notifications').insert([{user_id:currentUser.id,title:'Order Placed',message:`Order placed! Your hardcopy of "${currentOrder.title}" will be delivered soon.`}]);
-                        loadNotifications();closeModal();alert("Order Placed Successfully!");
-                    }else{alert("Payment successful but order saving failed. Contact support with ref: "+resp.reference);}
-                }
-            }).openIframe();
-        }
-
-        function openOrderModal(id,title,price){currentOrder={id,title,price};document.getElementById('modal-book-title').innerText=title;document.getElementById('orderModal').style.display='flex';}
-        function closeModal(){document.getElementById('orderModal').style.display='none';}
-
-        async function loadNotifications(){
-            const{data}=await _supabase.from('notifications').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(5);
-            const list=document.getElementById('notif-list');
-            if(data?.length>0){
-                document.getElementById('notif-badge').style.display='block';
-                list.innerHTML=data.map(n=>{const header=n.title||(n.message.includes('Cha-ching')?'Commission Earned!':'Library Alert');return`<div class="notif-item"><div class="notif-title">${header}</div>${n.message}<span class="notif-time">${new Date(n.created_at).toLocaleTimeString()}</span></div>`;}).join('');
-            }
-        }
-
-        function toggleNotifs(){const el=document.getElementById('notif-list');el.style.display=el.style.display==='block'?'none':'block';document.getElementById('notif-badge').style.display='none';}
-        async function deleteResource(id){if(confirm("Delete this?")){await _supabase.from('academic_resources').delete().eq('id',id);loadResources();}}
-
-        async function openReader(encodedUrl,encodedTitle){
-            const url=decodeURIComponent(encodedUrl);
-            const title=decodeURIComponent(encodedTitle);
-            document.getElementById('view-title').innerText=title;
-            document.getElementById('page-info').innerText='';
-            const container=document.getElementById('viewer-container');
-            document.getElementById('fileViewer').classList.add('open');
-            document.body.style.overflow='hidden';
-            if(isImageUrl(url)){container.innerHTML=`<img class="view-img" src="${url}">`;return;}
-            container.innerHTML=`<div class="viewer-loading"><i class="fa-solid fa-spinner fa-spin" style="font-size:2.5rem;"></i><p>Fetching document...</p><p style="font-size:.8rem;opacity:.5;margin-top:5px;">Large files may take a moment</p></div>`;
-            try{
-                const resp=await fetch(GEMINI_PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${supabaseKey}`},body:JSON.stringify({action:'fetch_pdf',pdf_url:url})});
-                if(!resp.ok)throw new Error(`Server returned ${resp.status}`);
-                const json=await resp.json();
-                if(!json.base64)throw new Error('No PDF data received');
-                const binary=atob(json.base64);
-                const bytes=new Uint8Array(binary.length);
-                for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-                container.innerHTML='';
-                const pdf=await pdfjsLib.getDocument({data:bytes}).promise;
-                const totalPages=pdf.numPages;
-                document.getElementById('page-info').innerText=`${totalPages} pages`;
-                const maxWidth=Math.min(window.innerWidth,800);
-                for(let p=1;p<=totalPages;p++){
-                    const page=await pdf.getPage(p);
-                    const baseVp=page.getViewport({scale:1});
-                    const vp=page.getViewport({scale:maxWidth/baseVp.width});
-                    const canvas=document.createElement('canvas');
-                    canvas.width=vp.width;canvas.height=vp.height;
-                    await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
-                    container.appendChild(canvas);
-                    document.getElementById('page-info').innerText=`${p}/${totalPages}`;
-                }
-                document.getElementById('page-info').innerText=`${totalPages} pages`;
-            }catch(e){
-                console.error('PDF load error:',e);
-                if(isGoogleDriveUrl(url)){container.innerHTML=`<div class="drive-fallback"><i class="fa-brands fa-google-drive"></i><h3 style="margin:0">Open in Google Drive</h3><p style="color:#94a3b8">Tap below to read this material</p><a href="${getDriveOpenUrl(url)}" target="_blank" class="btn-open-drive"><i class="fa-solid fa-external-link-alt"></i> Open Material</a></div>`;}
-                else{container.innerHTML=`<div class="viewer-loading"><i class="fa-solid fa-circle-xmark" style="color:var(--danger);font-size:3rem;"></i><h3>Could not load document</h3><p style="color:#94a3b8;font-size:.9rem;">${e.message||'Please try again'}</p><button class="btn-close-viewer" style="margin-top:15px;" onclick="closeViewer()">Close</button></div>`;}
-            }
-        }
-
-        function closeViewer(){document.getElementById('fileViewer').classList.remove('open');document.getElementById('viewer-container').innerHTML='';document.getElementById('page-info').innerText='';document.body.style.overflow='';}
+        function isGoogleDriveUrl(u) { return u && u.includes('drive.google.com'); }
+        function isImageUrl(u) { return u && /\.(jpeg|jpg|png|webp|gif)$/i.test(u); }
+        function extractDriveFileId(u) { let m = u.match(/\/file\/d\/([a-zA-Z0-9_-]+)/); if (m) return m[1]; m = u.match(/[?&]id=([a-zA-Z0-9_-]+)/); if (m) return m[1]; m = u.match(/open\?id=([a-zA-Z0-9_-]+)/); if (m) return m[1]; return null; }
+        function getDriveEmbedUrl(u) { const id = extractDriveFileId(u); return id ? `https://drive.google.com/file/d/${id}/preview` : u; }
+        function getDriveOpenUrl(u) { const id = extractDriveFileId(u); return id ? `https://drive.google.com/file/d/${id}/preview?rm=minimal` : u; }
 
         // ── REFUND POLICY ─────────────────────────────────────────────────────
         let pendingPurchase = null;
 
         function buySoftcopyWithPolicy(id, price, title, uploaderId) {
-            // Show policy on EVERY purchase
             pendingPurchase = { id, price, title, uploaderId };
             document.getElementById('refundPolicyModal').style.display = 'flex';
         }
@@ -380,7 +280,6 @@
         }
 
         function acceptRefundPolicy() {
-            sessionStorage.setItem('refund_policy_accepted', 'true');
             document.getElementById('refundPolicyModal').style.display = 'none';
             if (pendingPurchase) {
                 const { id, price, title, uploaderId } = pendingPurchase;
@@ -389,10 +288,174 @@
             }
         }
 
+        async function init() {
+            try {
+                const { data: { user } } = await _supabase.auth.getUser();
+                if (!user) return window.location.href = 'index.html';
+                currentUser = user;
+                const [adminReq, paymentsReq, facultiesReq, profileReq] = await Promise.all([
+                    _supabase.from('admin_users').select('*').ilike('email', user.email).maybeSingle(),
+                    _supabase.from('transactions').select('resource_id').eq('buyer_id', user.id),
+                    _supabase.from('faculties').select('id,name').order('name'),
+                    _supabase.from('profiles').select('department').eq('id', user.id).single()
+                ]);
+                if (adminReq.data) { isAdmin = true; document.getElementById('admin-fab').style.display = 'flex'; }
+                if (paymentsReq.data) paymentsReq.data.forEach(p => purchasedIds.add(p.resource_id.toString()));
+                const sel = document.getElementById('faculty-select');
+                sel.innerHTML = '<option value="">Select Faculty...</option>';
+                if (facultiesReq.data) facultiesReq.data.forEach(f => sel.innerHTML += `<option value="${f.id}">${f.name}</option>`);
+                if (profileReq.data?.department) {
+                    const { data: dd } = await _supabase.from('departments').select('*').ilike('name', `%${profileReq.data.department.replace("Department of", "").trim()}%`).limit(1);
+                    if (dd?.length > 0) { const d = dd[0]; document.getElementById('faculty-select').value = d.faculty_id; await loadDepartments(); document.getElementById('dept-select').value = d.id; document.getElementById('dept-select').disabled = false; document.getElementById('level-select').disabled = false; loadResources(); }
+                }
+                loadNotifications();
+            } catch (e) { console.error("Init Error", e); }
+        }
+
+        async function sendEmailNotification(toEmail, subject, message) {
+            try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { email: toEmail, name: "Campus Circle", to_name: toEmail, subject, message, time: new Date().toLocaleString() }); }
+            catch (e) { console.error("Email Error:", e); }
+        }
+
+        async function loadDepartments() {
+            const facId = document.getElementById('faculty-select').value;
+            const ds = document.getElementById('dept-select');
+            ds.innerHTML = '<option value="">Loading...</option>';
+            if (!facId) return;
+            const { data } = await _supabase.from('departments').select('id,name').eq('faculty_id', facId).order('name');
+            ds.innerHTML = '<option value="">Select Department...</option>';
+            if (data) { data.forEach(d => ds.innerHTML += `<option value="${d.id}">${d.name}</option>`); ds.disabled = false; }
+        }
+
+        function checkSelections() { if (document.getElementById('dept-select').value) { document.getElementById('level-select').disabled = false; loadResources(); } }
+
+        async function loadResources() {
+            const deptId = document.getElementById('dept-select').value;
+            const level = document.getElementById('level-select').value;
+            const list = document.getElementById('resources-list');
+            list.innerHTML = `<div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><h3>Searching...</h3></div>`;
+            let query = _supabase.from('academic_resources').select('*').eq('department_id', deptId);
+            if (level) query = query.eq('level', level);
+            const { data, error } = await query;
+            if (error || !data || data.length === 0) { list.innerHTML = `<div class="empty-state"><i class="fa-regular fa-folder-open"></i><h3>No Materials Found</h3><p>Try a different department or level.</p></div>`; return; }
+            list.innerHTML = data.map(res => {
+                const isOwned = purchasedIds.has(res.id.toString()) || isAdmin;
+                const price = res.softcopy_price || 100;
+                const isImg = isImageUrl(res.file_url);
+                const safeUrl = encodeURIComponent(res.file_url);
+                const safeTitle = encodeURIComponent(res.title);
+                let btns = isOwned
+                    ? `<button class="btn btn-success" onclick="openReader('${safeUrl}','${safeTitle}')"><i class="fa-solid fa-book-open"></i> Read Now</button>`
+                    : `<div class="btn-row"><button class="btn btn-primary" onclick="buySoftcopyWithPolicy('${res.id}','${price}','${res.title.replace(/'/g, "")}','${res.uploader_id || ''}')"><i class="fa-solid fa-unlock"></i> Buy PDF</button>${res.is_hardcopy_available ? `<button class="btn btn-secondary" onclick="openOrderModal('${res.id}','${res.title.replace(/'/g, "")}','${res.hardcopy_price}')"><i class="fa-solid fa-truck"></i> Print</button>` : `<button class="btn btn-secondary" disabled>No Print</button>`}</div>`;
+                return `<div class="res-card">
+                    ${res.is_hardcopy_available ? `<div class="hardcopy-badge">📖 Print Available</div>` : ''}
+                    <div class="res-header">
+                        <div class="file-icon ${isImg ? 'doc' : 'pdf'}"><i class="fa-solid ${isImg ? 'fa-camera' : 'fa-file-pdf'}"></i></div>
+                        <div><div class="res-title">${res.title}</div><span class="badge-level">${res.level}</span></div>
+                    </div>
+                    <div class="res-price-tag ${isOwned ? 'paid'}">₦${isOwned ? 'PAID ✓' : Number(price).toLocaleString()}</div>
+                    <div class="res-actions">${btns}</div>
+                    ${isAdmin ? `<button style="background:none;border:none;color:var(--danger);margin-top:6px;font-size:0.7rem;align-self:flex-end;cursor:pointer;font-family:inherit;" onclick="deleteResource('${res.id}')">Delete</button>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        function buySoftcopy(id, price, title, uploaderId) {
+            if (!currentUser) return alert("Please log in first");
+            const numericPrice = Number(String(price).replace(/[^0-9.-]+/g, ""));
+            PaystackPop.setup({
+                key: PAYSTACK_KEY, email: currentUser.email, amount: Math.ceil(numericPrice * 100), ref: 'SOFT-' + Date.now(),
+                callback: function (resp) { processSuccessfulPayment(resp, id, numericPrice, title, uploaderId); },
+                onClose: function () { alert('Transaction cancelled'); }
+            }).openIframe();
+        }
+
+        async function processSuccessfulPayment(resp, id, amount, title, uploaderId) {
+            try {
+                if (!currentUser) { const { data: { user } } = await _supabase.auth.getUser(); if (!user) { alert("Session expired. Payment went through! Show admin this ref: " + resp.reference); return; } currentUser = user; }
+                purchasedIds.add(id.toString()); loadResources();
+                const { data: existing } = await _supabase.from('transactions').select('id').eq('buyer_id', currentUser.id).eq('resource_id', id).maybeSingle();
+                if (!existing) { const { error: txError } = await _supabase.from('transactions').insert([{ buyer_id: currentUser.id, resource_id: id, amount_paid: amount }]); if (txError) console.error("TX insert:", txError.message); }
+                _supabase.from('notifications').insert([{ user_id: currentUser.id, title: 'Purchase Successful', message: `Payment successful! You can now read "${title}" in your Library.` }]).catch(() => {});
+                if (uploaderId && uploaderId.trim() !== "") { _supabase.from('notifications').insert([{ user_id: uploaderId, title: 'Sale Commission', message: `Cha-ching! A student just bought "${title}". You earned a commission from this ₦${amount} sale!` }]).catch(() => {}); }
+                sendEmailNotification(ADMIN_EMAIL, "PDF Sold — Campus Circle", `New sale!\n\nBuyer: ${currentUser.email}\nMaterial: ${title}\nAmount: ₦${amount}\nRef: ${resp.reference}`);
+                sendEmailNotification(currentUser.email, "Purchase Confirmed — Campus Circle", `Hi!\n\nYour purchase was successful!\n\nMaterial: ${title}\nAmount Paid: ₦${amount}\n\nOpen Campus Circle Library to start reading.\n\nThank you!\nCampus Circle Team`);
+                loadNotifications();
+                alert("✅ Payment Successful! The material has been added to your Library.");
+            } catch (error) {
+                console.error("Payment sync error:", error);
+                purchasedIds.add(id.toString()); loadResources();
+                alert("Payment received! Material added to Library. Ref: " + resp.reference);
+            }
+        }
+
+        async function processHardcopyPayment() {
+            if (!currentUser) return alert("Please log in.");
+            const address = document.getElementById('order-address').value;
+            const phone = document.getElementById('order-phone').value;
+            if (!address || !phone) return alert("Please enter delivery details.");
+            const numericPrice = parseFloat(String(currentOrder.price).replace(/[^0-9.]/g, ""));
+            if (isNaN(numericPrice) || numericPrice <= 0) return alert("Invalid price error.");
+            PaystackPop.setup({
+                key: PAYSTACK_KEY, email: currentUser.email, amount: Math.ceil(numericPrice * 100), ref: 'HARD-' + Math.floor(Math.random() * 1000000000),
+                callback: async function (resp) {
+                    const { error } = await _supabase.from('hardcopy_orders').insert({ user_id: currentUser.id, resource_id: currentOrder.id, amount: numericPrice, delivery_address: address, phone_number: phone, payment_ref: resp.reference });
+                    if (!error) { sendEmailNotification(ADMIN_EMAIL, "New Hardcopy Order", `Item: ${currentOrder.title}\nAmount: ₦${numericPrice}\nStudent: ${currentUser.email}\nAddress: ${address}\nPhone: ${phone}`); sendEmailNotification(currentUser.email, "Order Confirmation", `You ordered ${currentOrder.title}. Delivery to: ${address}`); await _supabase.from('notifications').insert([{ user_id: currentUser.id, title: 'Order Placed', message: `Order placed! Your hardcopy of "${currentOrder.title}" will be delivered soon.` }]); loadNotifications(); closeModal(); alert("Order Placed Successfully!"); } else { alert("Payment successful but order saving failed. Contact support with ref: " + resp.reference); }
+                }
+            }).openIframe();
+        }
+
+        function openOrderModal(id, title, price) { currentOrder = { id, title, price }; document.getElementById('modal-book-title').innerText = title; document.getElementById('orderModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('orderModal').style.display = 'none'; }
+
+        async function loadNotifications() {
+            const { data } = await _supabase.from('notifications').select('*').eq('user_id', currentUser.id).order('created_at', { ascending: false }).limit(5);
+            const list = document.getElementById('notif-list');
+            if (data?.length > 0) {
+                document.getElementById('notif-badge').style.display = 'block';
+                list.innerHTML = data.map(n => { const header = n.title || (n.message.includes('Cha-ching') ? 'Commission Earned!' : 'Library Alert'); return `<div class="notif-item"><div class="notif-title">${header}</div>${n.message}<span class="notif-time">${new Date(n.created_at).toLocaleTimeString()}</span></div>`; }).join('');
+            }
+        }
+
+        function toggleNotifs() { const el = document.getElementById('notif-list'); el.style.display = el.style.display === 'block' ? 'none' : 'block'; document.getElementById('notif-badge').style.display = 'none'; }
+        async function deleteResource(id) { if (confirm("Delete this resource?")) { await _supabase.from('academic_resources').delete().eq('id', id); loadResources(); } }
+
+        async function openReader(encodedUrl, encodedTitle) {
+            const url = decodeURIComponent(encodedUrl);
+            const title = decodeURIComponent(encodedTitle);
+            document.getElementById('view-title').innerText = title;
+            document.getElementById('page-info').innerText = '';
+            const container = document.getElementById('viewer-container');
+            document.getElementById('fileViewer').classList.add('open');
+            document.body.style.overflow = 'hidden';
+            if (isImageUrl(url)) { container.innerHTML = `<img class="view-img" src="${url}">`; return; }
+            container.innerHTML = `<div class="viewer-loading"><i class="fa-solid fa-spinner fa-spin" style="font-size:2.5rem;color:var(--accent)"></i><p>Fetching document...</p><p style="font-size:.8rem;opacity:.5;margin-top:5px;">Large files may take a moment</p></div>`;
+            try {
+                const resp = await fetch(GEMINI_PROXY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` }, body: JSON.stringify({ action: 'fetch_pdf', pdf_url: url }) });
+                if (!resp.ok) throw new Error(`Server returned ${resp.status}`);
+                const json = await resp.json();
+                if (!json.base64) throw new Error('No PDF data received');
+                const binary = atob(json.base64); const bytes = new Uint8Array(binary.length); for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                container.innerHTML = '';
+                const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+                const totalPages = pdf.numPages;
+                document.getElementById('page-info').innerText = `${totalPages} pages`;
+                const maxWidth = Math.min(window.innerWidth, 800);
+                for (let p = 1; p <= totalPages; p++) { const page = await pdf.getPage(p); const baseVp = page.getViewport({ scale: 1 }); const vp = page.getViewport({ scale: maxWidth / baseVp.width }); const canvas = document.createElement('canvas'); canvas.width = vp.width; canvas.height = vp.height; await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise; container.appendChild(canvas); document.getElementById('page-info').innerText = `${p}/${totalPages}`; }
+                document.getElementById('page-info').innerText = `${totalPages} pages`;
+            } catch (e) {
+                console.error('PDF load error:', e);
+                if (isGoogleDriveUrl(url)) { container.innerHTML = `<div class="drive-fallback"><i class="fa-brands fa-google-drive"></i><h3 style="margin:0">Open in Google Drive</h3><p style="color:var(--text-muted)">Tap below to read this material</p><a href="${getDriveOpenUrl(url)}" target="_blank" class="btn-open-drive"><i class="fa-solid fa-external-link-alt"></i> Open Material</a></div>`; }
+                else { container.innerHTML = `<div class="viewer-loading"><i class="fa-solid fa-circle-xmark" style="color:var(--danger);font-size:3rem;"></i><h3>Could not load document</h3><p style="color:var(--text-muted);font-size:.9rem;">${e.message || 'Please try again'}</p><button class="btn-close-viewer" style="margin-top:15px;" onclick="closeViewer()">Close</button></div>`; }
+            }
+        }
+
+        function closeViewer() { document.getElementById('fileViewer').classList.remove('open'); document.getElementById('viewer-container').innerHTML = ''; document.getElementById('page-info').innerText = ''; document.body.style.overflow = ''; }
+
         init();
     </script>
     <script>
-        if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js').then(r=>console.log('SW Registered!',r.scope)).catch(e=>console.log('SW Failed:',e));});}
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./service-worker.js').then(r => console.log('SW Registered!', r.scope)).catch(e => console.log('SW Failed:', e)); }); }
     </script>
 </body>
 </html>
