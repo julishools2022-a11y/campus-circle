@@ -11,17 +11,17 @@
         :root {
             --primary: #3d72b4;
             --primary-dark: #2d5a8e;
-            --primary-light: #dbeafe;
-            --accent: #f59e0b;
+            --primary-light: #1e3a5f;
+            --accent: #5a9fd4;
             --success: #10b981;
             --danger: #ef4444;
             --warning: #f59e0b;
-            --bg: #0f1923;
-            --surface: #1a2535;
-            --surface2: #212f42;
-            --border: #2a3d54;
-            --text: #e8f0fe;
-            --muted: #6b8cae;
+            --bg: #0d1b2a;
+            --surface: #112236;
+            --surface2: #17304d;
+            --border: #1e3f63;
+            --text: #e2eeff;
+            --muted: #6b96c4;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -229,7 +229,6 @@
             th, td { padding: 8px 10px; }
             .content { padding: 16px; }
         }
-        img { background: transparent; }
     </style>
 </head>
 <body>
@@ -237,7 +236,7 @@
 <!-- ════════════ LOGIN ════════════ -->
 <div id="login-screen">
     <div class="login-box">
-        <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png" alt="Campus Circle" style="width:64px;height:64px;border-radius:16px;object-fit:cover;margin:0 auto 16px;display:block;">
+        <img src="1000367752.jpg" alt="Campus Circle" style="width:64px;height:64px;border-radius:16px;object-fit:cover;margin:0 auto 16px;display:block;">
         <h2>Admin Panel</h2>
         <p>Campus Circle — Restricted Access</p>
         <div class="input-group">
@@ -257,7 +256,7 @@
 <div id="admin-screen">
     <div class="sidebar">
         <div class="sidebar-logo">
-            <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png" alt="CC" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;">
+            <img src="1000367752.jpg" alt="CC" style="width:36px;height:36px;border-radius:8px;object-fit:cover;flex-shrink:0;">
             <div class="sidebar-brand">Campus Circle <span>Admin Panel</span></div>
         </div>
         <div class="nav-item active" onclick="showTab('dashboard', this)"><i class="fa-solid fa-gauge"></i> Dashboard</div>
@@ -277,7 +276,7 @@
     <div class="main">
         <div class="topbar">
             <h1 id="topbar-title">Dashboard</h1>
-            <button class="btn-logout" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+            <button class="btn-logout" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
         </div>
         <div class="content">
 
@@ -495,6 +494,11 @@ function enterAdmin(email) {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('admin-screen').style.display = 'block';
     loadAll();
+}
+
+async function doLogout() {
+    await sb.auth.signOut();
+    window.location.href = 'index.html';
 }
 
 // ── NAV ──
@@ -778,16 +782,7 @@ sb.auth.getSession().then(async ({ data }) => {
         const { data: adminRow } = await sb.from('admin_users').select('email').eq('email', email).maybeSingle();
         if (adminRow) enterAdmin(email);
     }
-    
 });
-    async function logout() {
-            if(confirm("Are you sure you want to log out?")) {
-                await _supabase.auth.signOut();
-                window.location.href = 'index.html';
-            }
-        }
-
-        
 </script>
 </body>
 </html>
