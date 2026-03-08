@@ -5,212 +5,338 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login | Campus Circle</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { 
-            --primary: #2563eb; 
-            --primary-dark: #1d4ed8;
-            --dark: #0f172a; 
-            --bg: #f8fafc; 
-            --text: #334155;
-            --text-light: #64748b;
+        :root {
+            --bg: #0a1628;
+            --surface: #112236;
+            --surface2: #1a2f4a;
+            --border: rgba(61,114,180,0.25);
+            --primary: #3d72b4;
+            --primary-bright: #5b9bd5;
+            --accent: #64b5f6;
+            --text: #e2eaf4;
+            --text-muted: #7a9cc0;
+            --success: #10b981;
+            --danger: #ef4444;
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Roboto', sans-serif;
+            font-family: 'Outfit', sans-serif;
             background: var(--bg);
             min-height: 100vh;
-            margin: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            position: relative;
+            overflow: hidden;
         }
-        .brand { margin-bottom: 30px; text-align: center; }
-        .brand-text { font-size: 24px; font-weight: 900; color: var(--primary); letter-spacing: -0.5px; }
-        .brand-sub { font-size: 14px; color: var(--text-light); margin-top: 5px; }
-        .login-container {
-            background: white;
-            padding: 2.5rem;
-            border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+
+        /* Background grid pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(61,114,180,0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(61,114,180,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        /* Glow orb */
+        body::after {
+            content: '';
+            position: fixed;
+            top: -20%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(61,114,180,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .brand {
+            text-align: center;
+            margin-bottom: 28px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-logo {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 12px;
+            display: block;
+        }
+
+        .brand-name {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--text);
+            letter-spacing: -0.5px;
+        }
+
+        .brand-name span { color: var(--accent); }
+
+        .brand-sub {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px 28px;
             width: 100%;
             max-width: 400px;
-            border: 1px solid #e2e8f0;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4), 0 0 0 1px rgba(61,114,180,0.1);
         }
-        h2 { color: var(--dark); margin: 0 0 20px 0; font-size: 1.5rem; font-weight: 700; text-align: center; }
-        .form-group { margin-bottom: 1.2rem; text-align: left; }
-        label { display: block; margin-bottom: 0.5rem; color: var(--text); font-size: 0.85rem; font-weight: 600; }
+
+        .card-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .card-sub {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .form-group { margin-bottom: 16px; }
+
+        label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 7px;
+        }
+
+        .input-wrap {
+            position: relative;
+        }
+
+        .input-wrap i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
         input {
-            width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px;
-            font-size: 16px; color: var(--dark); outline: none; background: #f8fafc;
-            font-family: inherit; transition: all 0.2s;
-        }
-        input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
-        .btn-login {
-            width: 100%; padding: 14px; background: var(--primary); color: white;
-            border: none; border-radius: 8px; font-size: 1rem; font-weight: 700;
-            cursor: pointer; transition: background 0.2s, transform 0.1s;
-            margin-top: 1rem; font-family: inherit;
-        }
-        .btn-login:hover { background: var(--primary-dark); }
-        .btn-login:active { transform: scale(0.98); }
-        .btn-login:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
-
-        /* DIVIDER */
-        .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--text-light); font-size: 0.85rem; }
-        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
-
-        /* GOOGLE BUTTON */
-        .btn-google {
-            width: 100%; padding: 13px; background: white; color: var(--dark);
-            border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.95rem;
-            font-weight: 600; cursor: pointer; display: flex; align-items: center;
-            justify-content: center; gap: 10px; transition: background 0.2s, border-color 0.2s, transform 0.1s;
+            width: 100%;
+            padding: 13px 14px 13px 40px;
+            background: var(--surface2);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            color: var(--text);
             font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .btn-google:hover { background: #f8fafc; border-color: #cbd5e1; }
-        .btn-google:active { transform: scale(0.98); }
-        .btn-google:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-        .google-icon { width: 20px; height: 20px; flex-shrink: 0; }
 
-        #message { margin-top: 1.2rem; font-size: 0.9rem; text-align: center; min-height: 1.2rem; font-weight: 500; }
-        .forgot-link { display: block; text-align: right; font-size: 0.82rem; color: var(--primary); text-decoration: none; margin-top: 6px; font-weight: 500; }
-        .forgot-link:hover { text-decoration: underline; }
-        .footer-text { margin-top: 2rem; font-size: 0.9rem; color: var(--text-light); text-align: center; border-top: 1px solid #e2e8f0; padding-top: 20px; }
-        .footer-text a { color: var(--primary); text-decoration: none; font-weight: 600; }
-        .footer-text a:hover { text-decoration: underline; }
+        input::placeholder { color: var(--text-muted); opacity: 0.6; }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(61,114,180,0.15); }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-bright));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: opacity 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        #message {
+            margin-top: 14px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-align: center;
+            min-height: 20px;
+        }
+
+        .footer-link {
+            text-align: center;
+            margin-top: 22px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+            font-size: 0.88rem;
+            color: var(--text-muted);
+        }
+
+        .footer-link a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .divider span {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .google-btn {
+            width: 100%;
+            padding: 13px;
+            background: var(--surface2);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .google-btn:hover { border-color: var(--primary); background: rgba(61,114,180,0.08); }
+        .google-btn img { width: 18px; height: 18px; }
     </style>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2563eb">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
 
     <div class="brand">
-        <div class="brand-text">&#127891; Campus Circle</div>
-        <div class="brand-sub">The Exclusive Student Marketplace</div>
+        <img src="1000367752.jpg" class="brand-logo" alt="Campus Circle">
+        <div class="brand-name">Campus <span>Circle</span></div>
+        <div class="brand-sub">UNIZIK Student Marketplace</div>
     </div>
 
-    <div class="login-container">
-        <h2>Welcome Back</h2>
+    <div class="card">
+        <div class="card-title">Welcome back 👋</div>
+        <div class="card-sub">Sign in to access your library</div>
 
-        <!-- GOOGLE LOGIN -->
-        <button class="btn-google" id="googleBtn" onclick="signInWithGoogle()">
-            <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-            </svg>
-            Continue with Google
-        </button>
-
-        <div class="divider">or sign in with email</div>
-
-        <!-- EMAIL LOGIN -->
         <form id="login-form">
             <div class="form-group">
-                <label for="loginEmail">University Email</label>
-                <input type="email" id="loginEmail" placeholder="Email address" required>
+                <label>Email Address</label>
+                <div class="input-wrap">
+                    <i class="fa-regular fa-envelope"></i>
+                    <input type="email" id="loginEmail" placeholder="you@email.com" required>
+                </div>
             </div>
+
             <div class="form-group">
-                <label for="loginPassword">Password</label>
-                <input type="password" id="loginPassword" placeholder="Enter password" required>
-                <a href="forget-password.html" class="forgot-link">Forgot Password?</a>
+                <label>Password</label>
+                <div class="input-wrap">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="loginPassword" placeholder="Your password" required>
+                </div>
             </div>
-            <button type="submit" class="btn-login" id="loginBtn">Log In</button>
+
+            <button type="submit" id="loginBtn" class="btn">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+            </button>
         </form>
 
         <div id="message"></div>
 
-        <div class="footer-text">
-            New to Campus Circle? <a href="signin.html">Create an Account</a>
+        <div class="divider"><span>or</span></div>
+
+        <button class="google-btn" onclick="signInWithGoogle()">
+            <img src="https://www.google.com/favicon.ico" alt="Google">
+            Continue with Google
+        </button>
+
+        <div class="footer-link">
+            Don't have an account? <a href="signup.html">Sign Up</a>
         </div>
     </div>
 
-    <script>
-        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
-        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+<script>
+    const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
+    const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        const msg  = document.getElementById("message");
-        const btn  = document.getElementById("loginBtn");
-        const gBtn = document.getElementById("googleBtn");
+    const loginForm = document.getElementById("login-form");
+    const msg = document.getElementById("message");
+    const btn = document.getElementById("loginBtn");
 
-        // ── GOOGLE SIGN IN ────────────────────────────────────────────────────
-        async function signInWithGoogle() {
-            gBtn.disabled   = true;
-            gBtn.textContent = 'Connecting to Google...';
-            msg.textContent  = '';
+    loginForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("loginEmail").value;
+        const password = document.getElementById("loginPassword").value;
 
-            const { error } = await _supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: window.location.origin + '/index.html'
-                }
-            });
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+        msg.textContent = "";
 
+        try {
+            const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
             if (error) {
                 msg.textContent = error.message;
-                msg.style.color = '#ef4444';
-                gBtn.disabled   = false;
-                gBtn.textContent = 'Continue with Google';
+                msg.style.color = "var(--danger)";
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In';
+            } else {
+                msg.textContent = "✓ Success! Redirecting...";
+                msg.style.color = "var(--success)";
+                setTimeout(() => { window.location.href = "index.html"; }, 1000);
             }
-            // No error = Supabase redirects to Google automatically
+        } catch (err) {
+            msg.textContent = "Connection error. Please try again.";
+            msg.style.color = "var(--danger)";
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In';
         }
+    };
 
-        // ── EMAIL SIGN IN ─────────────────────────────────────────────────────
-        document.getElementById("login-form").onsubmit = async (e) => {
-            e.preventDefault();
-            const email    = document.getElementById("loginEmail").value.trim();
-            const password = document.getElementById("loginPassword").value;
-
-            btn.disabled    = true;
-            btn.textContent = "Verifying...";
-            msg.textContent = "";
-
-            try {
-                const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-
-                if (error) {
-                    msg.textContent = error.message;
-                    msg.style.color = "#ef4444";
-                    btn.disabled    = false;
-                    btn.textContent = "Log In";
-                } else {
-                    // Sync profile email on every login
-                    await _supabase.from('profiles').upsert({
-                        id:    data.user.id,
-                        email: data.user.email,
-                    }, { onConflict: 'id' });
-
-                    msg.textContent = "Success! Redirecting...";
-                    msg.style.color = "#16a34a";
-                    setTimeout(() => { window.location.href = "index.html"; }, 900);
-                }
-            } catch(err) {
-                msg.textContent = "Connection error. Please try again.";
-                msg.style.color = "#ef4444";
-                btn.disabled    = false;
-                btn.textContent = "Log In";
-            }
-        };
-
-        // ── HANDLE GOOGLE REDIRECT CALLBACK ──────────────────────────────────
-        // After Google redirects back, sync profile and navigate
-        _supabase.auth.onAuthStateChange(async (event, session) => {
-            if (event === 'SIGNED_IN' && session) {
-                await _supabase.from('profiles').upsert({
-                    id:    session.user.id,
-                    email: session.user.email,
-                    name:  session.user.user_metadata?.full_name || session.user.user_metadata?.name || '',
-                }, { onConflict: 'id' });
-                window.location.href = 'index.html';
-            }
+    async function signInWithGoogle() {
+        await _supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo: window.location.origin + '/index.html' }
         });
-    </script>
+    }
+</script>
 </body>
 </html>
