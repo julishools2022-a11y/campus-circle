@@ -9,9 +9,12 @@
     <link rel="apple-touch-icon" href="icon-192.png">
     <title>Campus Circle | Your Academic Success Partner</title>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
 
     <style>
         :root {
@@ -403,11 +406,24 @@
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
+    <div id="app-splash" style="position:fixed;inset:0;background:#0a1628;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.4s ease;">
+        <img src="1000367752.jpg" style="width:80px;height:80px;border-radius:20px;margin-bottom:16px;" onerror="this.style.display='none'">
+        <div style="color:#e2eaf4;font-size:1.3rem;font-weight:700;letter-spacing:0.5px;">Campus Circle</div>
+        <div style="color:#7a9cc0;font-size:0.85rem;margin-top:6px;">Loading...</div>
+    </div>
+    <script>
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                var s = document.getElementById('app-splash');
+                if(s) { s.style.opacity='0'; setTimeout(function(){ s.remove(); }, 400); }
+            }, 300);
+        });
+    </script>
 
     <!-- HEADER -->
     <header class="header">
         <div class="logo-container" onclick="window.location.reload()">
-            <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png" alt="Campus Circle Logo" class="brand-logo">
+            <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000387646-removebg-preview.png" alt="Campus Circle Logo" class="brand-logo">
             <span class="logo-text">Campus <span>Circle</span></span>
         </div>
 
@@ -570,7 +586,7 @@
         <div class="footer-grid">
             <div class="footer-col">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                    <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png" style="height:38px;">
+                    <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000387646-removebg-preview.png" style="height:38px;">
                     <span style="font-weight:900;font-size:1rem;color:var(--text);">Campus Circle</span>
                 </div>
                 <p style="font-size:0.87rem;line-height:1.7;color:var(--text-muted);">Empowering UNIZIK students with accessible resources and technology for academic excellence.</p>
