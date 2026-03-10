@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login | Campus Circle</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
     <style>
         :root {
             --bg: #0a1628;
@@ -246,9 +249,22 @@
     </style>
 </head>
 <body>
+    <div id="app-splash" style="position:fixed;inset:0;background:#0a1628;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.4s ease;">
+        <img src="1000367752.jpg" style="width:80px;height:80px;border-radius:20px;margin-bottom:16px;" onerror="this.style.display='none'">
+        <div style="color:#e2eaf4;font-size:1.3rem;font-weight:700;">Campus Circle</div>
+        <div style="color:#7a9cc0;font-size:0.85rem;margin-top:6px;">Loading...</div>
+    </div>
+    <script>
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                var s = document.getElementById('app-splash');
+                if(s) { s.style.opacity='0'; setTimeout(function(){ s.remove(); }, 400); }
+            }, 400);
+        });
+    </script>
 
     <div class="brand">
-        <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png" class="brand-logo" alt="Campus Circle">
+        <img src="1000367752.jpg" class="brand-logo" alt="Campus Circle">
         <div class="brand-name">Campus <span>Circle</span></div>
         <div class="brand-sub">UNIZIK Student Marketplace</div>
     </div>
