@@ -123,6 +123,18 @@
         #chat-input::placeholder { color: var(--muted); }
         .send-btn { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; box-shadow: 0 4px 12px rgba(61,114,180,0.4); }
 
+        /* TIMER */
+        .timer-bar { display: flex; align-items: center; gap: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; flex-shrink: 0; }
+        .timer-display { font-size: 1.4rem; font-weight: 800; font-family: monospace; min-width: 70px; }
+        .timer-display.warning { color: var(--warning); animation: pulse 1s infinite; }
+        .timer-display.danger  { color: var(--danger);  animation: pulse 0.5s infinite; }
+        .timer-display.normal  { color: var(--accent); }
+        .timer-progress { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+        .timer-progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 3px; transition: width 1s linear, background 0.5s; }
+        .timer-progress-fill.warning { background: linear-gradient(90deg, var(--warning), #fbbf24); }
+        .timer-progress-fill.danger  { background: linear-gradient(90deg, var(--danger), #f87171); }
+        @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
     </style>
@@ -169,15 +181,41 @@
             <p>Generate multiple-choice questions from your material</p>
             <div class="form-row">
                 <div class="form-group"><label>Questions</label>
-                    <select id="q-count"><option value="5">5</option><option value="10">10</option><option value="20" selected>20</option></select>
+                    <select id="q-count"><option value="5">5</option><option value="10">10</option><option value="20" selected>20</option><option value="40">40</option><option value="60">60</option></select>
                 </div>
                 <div class="form-group"><label>Difficulty</label>
                     <select id="q-diff"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select>
                 </div>
             </div>
-            <button class="btn btn-primary" onclick="startGen('quiz')"><i class="fa-solid fa-bolt"></i> Generate Quiz</button>
+            <div class="form-row">
+                <div class="form-group"><label><i class="fa-solid fa-clock"></i> Time Limit</label>
+                    <select id="q-time">
+                        <option value="0">No Limit</option>
+                        <option value="10">10 minutes</option>
+                        <option value="20">20 minutes</option>
+                        <option value="30" selected>30 minutes</option>
+                        <option value="45">45 minutes (JAMB)</option>
+                        <option value="60">60 minutes</option>
+                        <option value="90">90 minutes</option>
+                        <option value="120">2 hours</option>
+                    </select>
+                </div>
+                <div class="form-group"><label><i class="fa-solid fa-shuffle"></i> Mode</label>
+                    <select id="q-mode">
+                        <option value="practice">Practice (see answers)</option>
+                        <option value="exam">Exam (submit all)</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="startGen('quiz')"><i class="fa-solid fa-bolt"></i> Start CBT Exam</button>
         </div>
         <div id="quiz-active" style="display:none;">
+            <div id="timer-bar" class="timer-bar" style="display:none;">
+                <i class="fa-solid fa-clock" style="color:var(--muted);"></i>
+                <div class="timer-display normal" id="timer-display">30:00</div>
+                <div class="timer-progress"><div class="timer-progress-fill" id="timer-fill" style="width:100%;"></div></div>
+                <button onclick="submitQuiz()" style="background:var(--danger);border:none;color:white;padding:6px 12px;border-radius:8px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;white-space:nowrap;">Submit</button>
+            </div>
             <div class="score-header">
                 <span>Score: <span id="current-score">0</span> / <span id="total-q">0</span></span>
                 <button onclick="resetQuiz()">↺ Restart</button>
@@ -274,6 +312,8 @@
     const _supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
     let pdfText = "", quizData = [], score = 0, answeredCount = 0;
+    let timerInterval = null, timerSeconds = 0, timerTotal = 0, examMode = false;
+    let userAnswers = {}; // stores answers for exam mode
     let theoryQuestions = [], currentTheoryIndex = 0, theoryTotalScore = 0;
     let flashcardData = [], currentCardIndex = 0, chatHistory = [];
 
@@ -299,7 +339,7 @@
         if (msg) document.getElementById('upload-msg').innerText = msg;
     }
 
-    function switchTab(tabId) {
+    window.switchTab = function(tabId) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         const btn = document.querySelector(`.tab-btn[data-target="${tabId}"]`);
         if (btn) btn.classList.add('active');
@@ -310,18 +350,36 @@
 
     async function loadPdf(url) {
         let data = null;
+
+        // 1. Use proxy fetch_pdf — bypasses CORS for Google Drive
         try {
             showLoading('Fetching document...');
-            const resp = await fetch(PROXY_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`}, body: JSON.stringify({action:'fetch_pdf',pdf_url:url}) });
-            if (resp.ok) { const j = await resp.json(); if (j.base64) { const b=atob(j.base64),arr=new Uint8Array(b.length); for(let i=0;i<b.length;i++)arr[i]=b.charCodeAt(i); data=arr.buffer; } }
-        } catch(e) { console.warn('Proxy failed:',e.message); }
+            const resp = await fetch(PROXY_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+                body: JSON.stringify({ action: 'fetch_pdf', pdf_url: url })
+            });
+            if (resp.ok) {
+                const json = await resp.json();
+                if (json.base64) {
+                    const binary = atob(json.base64);
+                    const bytes = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                    data = bytes.buffer;
+                    console.log('PDF fetched via proxy, size:', data.byteLength);
+                }
+            }
+        } catch(e) { console.warn('Proxy fetch failed:', e.message); }
 
+        // 2. Supabase storage fallback
         if (!data && _supabase && url.includes('supabase.co')) {
             try {
                 const path = url.split('/public/')[1]||url.split('/sign/')[1];
                 if (path) { const bk=path.split('/')[0],fp=path.replace(`${bk}/`,''); const {data:blob,error}=await _supabase.storage.from(bk).download(fp); if(!error&&blob) data=await blob.arrayBuffer(); }
             } catch(e) {}
         }
+
+        // 3. Direct fetch fallback
         if (!data) { try { const r=await fetch(url); if(r.ok) data=await r.arrayBuffer(); } catch(e){} }
 
         if (data) await extractText(data);
@@ -355,7 +413,7 @@
         return d.text || '';
     }
 
-    async function startGen(type) {
+    window.startGen = async function(type) {
         if (!pdfText) { alert('Document not loaded yet.'); return; }
         const btn = document.querySelector(`#${type}-section .btn-primary`);
         const orig = btn.innerHTML;
@@ -386,13 +444,89 @@
         btn.innerHTML=orig; btn.disabled=false;
     }
 
+    // ── TIMER ─────────────────────────────────────────────────────────────────
+    function startTimer(minutes) {
+        if (minutes <= 0) return;
+        timerTotal   = minutes * 60;
+        timerSeconds = timerTotal;
+        document.getElementById('timer-bar').style.display  = 'flex';
+        document.getElementById('timer-display').innerText  = formatTime(timerSeconds);
+        document.getElementById('timer-fill').style.width   = '100%';
+
+        timerInterval = setInterval(() => {
+            timerSeconds--;
+            const pct = (timerSeconds / timerTotal) * 100;
+            const display = document.getElementById('timer-display');
+            const fill    = document.getElementById('timer-fill');
+
+            display.innerText = formatTime(timerSeconds);
+            fill.style.width  = pct + '%';
+
+            if (timerSeconds <= 60) {
+                display.className = 'timer-display danger';
+                fill.className    = 'timer-progress-fill danger';
+            } else if (timerSeconds <= timerTotal * 0.25) {
+                display.className = 'timer-display warning';
+                fill.className    = 'timer-progress-fill warning';
+            } else {
+                display.className = 'timer-display normal';
+                fill.className    = 'timer-progress-fill';
+            }
+
+            if (timerSeconds <= 0) {
+                clearInterval(timerInterval);
+                alert('⏰ Time is up! Submitting your exam...');
+                submitQuiz();
+            }
+        }, 1000);
+    }
+
+    function stopTimer() {
+        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        const bar = document.getElementById('timer-bar');
+        if (bar) bar.style.display = 'none';
+    }
+
+    function formatTime(seconds) {
+        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+        const s = (seconds % 60).toString().padStart(2, '0');
+        return `${m}:${s}`;
+    }
+
+    window.submitQuiz = function() {
+        stopTimer();
+        if (examMode) {
+            // Grade all unanswered as wrong
+            quizData.forEach((q, i) => {
+                const container = document.getElementById(`opts-${i}`);
+                if (!container || container.classList.contains('answered')) return;
+                container.classList.add('answered');
+                Array.from(container.children).forEach(o => {
+                    o.style.pointerEvents = 'none';
+                    if (o.innerText === q.a) o.classList.add('correct');
+                });
+                const parentDiv = container.closest('.quiz-card');
+                if (parentDiv) { const exp = parentDiv.querySelector('.explanation'); if (exp) exp.style.display = 'block'; }
+            });
+        }
+        const pct = Math.round((score / quizData.length) * 100);
+        document.getElementById('quiz-active').style.display  = 'none';
+        document.getElementById('quiz-result').style.display  = 'block';
+        document.getElementById('final-score').innerText      = pct + '%';
+        document.getElementById('result-msg').innerText = pct >= 70 ? '🎉 Great job! You passed.' : pct >= 50 ? '📚 Not bad! Keep studying.' : "💪 Keep practicing, you'll get there!";
+    }
+
     function renderQuiz() {
-        score=0; answeredCount=0;
+        score=0; answeredCount=0; userAnswers={};
+        stopTimer();
+        const timeLimit = parseInt(document.getElementById('q-time')?.value || '0');
+        examMode = document.getElementById('q-mode')?.value === 'exam';
         document.getElementById('quiz-setup').style.display='none';
         document.getElementById('quiz-result').style.display='none';
         document.getElementById('quiz-active').style.display='block';
         document.getElementById('current-score').innerText='0';
         document.getElementById('total-q').innerText=quizData.length;
+        if (timeLimit > 0) startTimer(timeLimit);
         const list=document.getElementById('quiz-list'); list.innerHTML='';
         quizData.forEach((q,i)=>{
             const div=document.createElement('div'); div.className='quiz-card';
@@ -408,21 +542,23 @@
     function checkAns(idx,el,sel,cor,parentDiv) {
         const c=document.getElementById(`opts-${idx}`); if(c.classList.contains('answered'))return;
         c.classList.add('answered'); Array.from(c.children).forEach(o=>o.style.pointerEvents='none');
-        answeredCount++; if(sel===cor){el.classList.add('correct');score++;}else{el.classList.add('wrong');}
-        Array.from(c.children).forEach(o=>{if(o.innerText===cor)o.classList.add('correct');});
-        parentDiv.querySelector('.explanation').style.display='block';
-        document.getElementById('current-score').innerText=score;
-        if(answeredCount===quizData.length){
-            setTimeout(()=>{
-                const pct=Math.round((score/quizData.length)*100);
-                document.getElementById('quiz-active').style.display='none';
-                document.getElementById('quiz-result').style.display='block';
-                document.getElementById('final-score').innerText=pct+'%';
-                document.getElementById('result-msg').innerText=pct>=70?'🎉 Great job!':pct>=50?'📚 Keep studying!':'💪 Keep practicing!';
-            },800);
+        userAnswers[idx] = sel;
+        answeredCount++;
+        if (examMode) {
+            // In exam mode just highlight selected, no reveal
+            el.style.background = 'rgba(61,114,180,0.25)';
+            el.style.borderColor = 'var(--accent)';
+            document.getElementById('current-score').innerText=answeredCount+' answered';
+            if(answeredCount===quizData.length) setTimeout(submitQuiz, 500);
+        } else {
+            if(sel===cor){el.classList.add('correct');score++;}else{el.classList.add('wrong');}
+            Array.from(c.children).forEach(o=>{if(o.innerText===cor)o.classList.add('correct');});
+            parentDiv.querySelector('.explanation').style.display='block';
+            document.getElementById('current-score').innerText=score;
+            if(answeredCount===quizData.length) setTimeout(submitQuiz, 800);
         }
     }
-    function resetQuiz(){document.getElementById('quiz-result').style.display='none';document.getElementById('quiz-active').style.display='none';document.getElementById('quiz-setup').style.display='block';}
+    window.resetQuiz = function(){stopTimer();document.getElementById('quiz-result').style.display='none';document.getElementById('quiz-active').style.display='none';document.getElementById('quiz-setup').style.display='block';}
 
     function renderTheory(){
         document.getElementById('theory-setup').style.display='none';
@@ -437,7 +573,7 @@
         document.getElementById('btn-next').style.display='none';
     }
 
-    async function gradeAnswer(){
+    window.gradeAnswer = async function(){
         const ans=document.getElementById('t-answer').value.trim();
         if(!ans){alert('Write an answer first.');return;}
         const btn=document.getElementById('btn-grade');
@@ -452,12 +588,12 @@
         btn.innerHTML='<i class="fa-solid fa-check"></i> Grade Answer'; btn.disabled=false;
     }
 
-    function nextTheoryQ(){
+    window.nextTheoryQ = function(){
         currentTheoryIndex++;
         if(currentTheoryIndex<theoryQuestions.length){renderTheory();}
         else{document.getElementById('theory-active').style.display='none';document.getElementById('theory-result').style.display='block';document.getElementById('final-theory-score').innerText=theoryTotalScore;}
     }
-    function resetTheory(){document.getElementById('theory-result').style.display='none';document.getElementById('theory-setup').style.display='block';}
+    window.resetTheory = function(){document.getElementById('theory-result').style.display='none';document.getElementById('theory-setup').style.display='block';}
 
     function setupFlashcards(){currentCardIndex=0;document.getElementById('fc-setup').style.display='none';document.getElementById('fc-active').style.display='block';updateCard();}
     function updateCard(){const c=flashcardData[currentCardIndex];document.getElementById('fc-front').innerText=c.front;document.getElementById('fc-back').innerText=c.back;document.getElementById('fc-counter').innerText=`Card ${currentCardIndex+1} of ${flashcardData.length}`;document.getElementById('active-card').classList.remove('flipped');}
