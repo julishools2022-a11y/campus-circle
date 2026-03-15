@@ -3,728 +3,485 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Study Partner | Campus Circle</title>
-    
+    <title>AI Study Companion | Campus Circle</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
     <style>
-        :root { --primary: #4f46e5; --bg: #f8fafc; --text: #1e293b; --success: #10b981; --danger: #ef4444; }
-        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Outfit', sans-serif; background: var(--bg); margin: 0; padding: 15px; color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-        .container { max-width: 900px; margin: 0 auto; width: 100%; height: 100%; display: flex; flex-direction: column; }
+        :root {
+            --bg: #0a1628; --surface: #112236; --surface2: #1a2f4a;
+            --primary: #3d72b4; --primary-bright: #5b9bd5; --accent: #64b5f6;
+            --text: #e2eaf4; --muted: #7a9cc0; --border: rgba(61,114,180,0.2);
+            --success: #22c55e; --danger: #ef4444; --warning: #f59e0b;
+        }
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
         /* HEADER */
-        .header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; }
-        .back-btn { text-decoration: none; color: var(--text); font-size: 1.1rem; width: 38px; height: 38px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.08); flex-shrink: 0; }
-        h2 { margin: 0; font-size: 1.2rem; color: var(--primary); }
-        #doc-title { font-size: 0.8rem; color: #64748b; }
+        .header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--surface); }
+        .back-btn { text-decoration: none; color: var(--muted); width: 36px; height: 36px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); font-size: 1rem; }
+        .header-info h2 { font-size: 1.1rem; font-weight: 700; color: var(--text); }
+        .header-info span { font-size: 0.78rem; color: var(--muted); }
 
         /* TABS */
-        .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 12px; background: white; padding: 6px; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); flex-shrink: 0; }
-        .tab-btn { padding: 9px 4px; border: none; background: transparent; border-radius: 10px; font-weight: 700; color: #64748b; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 0.72rem; font-family: inherit; }
+        .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 10px 12px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .tab-btn { padding: 9px 4px; border: 1px solid transparent; background: transparent; border-radius: 10px; font-weight: 700; color: var(--muted); cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.7rem; font-family: 'Outfit', sans-serif; }
         .tab-btn i { font-size: 1.1rem; }
-        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 3px 8px rgba(79,70,229,0.3); }
+        .tab-btn.active { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; box-shadow: 0 4px 12px rgba(61,114,180,0.4); }
 
-        /* SECTIONS */
-        .section-view { display: none; flex: 1; flex-direction: column; overflow-y: auto; padding-bottom: 20px; }
+        /* MAIN */
+        .main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+        .section-view { display: none; flex: 1; flex-direction: column; overflow-y: auto; padding: 16px; animation: fadeIn 0.25s ease-out; }
         .section-view.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* CARDS */
-        .quiz-card { background: white; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-        .theory-card { background: white; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-
-        /* SCORE BAR */
-        .score-header { background: var(--primary); color: white; padding: 12px 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; flex-shrink: 0; }
-
-        /* QUIZ OPTIONS */
-        .option { padding: 11px 14px; border: 1.5px solid #e2e8f0; margin-top: 7px; border-radius: 10px; cursor: pointer; transition: 0.15s; display: flex; align-items: center; justify-content: space-between; font-size: 0.95rem; user-select: none; }
-        .option:active { transform: scale(0.98); }
-        .option.correct { background: #dcfce7; border-color: #22c55e; color: #166534; }
-        .option.wrong { background: #fee2e2; border-color: #ef4444; color: #991b1b; opacity: 0.8; }
-        .option.disabled { pointer-events: none; }
-        .explanation { display: none; margin-top: 12px; padding: 12px; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 8px; font-size: 0.88rem; line-height: 1.5; color: #1e3a8a; }
-
-        /* THEORY */
-        .theory-q-text { font-size: 1.05rem; font-weight: 600; line-height: 1.5; margin-bottom: 12px; }
-        .answer-box { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; font-family: inherit; font-size: 0.95rem; min-height: 110px; resize: vertical; margin-bottom: 12px; }
-        .answer-box:focus { border-color: var(--primary); outline: none; }
-        .grading-box { margin-top: 15px; padding: 16px; border-radius: 12px; display: none; border: 1px solid #e2e8f0; line-height: 1.6; font-size: 0.9rem; }
-        .grading-box.good { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
-        .grading-box.avg { background: #fffbeb; border-color: #fde68a; color: #92400e; }
-        .grading-box.bad { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
-
-        /* FLASHCARDS */
-        .flashcard-wrap { height: 260px; cursor: pointer; perspective: 1000px; margin-bottom: 15px; width: 100%; flex-shrink: 0; }
-        .flashcard { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.55s; }
-        .flashcard.flipped { transform: rotateY(180deg); }
-        .fc-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; border-radius: 18px; box-shadow: 0 8px 25px -5px rgba(0,0,0,0.1); border: 2px solid #e2e8f0; background: white; overflow-y: auto; }
-        .fc-face.back { background: var(--primary); color: white; transform: rotateY(180deg); border: none; }
-        .fc-face small { opacity: 0.6; font-size: 0.75rem; margin-bottom: 10px; letter-spacing: 1px; text-transform: uppercase; }
-
-        /* CHAT */
-        #chat-section { overflow: hidden; }
-        .chat-history { flex: 1; overflow-y: auto; padding: 12px; background: #eef2ff; border-radius: 16px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
-        .msg { padding: 10px 14px; border-radius: 12px; max-width: 85%; line-height: 1.5; font-size: 0.93rem; word-wrap: break-word; }
-        .msg.user { background: var(--primary); color: white; align-self: flex-end; border-bottom-right-radius: 3px; }
-        .msg.ai { background: white; color: var(--text); align-self: flex-start; border: 1px solid #e2e8f0; border-bottom-left-radius: 3px; }
-        .chat-input-row { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-        #chat-input { flex: 1; padding: 0 14px; border: 1.5px solid #e2e8f0; border-radius: 25px; height: 48px; font-size: 0.95rem; font-family: inherit; background: white; }
-        .send-btn { width: 48px; height: 48px; border-radius: 50%; background: var(--primary); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.1rem; }
-
-        /* BUTTONS */
-        .action-btn { background: var(--primary); color: white; padding: 13px; border: none; border-radius: 12px; width: 100%; font-weight: 700; cursor: pointer; transition: 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; font-size: 0.95rem; }
-        .action-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-        .action-btn:active { transform: scale(0.98); }
-        .secondary-btn { background: white; border: 1.5px solid #e2e8f0; padding: 10px; border-radius: 10px; cursor: pointer; width: 100%; font-weight: 600; font-family: inherit; font-size: 0.9rem; }
-        .dark-btn { background: #0f172a; }
-        .setup-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-        select { width: 100%; padding: 11px; border-radius: 10px; border: 1.5px solid #e2e8f0; background: white; font-size: 0.95rem; font-family: inherit; }
-        label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 5px; color: #475569; }
-
-        /* SETUP CARDS */
-        .setup-card { background: white; padding: 22px; border-radius: 18px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
-        .setup-card h3 { margin: 0 0 18px; font-size: 1.1rem; color: var(--primary); }
-        .theory-trainer { background: #fffbeb; border: 1px solid #fef3c7; border-radius: 14px; padding: 16px; margin-bottom: 14px; }
-        .style-input { width: 100%; padding: 11px; border: 1.5px solid #fde68a; border-radius: 10px; font-family: inherit; font-size: 0.9rem; margin-top: 8px; resize: vertical; min-height: 60px; }
-
-        /* RESULT */
-        .result-card { text-align: center; padding: 35px 20px; background: white; border-radius: 18px; border: 1px solid #e2e8f0; }
-        .score-circle { width: 90px; height: 90px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; margin: 0 auto 15px; }
-
-        /* LOADING & STATES */
-        .loading-box { text-align: center; padding: 50px 20px; }
-        .spinner { font-size: 2.5rem; animation: spin 1s infinite linear; color: var(--primary); display: block; margin-bottom: 15px; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        /* LOADING */
+        #loading-box { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+        #loading-box.show { display: flex; }
+        .spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loading-text { color: var(--muted); font-size: 0.9rem; }
 
         /* UPLOAD */
-        .upload-card { background: white; border-radius: 18px; padding: 35px 20px; text-align: center; border: 2px dashed #cbd5e1; }
-        .upload-card h3 { margin: 0 0 8px; }
-        .upload-card p { color: #64748b; font-size: 0.9rem; margin-bottom: 18px; }
+        #upload-box { display: none; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 14px; text-align: center; padding: 30px; }
+        #upload-box.show { display: flex; }
+        #upload-box i { font-size: 3.5rem; color: var(--muted); }
+        #upload-box h3 { color: var(--text); }
+        #upload-box p { color: var(--muted); font-size: 0.85rem; line-height: 1.6; max-width: 280px; }
 
-        /* STATUS BADGE */
-        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-bottom: 12px; }
-        .status-badge.ready { background: #dcfce7; color: #166534; }
-        .status-badge.loading { background: #eff6ff; color: #1e40af; }
-        .status-badge.error { background: #fee2e2; color: #991b1b; }
+        /* CARDS & FORMS */
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 14px; }
+        .setup-card { text-align: center; padding: 32px 20px; }
+        .setup-card i.hero-icon { font-size: 2.2rem; color: var(--accent); margin-bottom: 14px; display: block; }
+        .setup-card h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; }
+        .setup-card p { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
+        select { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 0.9rem; font-family: 'Outfit', sans-serif; }
 
-        /* NAV BTNS */
-        .nav-btns { display: flex; gap: 10px; margin-bottom: 12px; }
-        .nav-btns button { flex: 1; }
+        /* BUTTONS */
+        .btn { padding: 12px 20px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 0.9rem; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; width: 100%; }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-dark { background: var(--surface2); color: var(--text); border: 1px solid var(--border); width: 100%; }
+        .btn-sec { background: var(--surface2); color: var(--text); border: 1px solid var(--border); flex: 1; }
 
-        /* FC COUNTER */
-        .fc-counter { text-align: center; color: #64748b; font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; }
+        /* SCORE HEADER */
+        .score-header { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; padding: 12px 16px; border-radius: 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+        .score-header button { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-family: 'Outfit', sans-serif; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-        .section-view.active { animation: fadeIn 0.25s ease-out; }
+        /* QUIZ */
+        .quiz-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 14px; }
+        .quiz-q { font-weight: 600; font-size: 0.95rem; line-height: 1.5; margin-bottom: 14px; }
+        .option { padding: 12px 14px; border: 1px solid var(--border); margin-top: 8px; border-radius: 10px; cursor: pointer; transition: 0.15s; font-size: 0.9rem; color: var(--text); background: var(--surface2); }
+        .option:active { transform: scale(0.98); }
+        .option.correct { background: rgba(34,197,94,0.15); border-color: var(--success); color: #bbf7d0; pointer-events: none; }
+        .option.wrong { background: rgba(239,68,68,0.1); border-color: var(--danger); color: #fecaca; opacity: 0.8; pointer-events: none; }
+        .explanation { display: none; margin-top: 14px; padding: 14px; background: rgba(61,114,180,0.1); border-left: 3px solid var(--accent); border-radius: 8px; font-size: 0.85rem; line-height: 1.6; color: var(--muted); }
+        .result-screen { text-align: center; padding: 40px 20px; display: none; }
+        .score-circle { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; margin: 0 auto 20px; box-shadow: 0 8px 25px rgba(61,114,180,0.4); }
+
+        /* THEORY */
+        .theory-q-text { font-size: 1rem; font-weight: 600; line-height: 1.6; margin-bottom: 16px; }
+        .answer-box { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; font-family: 'Outfit', sans-serif; font-size: 0.95rem; min-height: 120px; resize: vertical; margin-bottom: 14px; background: var(--surface2); color: var(--text); }
+        .answer-box:focus { border-color: var(--primary); }
+        .grading-box { margin-top: 16px; padding: 16px; border-radius: 12px; display: none; border: 1px solid var(--border); font-size: 0.9rem; line-height: 1.6; }
+        .grading-box.good { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: #bbf7d0; }
+        .grading-box.avg  { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: #fde68a; }
+        .grading-box.bad  { background: rgba(239,68,68,0.1);  border-color: rgba(239,68,68,0.3);  color: #fecaca; }
+        .btn-row { display: flex; gap: 10px; }
+        .style-section { background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+        .style-section h4 { color: #fde68a; font-size: 0.88rem; margin-bottom: 10px; }
+        .style-input { width: 100%; padding: 10px 12px; border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; font-family: 'Outfit', sans-serif; background: var(--surface2); color: var(--text); font-size: 0.85rem; margin-top: 8px; resize: none; min-height: 70px; }
+
+        /* FLASHCARDS */
+        .flashcard-container { height: 250px; cursor: pointer; perspective: 1000px; margin-bottom: 14px; }
+        .flashcard { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.5s; }
+        .flipped { transform: rotateY(180deg); }
+        .front, .back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; border-radius: 18px; border: 1px solid var(--border); overflow-y: auto; }
+        .front { background: var(--surface); }
+        .back  { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; transform: rotateY(180deg); border: none; }
+        .front small, .back small { font-size: 0.68rem; font-weight: 700; letter-spacing: 1px; opacity: 0.6; margin-bottom: 10px; text-transform: uppercase; }
+        .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .card-counter { color: var(--muted); font-size: 0.82rem; }
+        .flip-hint { color: var(--muted); font-size: 0.75rem; }
+        .card-nav { display: flex; gap: 10px; margin-bottom: 12px; }
+
+        /* CHAT */
+        #chat-section { display: none; flex-direction: column; height: 100%; overflow: hidden; padding: 0; }
+        #chat-section.active { display: flex; }
+        .chat-history { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 12px 15px; border-radius: 14px; max-width: 88%; line-height: 1.6; font-size: 0.9rem; word-wrap: break-word; }
+        .msg.user { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; align-self: flex-end; border-bottom-right-radius: 3px; }
+        .msg.ai   { background: var(--surface); color: var(--text); align-self: flex-start; border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+        .msg.ai p { margin-bottom: 8px; }
+        .msg.ai p:last-child { margin-bottom: 0; }
+        .chat-input-area { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--surface); border-top: 1px solid var(--border); flex-shrink: 0; }
+        #chat-input { flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: 22px; height: 44px; font-size: 0.95rem; background: var(--surface2); color: var(--text); font-family: 'Outfit', sans-serif; }
+        #chat-input::placeholder { color: var(--muted); }
+        .send-btn { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; box-shadow: 0 4px 12px rgba(61,114,180,0.4); }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <a href="resources.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
-        <div>
-            <h2>Study Companion</h2>
-            <span id="doc-title">Loading document...</span>
-        </div>
-        <div id="pdf-status" class="status-badge loading" style="margin-left:auto; margin-bottom:0;">
-            <i class="fa-solid fa-spinner fa-spin"></i> Loading
-        </div>
+<div class="header">
+    <a href="resources.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="header-info">
+        <h2>AI Study Companion</h2>
+        <span id="doc-title">Loading document...</span>
+    </div>
+</div>
+
+<div class="tabs">
+    <button class="tab-btn active" data-target="quiz" onclick="switchTab('quiz')"><i class="fa-solid fa-list-check"></i> CBT Quiz</button>
+    <button class="tab-btn" data-target="theory" onclick="switchTab('theory')"><i class="fa-solid fa-pen-nib"></i> Theory</button>
+    <button class="tab-btn" data-target="flashcard" onclick="switchTab('flashcard')"><i class="fa-solid fa-layer-group"></i> Flash</button>
+    <button class="tab-btn" data-target="chat" onclick="switchTab('chat')"><i class="fa-solid fa-robot"></i> Chat</button>
+</div>
+
+<div class="main">
+
+    <div id="loading-box">
+        <div class="spinner"></div>
+        <div id="loading-text">Loading document...</div>
     </div>
 
-    <div class="tabs">
-        <button class="tab-btn active" data-target="quiz" onclick="switchTab('quiz')"><i class="fa-solid fa-list-check"></i>CBT Quiz</button>
-        <button class="tab-btn" data-target="theory" onclick="switchTab('theory')"><i class="fa-solid fa-pen-nib"></i>Theory</button>
-        <button class="tab-btn" data-target="flashcard" onclick="switchTab('flashcard')"><i class="fa-solid fa-layer-group"></i>Flash</button>
-        <button class="tab-btn" data-target="chat" onclick="switchTab('chat')"><i class="fa-solid fa-robot"></i>Chat</button>
+    <div id="upload-box">
+        <i class="fa-solid fa-file-pdf"></i>
+        <h3>Upload PDF Manually</h3>
+        <p id="upload-msg">Could not load the document automatically. Upload the PDF directly to continue.</p>
+        <input type="file" id="manual-file" accept="application/pdf" onchange="handleManualUpload(this)" style="display:none">
+        <button onclick="document.getElementById('manual-file').click()" class="btn btn-primary" style="max-width:220px;">
+            <i class="fa-solid fa-upload"></i> Select PDF
+        </button>
     </div>
 
     <!-- QUIZ -->
     <div id="quiz-section" class="section-view active">
-        <div id="quiz-setup" class="setup-card">
-            <h3><i class="fa-solid fa-list-check" style="color:var(--primary)"></i> CBT Practice</h3>
-            <div class="setup-row">
-                <div><label>Questions</label>
-                    <select id="q-count">
-                        <option value="5">5</option>
-                        <option value="10">10</option>
-                        <option value="20" selected>20</option>
-                    </select>
+        <div id="quiz-setup" class="card setup-card">
+            <i class="fa-solid fa-list-check hero-icon"></i>
+            <h3>CBT Practice Quiz</h3>
+            <p>Generate multiple-choice questions from your material</p>
+            <div class="form-row">
+                <div class="form-group"><label>Questions</label>
+                    <select id="q-count"><option value="5">5</option><option value="10">10</option><option value="20" selected>20</option></select>
                 </div>
-                <div><label>Difficulty</label>
-                    <select id="q-diff">
-                        <option value="easy">Easy</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="hard">Hard</option>
-                    </select>
+                <div class="form-group"><label>Difficulty</label>
+                    <select id="q-diff"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select>
                 </div>
             </div>
-            <button class="action-btn" id="btn-gen-quiz" onclick="startGen('quiz')">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Quiz
-            </button>
+            <button class="btn btn-primary" onclick="startGen('quiz')"><i class="fa-solid fa-bolt"></i> Generate Quiz</button>
         </div>
-
-        <div id="quiz-active" style="display:none; flex-direction:column; flex:1;">
+        <div id="quiz-active" style="display:none;">
             <div class="score-header">
-                <span>Score: <strong><span id="current-score">0</span> / <span id="total-q">0</span></strong></span>
-                <button onclick="resetQuiz()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.5);color:white;padding:5px 12px;border-radius:8px;cursor:pointer;font-size:0.8rem;font-family:inherit;">Restart</button>
+                <span>Score: <span id="current-score">0</span> / <span id="total-q">0</span></span>
+                <button onclick="resetQuiz()">↺ Restart</button>
             </div>
-            <div id="quiz-list" style="overflow-y:auto; flex:1;"></div>
+            <div id="quiz-list"></div>
         </div>
-
-        <div id="quiz-result" class="result-card" style="display:none; margin-top:10px;">
+        <div id="quiz-result" class="result-screen">
             <div class="score-circle" id="final-score">0%</div>
-            <h3>Quiz Completed!</h3>
-            <p id="result-msg" style="color:#64748b; margin-bottom:20px;"></p>
-            <button class="action-btn" onclick="resetQuiz()"><i class="fa-solid fa-rotate-right"></i> Try Again</button>
+            <h3 style="margin-bottom:8px;">Quiz Complete!</h3>
+            <p style="color:var(--muted);margin-bottom:24px;" id="result-msg"></p>
+            <button class="btn btn-primary" onclick="resetQuiz()">Try Again</button>
         </div>
     </div>
 
     <!-- THEORY -->
     <div id="theory-section" class="section-view">
         <div id="theory-setup">
-            <div class="theory-trainer">
-                <h4 style="margin:0 0 12px; color:#92400e;"><i class="fa-solid fa-chalkboard-teacher"></i> Exam Settings</h4>
-                <label>Difficulty</label>
-                <select id="t-diff">
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
-                </select>
-                <label style="margin-top:12px;">Lecturer Style (optional)</label>
-                <textarea class="style-input" id="lecturer-style" placeholder="e.g. Dr. Smith focuses on derivations and applications..."></textarea>
+            <div class="style-section">
+                <h4><i class="fa-solid fa-chalkboard-user"></i> Lecturer Style (Optional)</h4>
+                <select id="t-diff"><option value="medium">Medium Difficulty</option><option value="hard">Hard / Exam Level</option></select>
+                <textarea class="style-input" id="lecturer-style" placeholder="Describe your lecturer's style e.g. 'Focuses on definitions, loves comparing theories'..."></textarea>
             </div>
-            <button class="action-btn" id="btn-gen-theory" onclick="startGen('theory')">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Start Theory Exam
-            </button>
+            <button class="btn btn-primary" onclick="startGen('theory')"><i class="fa-solid fa-pen-nib"></i> Start Theory Exam</button>
         </div>
-
-        <div id="theory-active" style="display:none; flex-direction:column; flex:1;">
+        <div id="theory-active" style="display:none;">
             <div class="score-header">
-                <span>Total: <strong><span id="theory-score">0</span> pts</strong></span>
+                <span>Total: <span id="theory-score">0</span> pts</span>
                 <span>Q <span id="t-num">1</span> of 5</span>
             </div>
-            <div class="theory-card">
+            <div class="card">
                 <div class="theory-q-text" id="t-question">Loading...</div>
                 <textarea class="answer-box" id="t-answer" placeholder="Type your answer here..."></textarea>
                 <div id="t-feedback" class="grading-box"></div>
-                <div style="display:flex; gap:10px; margin-top:10px;">
-                    <button class="action-btn dark-btn" id="btn-grade" onclick="gradeAnswer()">
-                        <i class="fa-solid fa-check-double"></i> Grade
-                    </button>
-                    <button class="action-btn" id="btn-next" onclick="nextTheoryQ()" style="display:none;">
-                        Next <i class="fa-solid fa-arrow-right"></i>
-                    </button>
+                <div class="btn-row">
+                    <button class="btn btn-dark" id="btn-grade" onclick="gradeAnswer()" style="flex:1;"><i class="fa-solid fa-check"></i> Grade Answer</button>
+                    <button class="btn btn-primary" id="btn-next" onclick="nextTheoryQ()" style="display:none;flex:1;">Next <i class="fa-solid fa-arrow-right"></i></button>
                 </div>
             </div>
         </div>
-
-        <div id="theory-result" class="result-card" style="display:none; margin-top:10px;">
+        <div id="theory-result" class="result-screen">
             <div class="score-circle" id="final-theory-score">0</div>
-            <h3>Exam Done!</h3>
-            <p style="color:#64748b; margin-bottom:20px;">Total score out of 50</p>
-            <button class="action-btn" onclick="resetTheory()"><i class="fa-solid fa-rotate-right"></i> New Exam</button>
+            <h3 style="margin-bottom:8px;">Exam Complete!</h3>
+            <p style="color:var(--muted);margin-bottom:24px;">Your total score across all 5 questions</p>
+            <button class="btn btn-primary" onclick="resetTheory()">New Exam</button>
         </div>
     </div>
 
     <!-- FLASHCARDS -->
     <div id="flashcard-section" class="section-view">
-        <!-- BUG FIX 2: Removed broken </Create> tag, fixed to plain text -->
-        <div id="fc-setup" class="setup-card" style="text-align:center;">
-            <h3><i class="fa-solid fa-layer-group" style="color:var(--primary)"></i> Flashcards</h3>
-            <p style="color:#64748b; margin-bottom:18px;">Generate key terms and definitions from your document</p>
-            <button class="action-btn" id="btn-gen-fc" onclick="startGen('flashcard')">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Create Deck
-            </button>
+        <div id="fc-setup" class="card setup-card">
+            <i class="fa-solid fa-layer-group hero-icon"></i>
+            <h3>Flashcard Deck</h3>
+            <p>Generate key terms and definitions from your material</p>
+            <button class="btn btn-primary" onclick="startGen('flashcard')"><i class="fa-solid fa-bolt"></i> Create Deck</button>
         </div>
-        <div id="fc-active" style="display:none; flex-direction:column; flex:1;">
-            <div class="fc-counter" id="fc-counter">Card 1 of 15</div>
-            <div class="flashcard-wrap" onclick="toggleFlip()">
+        <div id="fc-active" style="display:none;">
+            <div class="card-meta">
+                <span class="card-counter" id="fc-counter">Card 1 of 15</span>
+                <span class="flip-hint"><i class="fa-solid fa-hand-pointer"></i> Tap to flip</span>
+            </div>
+            <div class="flashcard-container" onclick="toggleFlip()">
                 <div class="flashcard" id="active-card">
-                    <div class="fc-face front"><small>TERM</small><h3 id="fc-front" style="margin:0; font-size:1.2rem;">...</h3></div>
-                    <div class="fc-face back"><small>DEFINITION</small><p id="fc-back" style="margin:0; font-size:1rem; line-height:1.5;">...</p></div>
+                    <div class="front"><small>Term</small><h3 id="fc-front" style="font-size:1.05rem;line-height:1.5;">...</h3></div>
+                    <div class="back"><small>Definition</small><p id="fc-back" style="font-size:0.9rem;line-height:1.6;">...</p></div>
                 </div>
             </div>
-            <p style="text-align:center; color:#94a3b8; font-size:0.8rem; margin:0 0 12px;">Tap card to flip</p>
-            <div class="nav-btns">
-                <button class="secondary-btn" onclick="prevCard()"><i class="fa-solid fa-arrow-left"></i> Prev</button>
-                <button class="secondary-btn" onclick="nextCard()">Next <i class="fa-solid fa-arrow-right"></i></button>
+            <div class="card-nav">
+                <button class="btn btn-sec" onclick="prevCard()"><i class="fa-solid fa-arrow-left"></i> Prev</button>
+                <button class="btn btn-sec" onclick="nextCard()">Next <i class="fa-solid fa-arrow-right"></i></button>
             </div>
-            <button class="action-btn" onclick="resetFlashcards()" style="background:#334155;">
-                <i class="fa-solid fa-rotate-right"></i> Regenerate
-            </button>
+            <button class="btn btn-dark" onclick="resetFlashcards()">↺ Regenerate Deck</button>
         </div>
     </div>
 
     <!-- CHAT -->
     <div id="chat-section" class="section-view">
         <div class="chat-history" id="chat-history">
-            <div class="msg ai"><i class="fa-solid fa-robot"></i> Hi! I'm your AI study partner. Ask me anything about your document!</div>
+            <div class="msg ai">👋 Hi! I've read your document and I'm ready to help.<br><br>Ask me anything — explain a topic, summarize a chapter, or clarify any concept.</div>
         </div>
-        <div class="chat-input-row">
+        <div class="chat-input-area">
             <input type="text" id="chat-input" placeholder="Ask anything about this material..." onkeypress="if(event.key==='Enter') sendMessage()">
             <button class="send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     </div>
-</div>
 
-<!-- MANUAL UPLOAD OVERLAY -->
-<!-- BUG FIX 1: Removed entire duplicate HTML document that appeared after </html> -->
-<div id="upload-overlay" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.85); z-index:9999; align-items:center; justify-content:center; padding:20px;">
-    <div class="upload-card" style="max-width:380px; width:100%;">
-        <i class="fa-solid fa-file-pdf" style="font-size:3rem; color:#ef4444; display:block; margin-bottom:15px;"></i>
-        <h3>Upload PDF Manually</h3>
-        <p>The document couldn't be loaded automatically. Please upload the PDF file to continue.</p>
-        <input type="file" id="manual-file" accept="application/pdf" onchange="handleManualUpload(this)" style="display:none">
-        <button onclick="document.getElementById('manual-file').click()" class="action-btn">
-            <i class="fa-solid fa-upload"></i> Select PDF File
-        </button>
-        <button onclick="closeUploadOverlay()" style="margin-top:10px; background:none; border:none; color:#64748b; cursor:pointer; font-family:inherit; font-size:0.9rem; width:100%;">
-            Continue without PDF
-        </button>
-    </div>
 </div>
 
 <script>
-    // ── CREDENTIALS ────────────────────────────────────────────────────────
-    const SUPABASE_URL = "https://nijjgpgxdhsrtftuqcoy.supabase.co";
+    const SUPABASE_URL      = "https://nijjgpgxdhsrtftuqcoy.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g";
+    const PROXY_URL         = `${SUPABASE_URL}/functions/v1/gemini-proxy`;
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     const _supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-    const GEMINI_PROXY_URL = `${SUPABASE_URL}/functions/v1/gemini-proxy`;
 
-    // ── STATE ──────────────────────────────────────────────────────────────
-    let pdfText = "";
-    let quizData = [], score = 0, answeredCount = 0;
-    let theoryQuestions = [], currentTheoryIdx = 0, theoryTotalScore = 0;
-    let flashcardData = [], currentCardIdx = 0;
+    let pdfText = "", quizData = [], score = 0, answeredCount = 0;
+    let theoryQuestions = [], currentTheoryIndex = 0, theoryTotalScore = 0;
+    let flashcardData = [], currentCardIndex = 0, chatHistory = [];
 
-    // ── INIT ───────────────────────────────────────────────────────────────
     window.onload = async () => {
         const params = new URLSearchParams(window.location.search);
-        const url   = params.get('url');
-        const title = params.get('title');
-
+        const url = params.get('url'), title = params.get('title');
         if (title) document.getElementById('doc-title').innerText = decodeURIComponent(title);
-
-        if (url) {
-            await loadDocument(decodeURIComponent(url));
-        } else {
-            setStatus('error', 'No document');
-            showUploadOverlay();
-        }
+        document.querySelectorAll('.section-view').forEach(el => { el.style.display='none'; el.classList.remove('active'); });
+        switchTab('quiz');
+        if (url) { showLoading('Fetching document...'); await loadPdf(decodeURIComponent(url)); }
+        else showUpload('No document URL. Upload PDF manually.');
     };
 
-    // ── STATUS BADGE ───────────────────────────────────────────────────────
-    function setStatus(type, text) {
-        const badge = document.getElementById('pdf-status');
-        const icons = { ready: 'fa-circle-check', loading: 'fa-spinner fa-spin', error: 'fa-circle-xmark' };
-        badge.className = `status-badge ${type}`;
-        badge.innerHTML = `<i class="fa-solid ${icons[type]}"></i> ${text}`;
+    function showLoading(msg) {
+        document.getElementById('loading-box').classList.add('show');
+        document.getElementById('upload-box').classList.remove('show');
+        document.getElementById('loading-text').innerText = msg;
+    }
+    function hideLoading() { document.getElementById('loading-box').classList.remove('show'); }
+    function showUpload(msg) {
+        hideLoading();
+        document.getElementById('upload-box').classList.add('show');
+        if (msg) document.getElementById('upload-msg').innerText = msg;
     }
 
-    // ── DOCUMENT LOADER ────────────────────────────────────────────────────
-    async function loadDocument(url) {
-        setStatus('loading', 'Reading PDF...');
-        try {
-            const resp = await fetch(GEMINI_PROXY_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                },
-                body: JSON.stringify({ action: 'extract_pdf', pdf_url: url }),
-            });
-
-            if (!resp.ok) {
-                const err = await resp.json().catch(() => ({}));
-                throw new Error(err.error || `Server error: ${resp.status}`);
-            }
-
-            const data = await resp.json();
-            if (!data.text || data.text.trim().length < 50) {
-                throw new Error('Could not extract enough text');
-            }
-
-            pdfText = data.text;
-            setStatus('ready', 'Ready');
-        } catch(e) {
-            console.error('PDF load error:', e);
-            setStatus('error', 'Upload manually');
-            showUploadOverlay();
-        }
-    }
-
-    // ── MANUAL UPLOAD ──────────────────────────────────────────────────────
-    function showUploadOverlay() {
-        document.getElementById('upload-overlay').style.display = 'flex';
-    }
-    function closeUploadOverlay() {
-        document.getElementById('upload-overlay').style.display = 'none';
-        if (!pdfText) setStatus('error', 'No PDF loaded');
-    }
-
-    window.handleManualUpload = async function(input) {
-        const file = input.files[0];
-        if (!file) return;
-
-        if (file.type !== 'application/pdf') {
-            alert('Please select a valid PDF file.');
-            return;
-        }
-        if (file.size > 10 * 1024 * 1024) {
-            alert('File too large. Please select a PDF under 10MB.');
-            return;
-        }
-
-        setStatus('loading', 'Reading PDF...');
-
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const base64 = e.target.result.split(',')[1];
-                const resp = await fetch(GEMINI_PROXY_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    },
-                    body: JSON.stringify({ action: 'extract_pdf_base64', pdf_base64: base64 }),
-                });
-
-                if (!resp.ok) {
-                    const errText = await resp.text();
-                    console.error('Proxy error:', errText);
-                    throw new Error('Upload extraction failed');
-                }
-
-                const data = await resp.json();
-                if (!data.text || data.text.trim().length < 50) throw new Error('No text returned');
-
-                pdfText = data.text;
-                setStatus('ready', 'Ready');
-                document.getElementById('upload-overlay').style.display = 'none';
-            } catch(err) {
-                console.error('Upload error:', err);
-                setStatus('error', 'Extraction failed');
-                alert('Could not read PDF. Try a different file.');
-            }
-        };
-
-        reader.onerror = (err) => {
-            console.error('FileReader error:', err);
-            setStatus('error', 'Read failed');
-            alert('Could not read the file. Please try again.');
-        };
-
-        reader.readAsDataURL(file);
-    };
-
-    // ── TAB SWITCHER ───────────────────────────────────────────────────────
     function switchTab(tabId) {
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector(`.tab-btn[data-target="${tabId}"]`).classList.add('active');
-
-        document.querySelectorAll('.section-view').forEach(el => {
-            el.style.display = 'none';
-            el.classList.remove('active');
-        });
-
+        const btn = document.querySelector(`.tab-btn[data-target="${tabId}"]`);
+        if (btn) btn.classList.add('active');
+        document.querySelectorAll('.section-view').forEach(el => { el.style.display='none'; el.classList.remove('active'); });
         const target = document.getElementById(`${tabId}-section`);
-        if (target) {
-            target.style.display = 'flex';
-            requestAnimationFrame(() => target.classList.add('active'));
+        if (target) { target.style.display = tabId==='chat' ? 'flex' : 'block'; setTimeout(() => target.classList.add('active'), 10); }
+    }
+
+    async function loadPdf(url) {
+        let data = null;
+        try {
+            showLoading('Fetching document...');
+            const resp = await fetch(PROXY_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`}, body: JSON.stringify({action:'fetch_pdf',pdf_url:url}) });
+            if (resp.ok) { const j = await resp.json(); if (j.base64) { const b=atob(j.base64),arr=new Uint8Array(b.length); for(let i=0;i<b.length;i++)arr[i]=b.charCodeAt(i); data=arr.buffer; } }
+        } catch(e) { console.warn('Proxy failed:',e.message); }
+
+        if (!data && _supabase && url.includes('supabase.co')) {
+            try {
+                const path = url.split('/public/')[1]||url.split('/sign/')[1];
+                if (path) { const bk=path.split('/')[0],fp=path.replace(`${bk}/`,''); const {data:blob,error}=await _supabase.storage.from(bk).download(fp); if(!error&&blob) data=await blob.arrayBuffer(); }
+            } catch(e) {}
         }
+        if (!data) { try { const r=await fetch(url); if(r.ok) data=await r.arrayBuffer(); } catch(e){} }
+
+        if (data) await extractText(data);
+        else showUpload('Could not load document. Upload PDF manually.');
     }
 
-    // ── AI CALL ────────────────────────────────────────────────────────────
-    async function callAI(prompt, context = '') {
-        const fullPrompt = context ? `${prompt}\n\n${context}` : prompt;
-
-        const resp = await fetch(GEMINI_PROXY_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-            },
-            body: JSON.stringify({ prompt: fullPrompt }),
-        });
-
-        if (!resp.ok) {
-            const err = await resp.json().catch(() => ({}));
-            throw new Error(err.error || `Proxy failed: ${resp.status}`);
-        }
-
-        const data = await resp.json();
-        if (!data.text) throw new Error('Empty response from proxy');
-        return data.text;
+    async function extractText(data) {
+        try {
+            showLoading('Reading document...');
+            const pdf = await pdfjsLib.getDocument({data}).promise;
+            const max = Math.min(pdf.numPages, 20);
+            let txt = '';
+            for (let i=1;i<=max;i++) { showLoading(`Reading page ${i} of ${max}...`); const p=await pdf.getPage(i); const t=await p.getTextContent(); txt+=t.items.map(s=>s.str).join(' ')+'\n'; }
+            pdfText = txt.trim();
+            if (!pdfText) { showUpload('PDF has no extractable text. Please upload a text-based PDF.'); return; }
+            hideLoading();
+        } catch(e) { showUpload('Error reading PDF: '+e.message); }
     }
 
-    function parseJson(raw) {
-        const start = raw.indexOf('{');
-        const end   = raw.lastIndexOf('}');
-        if (start === -1 || end === -1) throw new Error('No JSON found');
-        return JSON.parse(raw.substring(start, end + 1));
+    window.handleManualUpload = (input) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => { document.getElementById('upload-box').classList.remove('show'); await extractText(e.target.result); };
+        reader.readAsArrayBuffer(input.files[0]);
+    };
+
+    async function callAI(prompt) {
+        const resp = await fetch(PROXY_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`}, body: JSON.stringify({prompt}) });
+        if (!resp.ok) { const b=await resp.text(); throw new Error(`AI error ${resp.status}: ${b}`); }
+        const d = await resp.json();
+        if (d.error) throw new Error(d.error);
+        return d.text || '';
     }
 
-    function getContext() {
-        return pdfText
-            ? `DOCUMENT CONTENT:\n${pdfText.substring(0, 18000)}`
-            : 'No document loaded. Generate general academic questions.';
-    }
-
-    // ── GENERATORS ─────────────────────────────────────────────────────────
     async function startGen(type) {
-        const btnId = { quiz: 'btn-gen-quiz', theory: 'btn-gen-theory', flashcard: 'btn-gen-fc' }[type];
-        const btn = document.getElementById(btnId);
+        if (!pdfText) { alert('Document not loaded yet.'); return; }
+        const btn = document.querySelector(`#${type}-section .btn-primary`);
         const orig = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Generating...';
         btn.disabled = true;
+        const ctx = `DOCUMENT:\n${pdfText.substring(0,18000)}`;
+        let prompt = '';
 
-        const prompts = {
-            quiz: `Generate ${document.getElementById('q-count').value} multiple-choice questions at ${document.getElementById('q-diff').value} difficulty based on the document.\nReturn ONLY valid JSON, no markdown, no explanation:\n{"quiz":[{"q":"question text","options":["A. option","B. option","C. option","D. option"],"a":"exact correct option string","explanation":"brief explanation"}]}`,
-
-            theory: `Generate exactly 5 theory exam questions at ${document.getElementById('t-diff').value} difficulty based on the document.\n${document.getElementById('lecturer-style').value ? 'Lecturer style: ' + document.getElementById('lecturer-style').value : ''}\nReturn ONLY valid JSON, no markdown:\n{"questions":["Question 1 text","Question 2 text","Question 3 text","Question 4 text","Question 5 text"]}`,
-
-            flashcard: `Generate 15 flashcards of key terms and definitions from the document.\nReturn ONLY valid JSON, no markdown:\n{"flashcards":[{"front":"Term or concept","back":"Clear definition or explanation"}]}`
-        };
-
-        try {
-            const raw    = await callAI(prompts[type], getContext());
-            const parsed = parseJson(raw);
-
-            if (type === 'quiz')      { quizData = parsed.quiz; renderQuiz(); }
-            if (type === 'theory')    { theoryQuestions = parsed.questions; theoryTotalScore = 0; currentTheoryIdx = 0; renderTheory(); }
-            if (type === 'flashcard') { flashcardData = parsed.flashcards; setupFlashcards(); }
-        } catch(e) {
-            console.error('Generation error:', e);
-            alert('Generation failed. Please check your internet and try again.');
+        if (type==='quiz') {
+            const count=document.getElementById('q-count').value, diff=document.getElementById('q-diff').value;
+            prompt = `Generate exactly ${count} multiple-choice questions at ${diff} difficulty from the document below.\nReturn ONLY valid JSON:\n{"quiz":[{"q":"question","options":["A. opt","B. opt","C. opt","D. opt"],"a":"A. opt","explanation":"why"}]}\n\n${ctx}`;
+        } else if (type==='theory') {
+            const diff=document.getElementById('t-diff').value, style=document.getElementById('lecturer-style').value;
+            prompt = `Generate exactly 5 theory questions at ${diff} difficulty.${style?` Style: ${style}`:''}\nReturn ONLY valid JSON:\n{"questions":["Q1?","Q2?","Q3?","Q4?","Q5?"]}\n\n${ctx}`;
+        } else if (type==='flashcard') {
+            prompt = `Generate exactly 15 flashcards of key terms and definitions.\nReturn ONLY valid JSON:\n{"flashcards":[{"front":"Term","back":"Definition"}]}\n\n${ctx}`;
         }
 
-        btn.innerHTML = orig;
-        btn.disabled = false;
+        try {
+            const raw = await callAI(prompt);
+            const s=raw.indexOf('{'), e=raw.lastIndexOf('}');
+            if (s===-1||e===-1) throw new Error('Invalid response format');
+            const parsed = JSON.parse(raw.substring(s,e+1));
+            if (type==='quiz')      { quizData=parsed.quiz; renderQuiz(); }
+            if (type==='theory')    { theoryQuestions=parsed.questions; theoryTotalScore=0; currentTheoryIndex=0; renderTheory(); }
+            if (type==='flashcard') { flashcardData=parsed.flashcards; setupFlashcards(); }
+        } catch(e) { alert('Generation failed: '+e.message); console.error(e); }
+        btn.innerHTML=orig; btn.disabled=false;
     }
 
-    // ── QUIZ ───────────────────────────────────────────────────────────────
     function renderQuiz() {
-        score = 0; answeredCount = 0;
-        document.getElementById('quiz-setup').style.display  = 'none';
-        document.getElementById('quiz-result').style.display = 'none';
-        document.getElementById('quiz-active').style.display = 'flex';
-        document.getElementById('current-score').innerText = '0';
-        document.getElementById('total-q').innerText       = quizData.length;
-
-        const list = document.getElementById('quiz-list');
-        list.innerHTML = '';
-
-        quizData.forEach((q, i) => {
-            const card = document.createElement('div');
-            card.className = 'quiz-card';
-
-            const qText = document.createElement('p');
-            qText.style.cssText = 'font-weight:700; margin:0 0 8px; font-size:0.97rem;';
-            qText.innerText = `${i + 1}. ${q.q}`;
-            card.appendChild(qText);
-
-            const optsWrap = document.createElement('div');
-            optsWrap.id = `opts-${i}`;
-
-            q.options.forEach(opt => {
-                const btn = document.createElement('div');
-                btn.className = 'option';
-                btn.innerText = opt;
-                btn.addEventListener('click', function() {
-                    handleAnswer(i, this, opt, q.a, optsWrap, card);
-                });
-                optsWrap.appendChild(btn);
-            });
-            card.appendChild(optsWrap);
-
-            const exp = document.createElement('div');
-            exp.className = 'explanation';
-            exp.innerHTML = `<i class="fa-solid fa-lightbulb" style="color:#3b82f6"></i> ${q.explanation || 'See notes for more details.'}`;
-            card.appendChild(exp);
-
-            list.appendChild(card);
+        score=0; answeredCount=0;
+        document.getElementById('quiz-setup').style.display='none';
+        document.getElementById('quiz-result').style.display='none';
+        document.getElementById('quiz-active').style.display='block';
+        document.getElementById('current-score').innerText='0';
+        document.getElementById('total-q').innerText=quizData.length;
+        const list=document.getElementById('quiz-list'); list.innerHTML='';
+        quizData.forEach((q,i)=>{
+            const div=document.createElement('div'); div.className='quiz-card';
+            div.innerHTML=`<div class="quiz-q">${i+1}. ${q.q}</div>`;
+            const opts=document.createElement('div'); opts.id=`opts-${i}`;
+            q.options.forEach(opt=>{ const b=document.createElement('div'); b.className='option'; b.innerText=opt; b.onclick=function(){checkAns(i,this,opt,q.a,div);}; opts.appendChild(b); });
+            div.appendChild(opts);
+            const exp=document.createElement('div'); exp.className='explanation'; exp.innerHTML=`💡 ${q.explanation||'No explanation'}`;
+            div.appendChild(exp); list.appendChild(div);
         });
     }
 
-    function handleAnswer(idx, el, selected, correct, optsWrap, card) {
-        if (optsWrap.dataset.answered) return;
-        optsWrap.dataset.answered = '1';
-
-        Array.from(optsWrap.children).forEach(o => o.classList.add('disabled'));
-
-        answeredCount++;
-        const isCorrect = selected === correct;
-        el.classList.add(isCorrect ? 'correct' : 'wrong');
-
-        if (!isCorrect) {
-            Array.from(optsWrap.children).forEach(o => {
-                if (o.innerText === correct) o.classList.add('correct');
-            });
-        }
-
-        if (isCorrect) {
-            score++;
-            document.getElementById('current-score').innerText = score;
-        }
-
-        card.querySelector('.explanation').style.display = 'block';
-
-        if (answeredCount === quizData.length) {
-            setTimeout(showQuizResult, 1200);
+    function checkAns(idx,el,sel,cor,parentDiv) {
+        const c=document.getElementById(`opts-${idx}`); if(c.classList.contains('answered'))return;
+        c.classList.add('answered'); Array.from(c.children).forEach(o=>o.style.pointerEvents='none');
+        answeredCount++; if(sel===cor){el.classList.add('correct');score++;}else{el.classList.add('wrong');}
+        Array.from(c.children).forEach(o=>{if(o.innerText===cor)o.classList.add('correct');});
+        parentDiv.querySelector('.explanation').style.display='block';
+        document.getElementById('current-score').innerText=score;
+        if(answeredCount===quizData.length){
+            setTimeout(()=>{
+                const pct=Math.round((score/quizData.length)*100);
+                document.getElementById('quiz-active').style.display='none';
+                document.getElementById('quiz-result').style.display='block';
+                document.getElementById('final-score').innerText=pct+'%';
+                document.getElementById('result-msg').innerText=pct>=70?'🎉 Great job!':pct>=50?'📚 Keep studying!':'💪 Keep practicing!';
+            },800);
         }
     }
+    function resetQuiz(){document.getElementById('quiz-result').style.display='none';document.getElementById('quiz-active').style.display='none';document.getElementById('quiz-setup').style.display='block';}
 
-    function showQuizResult() {
-        const pct = Math.round((score / quizData.length) * 100);
-        document.getElementById('quiz-active').style.display  = 'none';
-        document.getElementById('quiz-result').style.display  = 'block';
-        document.getElementById('final-score').innerText      = `${pct}%`;
-        const msgs = {
-            90: '🏆 Excellent! Outstanding performance!',
-            70: '👍 Great job! Keep it up!',
-            50: '📚 Good effort! Review your weak areas.',
-             0: "💪 Keep studying! You'll improve!"
-        };
-        const msg = Object.entries(msgs).reverse().find(([min]) => pct >= Number(min));
-        document.getElementById('result-msg').innerText = msg ? msg[1] : '';
+    function renderTheory(){
+        document.getElementById('theory-setup').style.display='none';
+        document.getElementById('theory-result').style.display='none';
+        document.getElementById('theory-active').style.display='block';
+        document.getElementById('theory-score').innerText=theoryTotalScore;
+        document.getElementById('t-num').innerText=currentTheoryIndex+1;
+        document.getElementById('t-question').innerText=theoryQuestions[currentTheoryIndex];
+        document.getElementById('t-answer').value='';
+        document.getElementById('t-feedback').style.display='none';
+        document.getElementById('btn-grade').style.display='flex';
+        document.getElementById('btn-next').style.display='none';
     }
 
-    function resetQuiz() {
-        document.getElementById('quiz-result').style.display = 'none';
-        document.getElementById('quiz-active').style.display = 'none';
-        document.getElementById('quiz-setup').style.display  = 'block';
+    async function gradeAnswer(){
+        const ans=document.getElementById('t-answer').value.trim();
+        if(!ans){alert('Write an answer first.');return;}
+        const btn=document.getElementById('btn-grade');
+        btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Grading...'; btn.disabled=true;
+        try{
+            const raw=await callAI(`Grade this answer out of 10.\nQuestion: "${theoryQuestions[currentTheoryIndex]}"\nAnswer: "${ans}"\nContext: ${pdfText.substring(0,4000)}\n\nRespond ONLY with:\nScore: X/10\nFeedback: [2-3 sentences]`);
+            const fb=document.getElementById('t-feedback'); fb.innerHTML=marked.parse(raw); fb.style.display='block';
+            const m=raw.match(/(\d+)\/10/);
+            if(m){const s=parseInt(m[1]);theoryTotalScore+=s;document.getElementById('theory-score').innerText=theoryTotalScore;fb.className=`grading-box ${s>=7?'good':s>=4?'avg':'bad'}`;}
+            btn.style.display='none'; document.getElementById('btn-next').style.display='flex';
+        }catch(e){alert('Grading failed. Try again.');}
+        btn.innerHTML='<i class="fa-solid fa-check"></i> Grade Answer'; btn.disabled=false;
     }
 
-    // ── THEORY ─────────────────────────────────────────────────────────────
-    function renderTheory() {
-        document.getElementById('theory-setup').style.display  = 'none';
-        document.getElementById('theory-result').style.display = 'none';
-        document.getElementById('theory-active').style.display = 'flex';
-        document.getElementById('theory-score').innerText = theoryTotalScore;
-        document.getElementById('t-num').innerText        = currentTheoryIdx + 1;
-        document.getElementById('t-question').innerText   = theoryQuestions[currentTheoryIdx];
-        document.getElementById('t-answer').value         = '';
-        document.getElementById('t-feedback').style.display = 'none';
-        document.getElementById('t-feedback').className   = 'grading-box';
-        document.getElementById('btn-grade').style.display = 'flex';
-        document.getElementById('btn-next').style.display  = 'none';
+    function nextTheoryQ(){
+        currentTheoryIndex++;
+        if(currentTheoryIndex<theoryQuestions.length){renderTheory();}
+        else{document.getElementById('theory-active').style.display='none';document.getElementById('theory-result').style.display='block';document.getElementById('final-theory-score').innerText=theoryTotalScore;}
     }
+    function resetTheory(){document.getElementById('theory-result').style.display='none';document.getElementById('theory-setup').style.display='block';}
 
-    async function gradeAnswer() {
-        const answer = document.getElementById('t-answer').value.trim();
-        if (!answer) { alert('Please write your answer first!'); return; }
+    function setupFlashcards(){currentCardIndex=0;document.getElementById('fc-setup').style.display='none';document.getElementById('fc-active').style.display='block';updateCard();}
+    function updateCard(){const c=flashcardData[currentCardIndex];document.getElementById('fc-front').innerText=c.front;document.getElementById('fc-back').innerText=c.back;document.getElementById('fc-counter').innerText=`Card ${currentCardIndex+1} of ${flashcardData.length}`;document.getElementById('active-card').classList.remove('flipped');}
+    window.toggleFlip=()=>document.getElementById('active-card').classList.toggle('flipped');
+    window.nextCard=()=>{if(currentCardIndex<flashcardData.length-1){currentCardIndex++;updateCard();}};
+    window.prevCard=()=>{if(currentCardIndex>0){currentCardIndex--;updateCard();}};
+    window.resetFlashcards=()=>{document.getElementById('fc-active').style.display='none';document.getElementById('fc-setup').style.display='block';};
 
-        const btn = document.getElementById('btn-grade');
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Grading...';
-        btn.disabled = true;
-
-        try {
-            const prompt = `You are a strict but fair university examiner. Grade this answer out of 10.\nQuestion: "${theoryQuestions[currentTheoryIdx]}"\nStudent Answer: "${answer}"\n\nReturn your response in this exact format:\nScore: X/10\nFeedback: [detailed feedback explaining what was correct, what was missing, and how to improve]\nModel Answer: [brief ideal answer]`;
-
-            const raw = await callAI(prompt, `Marking scheme context: ${pdfText.substring(0, 5000)}`);
-            const fbBox = document.getElementById('t-feedback');
-            fbBox.innerHTML = marked.parse(raw);
-            fbBox.style.display = 'block';
-
-            const scoreMatch = raw.match(/Score:\s*(\d+)\/10/i);
-            if (scoreMatch) {
-                const pts = parseInt(scoreMatch[1]);
-                theoryTotalScore += pts;
-                document.getElementById('theory-score').innerText = theoryTotalScore;
-                fbBox.classList.add(pts >= 7 ? 'good' : pts >= 4 ? 'avg' : 'bad');
-            }
-
-            btn.style.display = 'none';
-            document.getElementById('btn-next').style.display = 'flex';
-        } catch(e) {
-            alert('Grading failed. Please try again.');
-        }
-
-        btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Grade';
-        btn.disabled = false;
-    }
-
-    function nextTheoryQ() {
-        currentTheoryIdx++;
-        if (currentTheoryIdx < theoryQuestions.length) {
-            renderTheory();
-        } else {
-            document.getElementById('theory-active').style.display  = 'none';
-            document.getElementById('theory-result').style.display  = 'block';
-            document.getElementById('final-theory-score').innerText = theoryTotalScore;
-        }
-    }
-
-    function resetTheory() {
-        theoryTotalScore = 0; currentTheoryIdx = 0;
-        document.getElementById('theory-result').style.display = 'none';
-        document.getElementById('theory-setup').style.display  = 'block';
-    }
-
-    // ── FLASHCARDS ─────────────────────────────────────────────────────────
-    function setupFlashcards() {
-        currentCardIdx = 0;
-        document.getElementById('fc-setup').style.display  = 'none';
-        document.getElementById('fc-active').style.display = 'flex';
-        updateCard();
-    }
-
-    function updateCard() {
-        const c = flashcardData[currentCardIdx];
-        document.getElementById('fc-front').innerText   = c.front;
-        document.getElementById('fc-back').innerText    = c.back;
-        document.getElementById('fc-counter').innerText = `Card ${currentCardIdx + 1} of ${flashcardData.length}`;
-        document.getElementById('active-card').classList.remove('flipped');
-    }
-
-    function toggleFlip() { document.getElementById('active-card').classList.toggle('flipped'); }
-    function nextCard()   { if (currentCardIdx < flashcardData.length - 1) { currentCardIdx++; updateCard(); } }
-    function prevCard()   { if (currentCardIdx > 0) { currentCardIdx--; updateCard(); } }
-    function resetFlashcards() {
-        document.getElementById('fc-active').style.display = 'none';
-        document.getElementById('fc-setup').style.display  = 'block';
-    }
-
-    // ── CHAT ───────────────────────────────────────────────────────────────
-    // BUG FIX 4: Fixed XSS vulnerability — user input now uses textContent
-    // instead of innerHTML to prevent script injection
-    async function sendMessage() {
-        const input = document.getElementById('chat-input');
-        const msg = input.value.trim();
-        if (!msg) return;
-
-        const history = document.getElementById('chat-history');
-
-        // SAFE: use textContent not innerHTML for user input
-        const userBubble = document.createElement('div');
-        userBubble.className = 'msg user';
-        userBubble.textContent = msg;
-        history.appendChild(userBubble);
-
-        input.value = '';
-        history.scrollTop = history.scrollHeight;
-
-        const thinking = document.createElement('div');
-        thinking.className = 'msg ai';
-        thinking.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Thinking...';
-        history.appendChild(thinking);
-        history.scrollTop = history.scrollHeight;
-
-        try {
-            const systemPrompt = `You are a helpful AI study partner. Answer the student's question based on the document provided. Be clear, concise, and educational.`;
-            const response = await callAI(`${systemPrompt}\n\nStudent question: ${msg}`, getContext());
-            thinking.innerHTML = marked.parse(response);
-        } catch(e) {
-            thinking.innerHTML = '❌ Failed to get response. Check your connection.';
-        }
-        history.scrollTop = history.scrollHeight;
-    }
+    window.sendMessage=async function(){
+        const input=document.getElementById('chat-input'); const msg=input.value.trim(); if(!msg)return;
+        const history=document.getElementById('chat-history');
+        history.innerHTML+=`<div class="msg user">${msg}</div>`; input.value='';
+        const typing=document.createElement('div'); typing.className='msg ai'; typing.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Thinking...';
+        history.appendChild(typing); history.scrollTop=history.scrollHeight;
+        chatHistory.push({role:'user',content:msg});
+        try{
+            const sys=pdfText?`You are a helpful study assistant. Material:\n\n${pdfText.substring(0,10000)}\n\nAnswer questions based on this material.`:'You are a helpful study assistant.';
+            const fullPrompt=`${sys}\n\nConversation:\n${chatHistory.slice(-6).map(m=>`${m.role}: ${m.content}`).join('\n')}\n\nassistant:`;
+            const reply=await callAI(fullPrompt);
+            chatHistory.push({role:'assistant',content:reply});
+            typing.innerHTML=marked.parse(reply);
+        }catch(e){typing.innerHTML='❌ Error: '+e.message;}
+        history.scrollTop=history.scrollHeight;
+    };
 </script>
-
 </body>
 </html>
