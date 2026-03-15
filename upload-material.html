@@ -311,36 +311,30 @@
 
     async function sendNotifications(deptId, title) {
         const { data: deptData } = await _supabase.from('departments').select('name').eq('id', deptId).single();
-        if (!deptData) return;
-        const searchKey = deptData.name.split(' ')[0];
-        // Get all students in this department with their emails
-        const { data: students } = await _supabase.from('profiles').select('id, email, full_name').ilike('department', `%${searchKey}%`);
-        if (students && students.length > 0) {
-            // In-app notifications
-            const notifications = students.map(s => ({ user_id: s.id, message: `📚 New material: "${title}" added to ${deptData.name}. Check it out on Campus Circle!` }));
-            await _supabase.from('notifications').insert(notifications);
-            // Email all students
-            for (const student of students) {
-                if (student.email) {
-                    sendEmailNotification(
-                        student.email,
-                        `📚 New Material Available — ${title}`,
-                        `Hi!
+        const deptName = deptData?.name || 'your department';
 
-A new academic material has just been added to your department on Campus Circle!
+        // Get ALL users on the platform
+        const { data: allUsers } = await _supabase.from('profiles').select('id, email, full_name');
+        if (!allUsers || allUsers.length === 0) return;
 
-Material: ${title}
-Department: ${deptData.name}
+        // In-app notifications for all users
+        const notifications = allUsers.map(u => ({
+            user_id: u.id,
+            message: `📚 New material just added: "${title}" (${deptName}). Check it out on Campus Circle!`
+        }));
+        await _supabase.from('notifications').insert(notifications);
 
-Log in to Campus Circle to access it now:
-https://campus-circle-ten.vercel.app
-
-Happy studying!
-Campus Circle Team`
-                    );
-                }
+        // Email all users
+        for (const user of allUsers) {
+            if (user.email) {
+                sendEmailNotification(
+                    user.email,
+                    `📚 New Material Available — ${title}`,
+                    `Hi ${user.full_name || 'there'}!\n\nA new academic material has just been added on Campus Circle!\n\nMaterial: ${title}\nDepartment: ${deptName}\n\nLog in now to access it:\nhttps://campus-circle-ten.vercel.app\n\nHappy studying!\nCampus Circle Team`
+                );
             }
         }
+        console.log(`Notified ${allUsers.length} users about "${title}"`);
     }
 </script>
 </body>
