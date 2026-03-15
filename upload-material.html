@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Upload Material | Campus Circle</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -284,6 +285,10 @@
             });
             if (dbErr) throw dbErr;
             await sendNotifications(deptId, title);
+            // Email admin about new upload
+            const { data: { user: uploader } } = await _supabase.auth.getUser();
+            sendEmailNotification(ADMIN_EMAIL, "New Material Uploaded — Campus Circle",
+                `A new material has been uploaded!\n\nTitle: ${title}\nDepartment ID: ${deptId}\nUploader: ${uploader?.email || 'Unknown'}\n\nLogin to admin panel to review.`);
             alert("✅ Material uploaded successfully!");
             window.location.reload();
         } catch (err) {
@@ -293,14 +298,48 @@
         }
     };
 
+    const EMAILJS_PUBLIC_KEY = "Y38V-Sq0IZSBfpHbR";
+    const EMAILJS_SERVICE_ID  = "service_kxffvki";
+    const EMAILJS_TEMPLATE_ID = "template_ztmcqtb";
+    const ADMIN_EMAIL         = "campuscircle26@gmail.com";
+    if (typeof emailjs !== 'undefined') emailjs.init(EMAILJS_PUBLIC_KEY);
+
+    async function sendEmailNotification(toEmail, subject, message) {
+        try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { email: toEmail, name: "Campus Circle", to_name: toEmail, subject, message, time: new Date().toLocaleString() }); }
+        catch (e) { console.error("Email Error:", e); }
+    }
+
     async function sendNotifications(deptId, title) {
         const { data: deptData } = await _supabase.from('departments').select('name').eq('id', deptId).single();
         if (!deptData) return;
         const searchKey = deptData.name.split(' ')[0];
-        const { data: students } = await _supabase.from('profiles').select('id').ilike('department', `%${searchKey}%`);
+        // Get all students in this department with their emails
+        const { data: students } = await _supabase.from('profiles').select('id, email, full_name').ilike('department', `%${searchKey}%`);
         if (students && students.length > 0) {
-            const notifications = students.map(s => ({ user_id: s.id, message: `📚 New material: "${title}" added to ${deptData.name}.` }));
+            // In-app notifications
+            const notifications = students.map(s => ({ user_id: s.id, message: `📚 New material: "${title}" added to ${deptData.name}. Check it out on Campus Circle!` }));
             await _supabase.from('notifications').insert(notifications);
+            // Email all students
+            for (const student of students) {
+                if (student.email) {
+                    sendEmailNotification(
+                        student.email,
+                        `📚 New Material Available — ${title}`,
+                        `Hi!
+
+A new academic material has just been added to your department on Campus Circle!
+
+Material: ${title}
+Department: ${deptData.name}
+
+Log in to Campus Circle to access it now:
+https://campus-circle-ten.vercel.app
+
+Happy studying!
+Campus Circle Team`
+                    );
+                }
+            }
         }
     }
 </script>
