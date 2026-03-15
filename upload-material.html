@@ -26,6 +26,25 @@
         }
 
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+
+        /* TOAST NOTIFICATIONS */
+        #toast-container { position: fixed; top: 20px; right: 16px; left: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+        .toast { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,0.3); animation: slideIn 0.3s ease-out; max-width: 400px; margin: 0 auto; width: 100%; }
+        .toast.success { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.1); color: #6ee7b7; }
+        .toast.error   { border-color: rgba(239,68,68,0.4);  background: rgba(239,68,68,0.1);  color: #fca5a5; }
+        .toast.info    { border-color: rgba(61,114,180,0.4); background: rgba(61,114,180,0.1); color: var(--accent); }
+        .toast.warning { border-color: rgba(245,158,11,0.4); background: rgba(245,158,11,0.1); color: #fde68a; }
+        .toast i { font-size: 1.1rem; flex-shrink: 0; }
+        @keyframes slideIn  { from { opacity:0; transform: translateY(-16px); } to { opacity:1; transform: translateY(0); } }
+        @keyframes slideOut { from { opacity:1; transform: translateY(0); } to { opacity:0; transform: translateY(-16px); } }
+
+        /* EMAIL PROGRESS */
+        #email-progress { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-top: 16px; }
+        #email-progress h4 { font-size: 0.85rem; color: var(--muted); margin-bottom: 12px; }
+        .email-progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+        .email-progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 3px; transition: width 0.3s ease; width: 0%; }
+        #email-progress-text { font-size: 0.8rem; color: var(--muted); }
+        #email-progress-count { font-size: 0.8rem; color: var(--accent); font-weight: 700; float: right; }
         body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
 
         .container { width: 100%; max-width: 550px; }
@@ -127,6 +146,8 @@
 <body>
 
 <div class="container">
+    <div id="toast-container"></div>
+
     <div class="header-row">
         <a href="resources.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
         <div class="page-title">Upload <span>Material</span></div>
@@ -202,6 +223,13 @@
         <button type="submit" class="btn-upload" id="btn">
             <i class="fa-solid fa-cloud-arrow-up"></i> Upload Material
         </button>
+
+        <div id="email-progress">
+            <h4><i class="fa-solid fa-envelope"></i> Sending notifications...</h4>
+            <div class="email-progress-bar"><div class="email-progress-fill" id="email-fill"></div></div>
+            <span id="email-progress-text">Preparing...</span>
+            <span id="email-progress-count"></span>
+        </div>
     </form>
 </div>
 
@@ -275,6 +303,9 @@
             const title = document.getElementById('title').value;
             const isHardcopy = document.getElementById('is_hardcopy').checked;
             const { data: { user } } = await _supabase.auth.getUser();
+
+            // Save to database
+            showToast('Saving material to database...', 'info');
             const { error: dbErr } = await _supabase.from('academic_resources').insert({
                 department_id: deptId, title, description: document.getElementById('desc').value,
                 level: document.getElementById('level').value,
@@ -284,15 +315,21 @@
                 type: 'File', file_url: fileUrl, uploader_id: user.id
             });
             if (dbErr) throw dbErr;
-            await sendNotifications(deptId, title);
-            // Email admin about new upload
-            const { data: { user: uploader } } = await _supabase.auth.getUser();
-            sendEmailNotification(ADMIN_EMAIL, "New Material Uploaded — Campus Circle",
-                `A new material has been uploaded!\n\nTitle: ${title}\nDepartment ID: ${deptId}\nUploader: ${uploader?.email || 'Unknown'}\n\nLogin to admin panel to review.`);
-            alert("✅ Material uploaded successfully!");
-            window.location.reload();
+            showToast('✅ Material saved successfully!', 'success');
+
+            // Email admin
+            showToast('Notifying admin...', 'info');
+            const adminSent = await sendEmailNotification(ADMIN_EMAIL, "New Material Uploaded — Campus Circle",
+                `A new material has been uploaded!\n\nTitle: ${title}\nUploader: ${user?.email || 'Unknown'}\n\nLogin to admin panel to review.`);
+            if (adminSent) showToast('Admin notified ✓', 'success', 2000);
+
+            // Notify all users
+            await sendNotifications(deptId, title, user);
+
+            setTimeout(() => window.location.reload(), 2000);
         } catch (err) {
-            console.error(err); alert("Error: " + err.message);
+            console.error(err);
+            showToast('Error: ' + err.message, 'error', 6000);
             btn.disabled = false;
             btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload Material';
         }
@@ -304,37 +341,88 @@
     const ADMIN_EMAIL         = "campuscircle26@gmail.com";
     if (typeof emailjs !== 'undefined') emailjs.init(EMAILJS_PUBLIC_KEY);
 
-    async function sendEmailNotification(toEmail, subject, message) {
-        try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { email: toEmail, name: "Campus Circle", to_name: toEmail, subject, message, time: new Date().toLocaleString() }); }
-        catch (e) { console.error("Email Error:", e); }
+    // ── TOAST ─────────────────────────────────────────────────────────────────
+    function showToast(message, type = 'info', duration = 4000) {
+        const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info', warning: 'fa-triangle-exclamation' };
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<i class="fa-solid ${icons[type]}"></i><span>${message}</span>`;
+        document.getElementById('toast-container').appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease-in forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, duration);
     }
 
-    async function sendNotifications(deptId, title) {
+    async function sendEmailNotification(toEmail, subject, message) {
+        try {
+            await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+                email: toEmail, name: "Campus Circle", to_name: toEmail,
+                subject, message, time: new Date().toLocaleString()
+            });
+            return true;
+        } catch (e) {
+            console.error("Email Error:", e);
+            return false;
+        }
+    }
+
+    async function sendNotifications(deptId, title, uploader) {
         const { data: deptData } = await _supabase.from('departments').select('name').eq('id', deptId).single();
         const deptName = deptData?.name || 'your department';
 
-        // Get ALL users on the platform
+        // Get ALL users
         const { data: allUsers } = await _supabase.from('profiles').select('id, email, full_name');
         if (!allUsers || allUsers.length === 0) return;
 
-        // In-app notifications for all users
+        // In-app notifications
         const notifications = allUsers.map(u => ({
             user_id: u.id,
             message: `📚 New material just added: "${title}" (${deptName}). Check it out on Campus Circle!`
         }));
         await _supabase.from('notifications').insert(notifications);
+        showToast(`📬 In-app notifications sent to ${allUsers.length} users`, 'success');
 
-        // Email all users
-        for (const user of allUsers) {
-            if (user.email) {
-                sendEmailNotification(
-                    user.email,
-                    `📚 New Material Available — ${title}`,
-                    `Hi ${user.full_name || 'there'}!\n\nA new academic material has just been added on Campus Circle!\n\nMaterial: ${title}\nDepartment: ${deptName}\n\nLog in now to access it:\nhttps://campus-circle-ten.vercel.app\n\nHappy studying!\nCampus Circle Team`
-                );
+        // Email users with email
+        const usersWithEmail = allUsers.filter(u => u.email && u.email !== uploader?.email);
+        if (usersWithEmail.length === 0) return;
+
+        // Show progress bar
+        const progressBox  = document.getElementById('email-progress');
+        const progressFill = document.getElementById('email-fill');
+        const progressText = document.getElementById('email-progress-text');
+        const progressCount = document.getElementById('email-progress-count');
+        progressBox.style.display = 'block';
+
+        let sent = 0, failed = 0;
+        const BATCH_SIZE = 5;
+        const subject = `📚 New Material Available — ${title}`;
+        const buildMsg = (name) => `Hi ${name || 'there'}!\n\nA new academic material has just been added on Campus Circle!\n\nMaterial: ${title}\nDepartment: ${deptName}\n\nLog in now:\nhttps://campus-circle-ten.vercel.app\n\nHappy studying!\nCampus Circle Team`;
+
+        for (let i = 0; i < usersWithEmail.length; i += BATCH_SIZE) {
+            const batch = usersWithEmail.slice(i, i + BATCH_SIZE);
+            const pct = Math.round(((i + BATCH_SIZE) / usersWithEmail.length) * 100);
+            progressFill.style.width = Math.min(pct, 100) + '%';
+            progressText.innerText = `Sending batch ${Math.floor(i/BATCH_SIZE)+1}...`;
+            progressCount.innerText = `${Math.min(i + BATCH_SIZE, usersWithEmail.length)}/${usersWithEmail.length}`;
+
+            const results = await Promise.allSettled(
+                batch.map(u => sendEmailNotification(u.email, subject, buildMsg(u.full_name)))
+            );
+            results.forEach(r => r.status === 'fulfilled' && r.value ? sent++ : failed++);
+
+            // Small delay between batches only
+            if (i + BATCH_SIZE < usersWithEmail.length) {
+                await new Promise(r => setTimeout(r, 500));
             }
         }
-        console.log(`Notified ${allUsers.length} users about "${title}"`);
+
+        progressFill.style.background = failed > 0 ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #10b981, #34d399)';
+        progressText.innerText = `Done! ${sent} sent${failed > 0 ? `, ${failed} failed` : ''}`;
+        progressCount.innerText = '✓';
+
+        if (sent > 0) showToast(`📧 ${sent} email notifications sent!`, 'success', 5000);
+        if (failed > 0) showToast(`⚠️ ${failed} emails failed (may be rate limit)`, 'warning', 5000);
     }
 </script>
 </body>
