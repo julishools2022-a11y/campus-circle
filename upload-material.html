@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Upload Material | Campus Circle</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -40,11 +39,12 @@
 
         /* EMAIL PROGRESS */
         #email-progress { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-top: 16px; }
-        #email-progress h4 { font-size: 0.85rem; color: var(--muted); margin-bottom: 12px; }
+        #email-progress h4 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px; }
         .email-progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
         .email-progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 3px; transition: width 0.3s ease; width: 0%; }
-        #email-progress-text { font-size: 0.8rem; color: var(--muted); }
+        #email-progress-text { font-size: 0.8rem; color: var(--text-muted); }
         #email-progress-count { font-size: 0.8rem; color: var(--accent); font-weight: 700; float: right; }
+
         body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
 
         .container { width: 100%; max-width: 550px; }
@@ -71,15 +71,10 @@
         }
 
         select, input[type="text"], input[type="url"], input[type="number"], textarea {
-            width: 100%;
-            padding: 13px 14px;
-            background: var(--surface2);
-            border: 1.5px solid var(--border);
-            border-radius: 12px;
-            font-family: inherit; font-size: 0.93rem;
-            color: var(--text);
-            transition: border-color 0.2s, box-shadow 0.2s;
-            appearance: none;
+            width: 100%; padding: 13px 14px;
+            background: var(--surface2); border: 1.5px solid var(--border);
+            border-radius: 12px; font-family: inherit; font-size: 0.93rem;
+            color: var(--text); transition: border-color 0.2s, box-shadow 0.2s; appearance: none;
         }
         select:focus, input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(61,114,180,0.12); }
         select:disabled { opacity: 0.4; }
@@ -87,13 +82,7 @@
         input::placeholder, textarea::placeholder { color: var(--text-muted); opacity: 0.6; }
         textarea { resize: vertical; }
 
-        .section-box {
-            background: var(--surface);
-            padding: 20px;
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            margin-top: 20px;
-        }
+        .section-box { background: var(--surface); padding: 20px; border: 1px solid var(--border); border-radius: 16px; margin-top: 20px; }
         .section-box-title { font-weight: 800; font-size: 0.88rem; color: var(--text); margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; }
         .section-box-title i { color: var(--accent); }
 
@@ -101,30 +90,17 @@
         input[type="checkbox"] { width: 20px; height: 20px; margin: 0; cursor: pointer; accent-color: var(--primary); background: var(--surface2); }
         .checkbox-label { margin: 0; font-weight: 600; cursor: pointer; font-size: 0.93rem; }
 
-        /* Drive Guide */
-        .drive-guide {
-            background: rgba(61,114,180,0.08);
-            border: 1px solid rgba(61,114,180,0.25);
-            border-radius: 14px;
-            padding: 16px;
-            margin-top: 10px;
-        }
+        .drive-guide { background: rgba(61,114,180,0.08); border: 1px solid rgba(61,114,180,0.25); border-radius: 14px; padding: 16px; margin-top: 10px; }
         .drive-guide-title { font-weight: 700; color: var(--accent); font-size: 0.88rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
         .drive-steps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 9px; }
         .drive-steps li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.84rem; color: var(--text-muted); }
         .step-num { background: var(--primary); color: white; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 800; flex-shrink: 0; margin-top: 1px; }
 
-        /* Link Preview */
-        .link-preview {
-            display: none; margin-top: 10px; padding: 11px 14px;
-            border-radius: 10px; font-size: 0.84rem;
-            align-items: center; gap: 10px;
-        }
+        .link-preview { display: none; margin-top: 10px; padding: 11px 14px; border-radius: 10px; font-size: 0.84rem; align-items: center; gap: 10px; }
         .link-preview.success { display: flex; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: var(--success); }
-        .link-preview.error { display: flex; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--danger); }
+        .link-preview.error   { display: flex; background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.3);  color: var(--danger); }
 
         small { color: var(--text-muted); font-size: 0.78rem; display: block; margin-top: 5px; }
-
         .divider { height: 1px; background: var(--border); margin: 18px 0; }
 
         .btn-upload {
@@ -236,6 +212,9 @@
 <script>
     const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
+    const PROXY_URL   = `${supabaseUrl}/functions/v1/gemini-proxy`;
+    const ADMIN_EMAIL = 'campuscircle26@gmail.com';
+
     const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
     async function checkAdmin() {
@@ -290,57 +269,6 @@
         if (data && data.length > 0) { data.forEach(d => deptSelect.innerHTML += `<option value="${d.id}">${d.name}</option>`); deptSelect.disabled = false; }
     }
 
-    document.getElementById('upload-form').onsubmit = async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('btn');
-        const driveLink = document.getElementById('drive-link').value.trim();
-        if (!isValidDriveUrl(driveLink)) { alert("Please enter a valid Google Drive link."); return; }
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
-        try {
-            const fileUrl = normalizeDriveUrl(driveLink);
-            const deptId = document.getElementById('dept').value;
-            const title = document.getElementById('title').value;
-            const isHardcopy = document.getElementById('is_hardcopy').checked;
-            const { data: { user } } = await _supabase.auth.getUser();
-
-            // Save to database
-            showToast('Saving material to database...', 'info');
-            const { error: dbErr } = await _supabase.from('academic_resources').insert({
-                department_id: deptId, title, description: document.getElementById('desc').value,
-                level: document.getElementById('level').value,
-                softcopy_price: document.getElementById('soft_price').value,
-                is_hardcopy_available: isHardcopy,
-                hardcopy_price: isHardcopy ? document.getElementById('hard_price').value : null,
-                type: 'File', file_url: fileUrl, uploader_id: user.id
-            });
-            if (dbErr) throw dbErr;
-            showToast('✅ Material saved successfully!', 'success');
-
-            // Email admin
-            showToast('Notifying admin...', 'info');
-            const adminSent = await sendEmailNotification(ADMIN_EMAIL, "New Material Uploaded — Campus Circle",
-                `A new material has been uploaded!\n\nTitle: ${title}\nUploader: ${user?.email || 'Unknown'}\n\nLogin to admin panel to review.`);
-            if (adminSent) showToast('Admin notified ✓', 'success', 2000);
-
-            // Notify all users
-            await sendNotifications(deptId, title, user);
-
-            setTimeout(() => window.location.reload(), 2000);
-        } catch (err) {
-            console.error(err);
-            showToast('Error: ' + err.message, 'error', 6000);
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload Material';
-        }
-    };
-
-    const EMAILJS_PUBLIC_KEY = "Y38V-Sq0IZSBfpHbR";
-    const EMAILJS_SERVICE_ID  = "service_kxffvki";
-    const EMAILJS_TEMPLATE_ID = "template_ztmcqtb";
-    const ADMIN_EMAIL         = "campuscircle26@gmail.com";
-    if (typeof emailjs !== 'undefined') emailjs.init(EMAILJS_PUBLIC_KEY);
-
     // ── TOAST ─────────────────────────────────────────────────────────────────
     function showToast(message, type = 'info', duration = 4000) {
         const icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info', warning: 'fa-triangle-exclamation' };
@@ -354,28 +282,53 @@
         }, duration);
     }
 
-    async function sendEmailNotification(toEmail, subject, message) {
+    // ── FORM SUBMIT ───────────────────────────────────────────────────────────
+    document.getElementById('upload-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('btn');
+        const driveLink = document.getElementById('drive-link').value.trim();
+        if (!isValidDriveUrl(driveLink)) { alert("Please enter a valid Google Drive link."); return; }
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
         try {
-            await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-                email: toEmail, name: "Campus Circle", to_name: toEmail,
-                subject, message, time: new Date().toLocaleString()
-            });
-            return true;
-        } catch (e) {
-            console.error("Email Error:", e);
-            return false;
-        }
-    }
+            const fileUrl    = normalizeDriveUrl(driveLink);
+            const deptId     = document.getElementById('dept').value;
+            const title      = document.getElementById('title').value;
+            const isHardcopy = document.getElementById('is_hardcopy').checked;
+            const { data: { user } } = await _supabase.auth.getUser();
 
+            showToast('Saving material to database...', 'info');
+            const { error: dbErr } = await _supabase.from('academic_resources').insert({
+                department_id: deptId, title,
+                description: document.getElementById('desc').value,
+                level: document.getElementById('level').value,
+                softcopy_price: document.getElementById('soft_price').value,
+                is_hardcopy_available: isHardcopy,
+                hardcopy_price: isHardcopy ? document.getElementById('hard_price').value : null,
+                type: 'File', file_url: fileUrl, uploader_id: user.id
+            });
+            if (dbErr) throw dbErr;
+            showToast('✅ Material saved successfully!', 'success');
+
+            await sendNotifications(deptId, title, user);
+            setTimeout(() => window.location.reload(), 2000);
+        } catch (err) {
+            console.error(err);
+            showToast('Error: ' + err.message, 'error', 6000);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Upload Material';
+        }
+    };
+
+    // ── NOTIFICATIONS (Brevo via Edge Function) ───────────────────────────────
     async function sendNotifications(deptId, title, uploader) {
         const { data: deptData } = await _supabase.from('departments').select('name').eq('id', deptId).single();
         const deptName = deptData?.name || 'your department';
 
-        // Get ALL users
         const { data: allUsers } = await _supabase.from('profiles').select('id, email, full_name');
         if (!allUsers || allUsers.length === 0) return;
 
-        // In-app notifications
+        // In-app notifications for all users
         const notifications = allUsers.map(u => ({
             user_id: u.id,
             message: `📚 New material just added: "${title}" (${deptName}). Check it out on Campus Circle!`
@@ -383,46 +336,46 @@
         await _supabase.from('notifications').insert(notifications);
         showToast(`📬 In-app notifications sent to ${allUsers.length} users`, 'success');
 
-        // Email users with email
-        const usersWithEmail = allUsers.filter(u => u.email && u.email !== uploader?.email);
+        // Show progress UI
+        const usersWithEmail = allUsers.filter(u => u.email);
         if (usersWithEmail.length === 0) return;
 
-        // Show progress bar
-        const progressBox  = document.getElementById('email-progress');
-        const progressFill = document.getElementById('email-fill');
-        const progressText = document.getElementById('email-progress-text');
+        const progressBox   = document.getElementById('email-progress');
+        const progressFill  = document.getElementById('email-fill');
+        const progressText  = document.getElementById('email-progress-text');
         const progressCount = document.getElementById('email-progress-count');
         progressBox.style.display = 'block';
+        progressText.innerText    = 'Sending via Brevo...';
+        progressCount.innerText   = `0/${usersWithEmail.length}`;
+        progressFill.style.width  = '30%';
 
-        let sent = 0, failed = 0;
-        const BATCH_SIZE = 5;
-        const subject = `📚 New Material Available — ${title}`;
-        const buildMsg = (name) => `Hi ${name || 'there'}!\n\nA new academic material has just been added on Campus Circle!\n\nMaterial: ${title}\nDepartment: ${deptName}\n\nLog in now:\nhttps://campus-circle-ten.vercel.app\n\nHappy studying!\nCampus Circle Team`;
+        try {
+            const resp = await fetch(PROXY_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${supabaseKey}`
+                },
+                body: JSON.stringify({
+                    action: 'send_bulk_email',
+                    users: usersWithEmail,
+                    title,
+                    deptName
+                })
+            });
 
-        for (let i = 0; i < usersWithEmail.length; i += BATCH_SIZE) {
-            const batch = usersWithEmail.slice(i, i + BATCH_SIZE);
-            const pct = Math.round(((i + BATCH_SIZE) / usersWithEmail.length) * 100);
-            progressFill.style.width = Math.min(pct, 100) + '%';
-            progressText.innerText = `Sending batch ${Math.floor(i/BATCH_SIZE)+1}...`;
-            progressCount.innerText = `${Math.min(i + BATCH_SIZE, usersWithEmail.length)}/${usersWithEmail.length}`;
-
-            const results = await Promise.allSettled(
-                batch.map(u => sendEmailNotification(u.email, subject, buildMsg(u.full_name)))
-            );
-            results.forEach(r => r.status === 'fulfilled' && r.value ? sent++ : failed++);
-
-            // Small delay between batches only
-            if (i + BATCH_SIZE < usersWithEmail.length) {
-                await new Promise(r => setTimeout(r, 500));
-            }
+            const result = await resp.json();
+            progressFill.style.width      = '100%';
+            progressFill.style.background = 'linear-gradient(90deg, #10b981, #34d399)';
+            progressText.innerText        = `Done! ${result.sent || usersWithEmail.length} emails sent`;
+            progressCount.innerText       = '✓';
+            showToast(`📧 ${result.sent || usersWithEmail.length} email notifications sent!`, 'success', 5000);
+        } catch (e) {
+            console.error('Bulk email failed:', e.message);
+            progressFill.style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+            progressText.innerText        = 'Email sending failed — in-app notifications still sent';
+            showToast('⚠️ Bulk email failed, but in-app notifications went through', 'warning', 5000);
         }
-
-        progressFill.style.background = failed > 0 ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'linear-gradient(90deg, #10b981, #34d399)';
-        progressText.innerText = `Done! ${sent} sent${failed > 0 ? `, ${failed} failed` : ''}`;
-        progressCount.innerText = '✓';
-
-        if (sent > 0) showToast(`📧 ${sent} email notifications sent!`, 'success', 5000);
-        if (failed > 0) showToast(`⚠️ ${failed} emails failed (may be rate limit)`, 'warning', 5000);
     }
 </script>
 </body>
