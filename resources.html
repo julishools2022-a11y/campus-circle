@@ -7,7 +7,6 @@
     <link rel="manifest" href="manifest.json">
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -117,6 +116,7 @@
         .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
         .btn-success { background: linear-gradient(135deg, #059669, var(--success)); color: white; box-shadow: 0 3px 10px rgba(16,185,129,0.25); }
         .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-ai { background: linear-gradient(135deg, #7c3aed, #9f5cf7); color: white; box-shadow: 0 3px 10px rgba(124,58,237,0.3); }
 
         .hardcopy-badge { position: absolute; top: 0; right: 0; background: var(--warning); color: #78350f; font-size: 0.62rem; font-weight: 800; padding: 4px 10px; border-bottom-left-radius: 10px; border-top-right-radius: 15px; }
         .empty-state { grid-column: 1/-1; text-align: center; padding: 50px 20px; color: var(--text-muted); }
@@ -251,13 +251,10 @@
         const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g';
         const PAYSTACK_KEY = 'pk_live_aff4bfc90ebf07a7c006c862bb4fac8223bd35b5';
-        const EMAILJS_PUBLIC_KEY = "Y38V-Sq0IZSBfpHbR";
-        const EMAILJS_SERVICE_ID = "service_kxffvki";
-        const EMAILJS_TEMPLATE_ID = "template_ztmcqtb";
-        const GEMINI_PROXY_URL = `${supabaseUrl}/functions/v1/gemini-proxy`;
+        const PROXY_URL = `${supabaseUrl}/functions/v1/gemini-proxy`;
+        const GEMINI_PROXY_URL = PROXY_URL;
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        if (typeof emailjs !== 'undefined') emailjs.init(EMAILJS_PUBLIC_KEY);
         let isAdmin = false, purchasedIds = new Set(), currentOrder = null, currentUser = null;
 
         function isGoogleDriveUrl(u) { return u && u.includes('drive.google.com'); }
@@ -313,8 +310,13 @@
         }
 
         async function sendEmailNotification(toEmail, subject, message) {
-            try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { email: toEmail, name: "Campus Circle", to_name: toEmail, subject, message, time: new Date().toLocaleString() }); }
-            catch (e) { console.error("Email Error:", e); }
+            try {
+                await fetch(PROXY_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` },
+                    body: JSON.stringify({ action: 'send_email', to: toEmail, subject, text: message })
+                });
+            } catch (e) { console.error("Email Error:", e); }
         }
 
         async function loadDepartments() {
@@ -364,7 +366,7 @@
             if (!currentUser) return alert("Please log in first");
             const numericPrice = Number(String(price).replace(/[^0-9.-]+/g, ""));
             PaystackPop.setup({
-                key: PAYSTACK_KEY, email: currentUser.email, amount: Math.ceil(numericPrice * 100), ref: 'SOFT-' + Date.now(),
+                key: PAYSTACK_KEY, email: currentUser.email, amount: Math.ceil(numericPrice * 100), ref: 'SOFT-' + id + '-' + Date.now(),
                 callback: function (resp) { processSuccessfulPayment(resp, id, numericPrice, title, uploaderId); },
                 onClose: function () { alert('Transaction cancelled'); }
             }).openIframe();
@@ -477,6 +479,12 @@
                 }
                 else { container.innerHTML = `<div class="viewer-loading"><i class="fa-solid fa-circle-xmark" style="color:var(--danger);font-size:3rem;"></i><h3>Could not load document</h3><p style="color:var(--text-muted);font-size:.9rem;">${e.message || 'Please try again'}</p><button class="btn-close-viewer" style="margin-top:15px;" onclick="closeViewer()">Close</button></div>`; }
             }
+        }
+
+        function openStudyCompanion(safeUrl, safeTitle) {
+            const url = decodeURIComponent(safeUrl);
+            const title = decodeURIComponent(safeTitle);
+            window.location.href = `study-companion.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
         }
 
         function closeViewer() { document.getElementById('fileViewer').classList.remove('open'); document.getElementById('viewer-container').innerHTML = ''; document.getElementById('page-info').innerText = ''; document.body.style.overflow = ''; }
