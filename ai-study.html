@@ -19,39 +19,37 @@
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
         body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* HEADER */
         .header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; background: var(--surface); }
         .back-btn { text-decoration: none; color: var(--muted); width: 36px; height: 36px; border-radius: 50%; background: var(--surface2); display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); font-size: 1rem; }
         .header-info h2 { font-size: 1.1rem; font-weight: 700; color: var(--text); }
         .header-info span { font-size: 0.78rem; color: var(--muted); }
 
-        /* TABS */
         .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 10px 12px; background: var(--surface); border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .tab-btn { padding: 9px 4px; border: 1px solid transparent; background: transparent; border-radius: 10px; font-weight: 700; color: var(--muted); cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 0.7rem; font-family: 'Outfit', sans-serif; }
         .tab-btn i { font-size: 1.1rem; }
         .tab-btn.active { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; box-shadow: 0 4px 12px rgba(61,114,180,0.4); }
 
-        /* MAIN */
-        .main { flex: 1; overflow: hidden; display: flex; flex-direction: column; position: relative; }
-        .section-view { display: none; flex: 1; flex-direction: column; overflow-y: auto; padding: 16px; animation: fadeIn 0.25s ease-out; }
-        .section-view.active { display: flex; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        /* MAIN — position:relative so absolute overlays work */
+        .main { flex: 1; overflow: hidden; display: flex; flex-direction: column; position: relative; min-height: 0; }
 
-        /* LOADING */
-        #loading-box { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: var(--bg); z-index: 10; }
+        /* LOADING & UPLOAD — absolute overlays, never affect layout */
+        #loading-box { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; background: var(--bg); z-index: 20; }
         #loading-box.show { display: flex; }
         .spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.9s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         #loading-text { color: var(--muted); font-size: 0.9rem; }
 
-        /* UPLOAD */
-        #upload-box { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 30px; background: var(--bg); z-index: 10; }
+        #upload-box { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 30px; background: var(--bg); z-index: 20; }
         #upload-box.show { display: flex; }
-        #upload-box i { font-size: 3.5rem; color: var(--muted); }
+        #upload-box i.pdf-icon { font-size: 3.5rem; color: var(--muted); }
         #upload-box h3 { color: var(--text); }
         #upload-box p { color: var(--muted); font-size: 0.85rem; line-height: 1.6; max-width: 280px; }
 
-        /* CARDS & FORMS */
+        /* SECTIONS */
+        .section-view { display: none; flex: 1; flex-direction: column; overflow-y: auto; overflow-x: hidden; padding: 16px; animation: fadeIn 0.25s ease-out; min-height: 0; }
+        .section-view.active { display: flex; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
         .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 14px; }
         .setup-card { text-align: center; padding: 32px 20px; }
         .setup-card i.hero-icon { font-size: 2.2rem; color: var(--accent); margin-bottom: 14px; display: block; }
@@ -61,18 +59,15 @@
         .form-group label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--muted); margin-bottom: 6px; }
         select { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--text); font-size: 0.9rem; font-family: 'Outfit', sans-serif; }
 
-        /* BUTTONS */
         .btn { padding: 12px 20px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 0.9rem; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; width: 100%; }
         .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-dark { background: var(--surface2); color: var(--text); border: 1px solid var(--border); width: 100%; }
         .btn-sec { background: var(--surface2); color: var(--text); border: 1px solid var(--border); flex: 1; }
 
-        /* SCORE HEADER */
-        .score-header { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; padding: 12px 16px; border-radius: 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+        .score-header { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; padding: 12px 16px; border-radius: 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; font-weight: 700; flex-shrink: 0; }
         .score-header button { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 5px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-family: 'Outfit', sans-serif; }
 
-        /* QUIZ */
         .quiz-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-bottom: 14px; }
         .quiz-q { font-weight: 600; font-size: 0.95rem; line-height: 1.5; margin-bottom: 14px; }
         .option { padding: 12px 14px; border: 1px solid var(--border); margin-top: 8px; border-radius: 10px; cursor: pointer; transition: 0.15s; font-size: 0.9rem; color: var(--text); background: var(--surface2); }
@@ -83,39 +78,39 @@
         .result-screen { text-align: center; padding: 40px 20px; display: none; }
         .score-circle { width: 100px; height: 100px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; margin: 0 auto 20px; box-shadow: 0 8px 25px rgba(61,114,180,0.4); }
 
-        /* THEORY */
         .theory-q-text { font-size: 1rem; font-weight: 600; line-height: 1.6; margin-bottom: 16px; }
         .answer-box { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; font-family: 'Outfit', sans-serif; font-size: 0.95rem; min-height: 120px; resize: vertical; margin-bottom: 14px; background: var(--surface2); color: var(--text); }
         .answer-box:focus { border-color: var(--primary); }
         .grading-box { margin-top: 16px; padding: 16px; border-radius: 12px; display: none; border: 1px solid var(--border); font-size: 0.9rem; line-height: 1.6; }
         .grading-box.good { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: #bbf7d0; }
         .grading-box.avg  { background: rgba(245,158,11,0.1); border-color: rgba(245,158,11,0.3); color: #fde68a; }
-        .grading-box.bad  { background: rgba(239,68,68,0.1);  border-color: rgba(239,68,68,0.3);  color: #fecaca; }
+        .grading-box.bad  { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #fecaca; }
         .btn-row { display: flex; gap: 10px; }
         .style-section { background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
         .style-section h4 { color: #fde68a; font-size: 0.88rem; margin-bottom: 10px; }
         .style-input { width: 100%; padding: 10px 12px; border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; font-family: 'Outfit', sans-serif; background: var(--surface2); color: var(--text); font-size: 0.85rem; margin-top: 8px; resize: none; min-height: 70px; }
 
-        /* FLASHCARDS */
         .flashcard-container { height: 250px; cursor: pointer; perspective: 1000px; margin-bottom: 14px; }
         .flashcard { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.5s; }
         .flipped { transform: rotateY(180deg); }
         .front, .back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center; border-radius: 18px; border: 1px solid var(--border); overflow-y: auto; }
         .front { background: var(--surface); }
-        .back  { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; transform: rotateY(180deg); border: none; }
+        .back { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; transform: rotateY(180deg); border: none; }
         .front small, .back small { font-size: 0.68rem; font-weight: 700; letter-spacing: 1px; opacity: 0.6; margin-bottom: 10px; text-transform: uppercase; }
         .card-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .card-counter { color: var(--muted); font-size: 0.82rem; }
         .flip-hint { color: var(--muted); font-size: 0.75rem; }
         .card-nav { display: flex; gap: 10px; margin-bottom: 12px; }
 
-        /* CHAT */
-        #chat-section { display: none; flex-direction: column; overflow: hidden !important; padding: 0 !important; }
-        #chat-section.active { display: flex !important; flex: 1; min-height: 0; overflow: hidden !important; }
-        .chat-history { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+        /* CHAT — completely independent from section-view */
+        #chat-section { display: none; flex-direction: column; overflow: hidden; padding: 0; min-height: 0; }
+        #chat-section.active { display: flex; flex: 1; }
+        #chat-no-pdf { display: none; flex-direction: column; align-items: center; gap: 12px; padding: 16px; text-align: center; background: rgba(61,114,180,0.08); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        #chat-no-pdf p { color: var(--muted); font-size: 0.84rem; margin: 0; }
+        .chat-history { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
         .msg { padding: 12px 15px; border-radius: 14px; max-width: 88%; line-height: 1.6; font-size: 0.9rem; word-wrap: break-word; }
         .msg.user { background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; align-self: flex-end; border-bottom-right-radius: 3px; }
-        .msg.ai   { background: var(--surface); color: var(--text); align-self: flex-start; border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+        .msg.ai { background: var(--surface); color: var(--text); align-self: flex-start; border: 1px solid var(--border); border-bottom-left-radius: 3px; }
         .msg.ai p { margin-bottom: 8px; }
         .msg.ai p:last-child { margin-bottom: 0; }
         .chat-input-area { display: flex; align-items: center; gap: 10px; padding: 12px 14px; padding-bottom: max(12px, env(safe-area-inset-bottom)); background: var(--surface); border-top: 1px solid var(--border); flex-shrink: 0; }
@@ -123,16 +118,15 @@
         #chat-input::placeholder { color: var(--muted); }
         .send-btn { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--primary-bright)); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; box-shadow: 0 4px 12px rgba(61,114,180,0.4); }
 
-        /* TIMER */
         .timer-bar { display: flex; align-items: center; gap: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; flex-shrink: 0; }
         .timer-display { font-size: 1.4rem; font-weight: 800; font-family: monospace; min-width: 70px; }
         .timer-display.warning { color: var(--warning); animation: pulse 1s infinite; }
-        .timer-display.danger  { color: var(--danger);  animation: pulse 0.5s infinite; }
-        .timer-display.normal  { color: var(--accent); }
+        .timer-display.danger { color: var(--danger); animation: pulse 0.5s infinite; }
+        .timer-display.normal { color: var(--accent); }
         .timer-progress { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
         .timer-progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 3px; transition: width 1s linear, background 0.5s; }
         .timer-progress-fill.warning { background: linear-gradient(90deg, var(--warning), #fbbf24); }
-        .timer-progress-fill.danger  { background: linear-gradient(90deg, var(--danger), #f87171); }
+        .timer-progress-fill.danger { background: linear-gradient(90deg, var(--danger), #f87171); }
         @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
 
         ::-webkit-scrollbar { width: 4px; }
@@ -164,7 +158,7 @@
     </div>
 
     <div id="upload-box">
-        <i class="fa-solid fa-file-pdf"></i>
+        <i class="fa-solid fa-file-pdf pdf-icon"></i>
         <h3>Upload PDF Manually</h3>
         <p id="upload-msg">Could not load the document automatically. Upload the PDF directly to continue.</p>
         <input type="file" id="manual-file" accept="application/pdf" onchange="handleManualUpload(this)" style="display:none">
@@ -190,14 +184,10 @@
             <div class="form-row">
                 <div class="form-group"><label><i class="fa-solid fa-clock"></i> Time Limit</label>
                     <select id="q-time">
-                        <option value="0">No Limit</option>
-                        <option value="10">10 minutes</option>
-                        <option value="20">20 minutes</option>
-                        <option value="30" selected>30 minutes</option>
-                        <option value="45">45 minutes (JAMB)</option>
-                        <option value="60">60 minutes</option>
-                        <option value="90">90 minutes</option>
-                        <option value="120">2 hours</option>
+                        <option value="0">No Limit</option><option value="10">10 minutes</option>
+                        <option value="20">20 minutes</option><option value="30" selected>30 minutes</option>
+                        <option value="45">45 minutes (JAMB)</option><option value="60">60 minutes</option>
+                        <option value="90">90 minutes</option><option value="120">2 hours</option>
                     </select>
                 </div>
                 <div class="form-group"><label><i class="fa-solid fa-shuffle"></i> Mode</label>
@@ -218,7 +208,7 @@
             </div>
             <div class="score-header">
                 <span>Score: <span id="current-score">0</span> / <span id="total-q">0</span></span>
-                <button onclick="resetQuiz()">↺ Restart</button>
+                <button onclick="resetQuiz()">&#x21BA; Restart</button>
             </div>
             <div id="quiz-list"></div>
         </div>
@@ -236,7 +226,7 @@
             <div class="style-section">
                 <h4><i class="fa-solid fa-chalkboard-user"></i> Lecturer Style (Optional)</h4>
                 <select id="t-diff"><option value="medium">Medium Difficulty</option><option value="hard">Hard / Exam Level</option></select>
-                <textarea class="style-input" id="lecturer-style" placeholder="Describe your lecturer's style e.g. 'Focuses on definitions, loves comparing theories'..."></textarea>
+                <textarea class="style-input" id="lecturer-style" placeholder="Describe your lecturer style e.g. Focuses on definitions, loves comparing theories..."></textarea>
             </div>
             <button class="btn btn-primary" onclick="startGen('theory')"><i class="fa-solid fa-pen-nib"></i> Start Theory Exam</button>
         </div>
@@ -286,26 +276,25 @@
                 <button class="btn btn-sec" onclick="prevCard()"><i class="fa-solid fa-arrow-left"></i> Prev</button>
                 <button class="btn btn-sec" onclick="nextCard()">Next <i class="fa-solid fa-arrow-right"></i></button>
             </div>
-            <button class="btn btn-dark" onclick="resetFlashcards()">↺ Regenerate Deck</button>
+            <button class="btn btn-dark" onclick="resetFlashcards()">&#x21BA; Regenerate Deck</button>
         </div>
     </div>
 
     <!-- CHAT -->
     <div id="chat-section">
-        <!-- No PDF uploaded yet banner -->
-        <div id="chat-no-pdf" style="display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:24px; text-align:center; background:rgba(61,114,180,0.08); border-bottom:1px solid var(--border);">
-            <i class="fa-solid fa-file-pdf" style="font-size:2rem; color:var(--muted);"></i>
-            <p style="color:var(--muted); font-size:0.85rem; margin:0;">No document loaded. Upload a PDF to chat about it.</p>
+        <div id="chat-no-pdf">
+            <i class="fa-solid fa-file-pdf" style="font-size:2rem;color:var(--muted);"></i>
+            <p>No document loaded. Upload a PDF to chat about it.</p>
             <input type="file" id="chat-manual-file" accept="application/pdf" onchange="handleManualUpload(this)" style="display:none">
-            <button onclick="document.getElementById('chat-manual-file').click()" class="btn btn-primary" style="max-width:200px; padding:10px 16px;">
+            <button onclick="document.getElementById('chat-manual-file').click()" class="btn btn-primary" style="max-width:200px;padding:10px 16px;">
                 <i class="fa-solid fa-upload"></i> Upload PDF
             </button>
         </div>
-        <div class="chat-history" id="chat-history" style="flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px;">
-            <div class="msg ai">👋 Hi! I've read your document and I'm ready to help.<br><br>Ask me anything — explain a topic, summarize a chapter, or clarify any concept.</div>
+        <div class="chat-history" id="chat-history">
+            <div class="msg ai">Hi! I have read your document and I am ready to help.<br><br>Ask me anything about the material.</div>
         </div>
-        <div class="chat-input-area" style="flex-shrink:0;">
-            <input type="text" id="chat-input" placeholder="Ask anything about this material..." onkeypress="if(event.key==='Enter') sendMessage()">
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Ask anything about this material..." onkeypress="if(event.key==='Enter')sendMessage()">
             <button class="send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     </div>
@@ -315,22 +304,52 @@
 <script>
     const SUPABASE_URL      = "https://nijjgpgxdhsrtftuqcoy.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g";
-    const PROXY_URL         = `${SUPABASE_URL}/functions/v1/gemini-proxy`;
+    const PROXY_URL = `${SUPABASE_URL}/functions/v1/gemini-proxy`;
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     const _supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-    let pdfText = "", quizData = [], score = 0, answeredCount = 0;
-    let timerInterval = null, timerSeconds = 0, timerTotal = 0, examMode = false;
-    let userAnswers = {}; // stores answers for exam mode
-    let theoryQuestions = [], currentTheoryIndex = 0, theoryTotalScore = 0;
-    let flashcardData = [], currentCardIndex = 0, chatHistory = [];
+    let pdfText="", quizData=[], score=0, answeredCount=0;
+    let timerInterval=null, timerSeconds=0, timerTotal=0, examMode=false;
+    let userAnswers={}, theoryQuestions=[], currentTheoryIndex=0, theoryTotalScore=0;
+    let flashcardData=[], currentCardIndex=0, chatHistory=[];
 
+    // ── TABS ──────────────────────────────────────────────────────────────────
+    window.switchTab = function(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        const tabBtn = document.querySelector(`.tab-btn[data-target="${tabId}"]`);
+        if (tabBtn) tabBtn.classList.add('active');
+
+        // Hide all sections including chat
+        ['quiz','theory','flashcard'].forEach(id => {
+            const el = document.getElementById(id+'-section');
+            if (el) { el.style.display='none'; el.classList.remove('active'); }
+        });
+        const chatEl = document.getElementById('chat-section');
+        chatEl.style.display = 'none';
+        chatEl.classList.remove('active');
+
+        if (tabId === 'chat') {
+            // Hide overlays so they never sit on top of chat
+            document.getElementById('loading-box').classList.remove('show');
+            document.getElementById('upload-box').classList.remove('show');
+            // Show no-PDF banner if needed
+            document.getElementById('chat-no-pdf').style.display = pdfText ? 'none' : 'flex';
+            chatEl.style.display = 'flex';
+            setTimeout(() => chatEl.classList.add('active'), 10);
+        } else {
+            // Restore upload overlay on other tabs if PDF not loaded
+            if (!pdfText) document.getElementById('upload-box').classList.add('show');
+            const target = document.getElementById(tabId+'-section');
+            if (target) { target.style.display='flex'; setTimeout(()=>target.classList.add('active'),10); }
+        }
+    };
+
+    // ── INIT ──────────────────────────────────────────────────────────────────
     window.onload = async () => {
         const params = new URLSearchParams(window.location.search);
         const url = params.get('url'), title = params.get('title');
         if (title) document.getElementById('doc-title').innerText = decodeURIComponent(title);
-        document.querySelectorAll('.section-view').forEach(el => { el.style.display='none'; el.classList.remove('active'); });
         switchTab('quiz');
         if (url) { showLoading('Fetching document...'); await loadPdf(decodeURIComponent(url)); }
         else showUpload('No document URL. Upload PDF manually.');
@@ -348,67 +367,33 @@
         if (msg) document.getElementById('upload-msg').innerText = msg;
     }
 
-    window.switchTab = function(tabId) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        const btn = document.querySelector(`.tab-btn[data-target="${tabId}"]`);
-        if (btn) btn.classList.add('active');
-
-        // Hide all sections
-        document.querySelectorAll('.section-view').forEach(el => { el.style.display='none'; el.classList.remove('active'); });
-        document.getElementById('chat-section').style.display = 'none';
-        document.getElementById('chat-section').classList.remove('active');
-
-        // When switching to chat, hide loading/upload boxes so they don't overlap
-        if (tabId === 'chat') {
-            document.getElementById('loading-box').classList.remove('show');
-            document.getElementById('upload-box').classList.remove('show');
-            // Show no-PDF banner if document not loaded
-            const noPdf = document.getElementById('chat-no-pdf');
-            if (noPdf) noPdf.style.display = pdfText ? 'none' : 'flex';
-        }
-
-        // Show target
-        const target = document.getElementById(`${tabId}-section`);
-        if (target) {
-            target.style.display = 'flex';
-            setTimeout(() => target.classList.add('active'), 10);
-        }
-    }
-
+    // ── PDF ───────────────────────────────────────────────────────────────────
     async function loadPdf(url) {
         let data = null;
-
-        // 1. Use proxy fetch_pdf — bypasses CORS for Google Drive
         try {
             showLoading('Fetching document...');
             const resp = await fetch(PROXY_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-                body: JSON.stringify({ action: 'fetch_pdf', pdf_url: url })
+                method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`},
+                body: JSON.stringify({action:'fetch_pdf', pdf_url:url})
             });
             if (resp.ok) {
                 const json = await resp.json();
                 if (json.base64) {
-                    const binary = atob(json.base64);
-                    const bytes = new Uint8Array(binary.length);
-                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                    const bin = atob(json.base64);
+                    const bytes = new Uint8Array(bin.length);
+                    for (let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
                     data = bytes.buffer;
-                    console.log('PDF fetched via proxy, size:', data.byteLength);
                 }
             }
         } catch(e) { console.warn('Proxy fetch failed:', e.message); }
 
-        // 2. Supabase storage fallback
         if (!data && _supabase && url.includes('supabase.co')) {
             try {
                 const path = url.split('/public/')[1]||url.split('/sign/')[1];
                 if (path) { const bk=path.split('/')[0],fp=path.replace(`${bk}/`,''); const {data:blob,error}=await _supabase.storage.from(bk).download(fp); if(!error&&blob) data=await blob.arrayBuffer(); }
             } catch(e) {}
         }
-
-        // 3. Direct fetch fallback
         if (!data) { try { const r=await fetch(url); if(r.ok) data=await r.arrayBuffer(); } catch(e){} }
-
         if (data) await extractText(data);
         else showUpload('Could not load document. Upload PDF manually.');
     }
@@ -419,30 +404,76 @@
             const pdf = await pdfjsLib.getDocument({data}).promise;
             const max = Math.min(pdf.numPages, 20);
             let txt = '';
-            for (let i=1;i<=max;i++) { showLoading(`Reading page ${i} of ${max}...`); const p=await pdf.getPage(i); const t=await p.getTextContent(); txt+=t.items.map(s=>s.str).join(' ')+'\n'; }
+            for (let i=1;i<=max;i++) {
+                showLoading(`Reading page ${i} of ${max}...`);
+                const p=await pdf.getPage(i); const t=await p.getTextContent();
+                txt+=t.items.map(s=>s.str).join(' ')+'\n';
+            }
             pdfText = txt.trim();
-            if (!pdfText) { showUpload('PDF has no extractable text. Please upload a text-based PDF.'); return; }
+            if (!pdfText) { showUpload('PDF has no extractable text.'); return; }
             hideLoading();
-            // Hide chat no-PDF banner now that PDF is loaded
-            const noPdf = document.getElementById('chat-no-pdf');
-            if (noPdf) noPdf.style.display = 'none';
+            document.getElementById('chat-no-pdf').style.display = 'none';
         } catch(e) { showUpload('Error reading PDF: '+e.message); }
     }
 
     window.handleManualUpload = (input) => {
         const reader = new FileReader();
-        reader.onload = async (e) => { document.getElementById('upload-box').classList.remove('show'); await extractText(e.target.result); };
+        reader.onload = async (e) => {
+            document.getElementById('upload-box').classList.remove('show');
+            document.getElementById('chat-no-pdf').style.display = 'none';
+            await extractText(e.target.result);
+        };
         reader.readAsArrayBuffer(input.files[0]);
     };
 
+    // ── AI ────────────────────────────────────────────────────────────────────
     async function callAI(prompt) {
-        const resp = await fetch(PROXY_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`}, body: JSON.stringify({prompt}) });
+        const resp = await fetch(PROXY_URL, {
+            method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${SUPABASE_ANON_KEY}`},
+            body: JSON.stringify({prompt})
+        });
         if (!resp.ok) { const b=await resp.text(); throw new Error(`AI error ${resp.status}: ${b}`); }
         const d = await resp.json();
         if (d.error) throw new Error(d.error);
         return d.text || '';
     }
 
+    // ── ROBUST JSON PARSER ────────────────────────────────────────────────────
+    function parseAIJson(raw) {
+        const s = raw.indexOf('{'), e = raw.lastIndexOf('}');
+        if (s===-1||e===-1) throw new Error('No JSON object found in response');
+        let str = raw.substring(s, e+1);
+        // Fix smart quotes
+        str = str.replace(/[\u2018\u2019\u201A\u201B]/g, "'").replace(/[\u201C\u201D\u201E\u201F]/g, '"');
+        // Remove problematic control chars (keep \n \t for readability)
+        str = str.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '');
+        // Fix trailing commas
+        str = str.replace(/,(\s*[}\]])/g, '$1');
+
+        // Try direct parse
+        try { return JSON.parse(str); } catch(e1) {}
+
+        // Walk character by character to fix unescaped inner quotes/newlines
+        try {
+            let fixed='', inStr=false, i=0;
+            while (i < str.length) {
+                const ch=str[i], prev=i>0?str[i-1]:'';
+                if (ch==='"' && prev!=='\\') { inStr=!inStr; fixed+=ch; }
+                else if (inStr && (ch==='\n'||ch==='\r'||ch==='\t')) { fixed+=' '; }
+                else { fixed+=ch; }
+                i++;
+            }
+            return JSON.parse(fixed);
+        } catch(e2) {}
+
+        // Last resort for theory — extract questions by regex
+        const qs = [...str.matchAll(/"([^"]{15,}[?!.])"/g)].map(m=>m[1]).filter(q=>q.length>15);
+        if (qs.length>=3) return { questions: qs.slice(0,5) };
+
+        throw new Error('Could not parse AI response. Please try again.');
+    }
+
+    // ── GENERATION ────────────────────────────────────────────────────────────
     window.startGen = async function(type) {
         if (!pdfText) { alert('Document not loaded yet.'); return; }
         const btn = document.querySelector(`#${type}-section .btn-primary`);
@@ -454,131 +485,56 @@
 
         if (type==='quiz') {
             const count=document.getElementById('q-count').value, diff=document.getElementById('q-diff').value;
-            prompt = `Generate exactly ${count} multiple-choice questions at ${diff} difficulty from the document below.\nIMPORTANT: Do not use apostrophes, single quotes, or special characters inside any string values.\nReturn ONLY valid JSON with no extra text:\n{"quiz":[{"q":"question text","options":["A. option","B. option","C. option","D. option"],"a":"A. option","explanation":"reason"}]}\n\n${ctx}`;
+            prompt = `Generate exactly ${count} multiple-choice questions at ${diff} difficulty from the document below. Use formal language only, no contractions. Return ONLY valid JSON:\n{"quiz":[{"q":"question","options":["A. opt","B. opt","C. opt","D. opt"],"a":"A. opt","explanation":"reason"}]}\n\n${ctx}`;
         } else if (type==='theory') {
             const diff=document.getElementById('t-diff').value, style=document.getElementById('lecturer-style').value;
-            prompt = `Generate exactly 5 theory exam questions at ${diff} difficulty.${style?` Lecturer style: ${style}`:''}\nIMPORTANT: Do not use apostrophes, single quotes, or special characters inside any string values.\nReturn ONLY valid JSON with no extra text:\n{"questions":["Question one?","Question two?","Question three?","Question four?","Question five?"]}\n\n${ctx}`;
+            prompt = `Generate exactly 5 theory exam questions at ${diff} difficulty.${style?` Style: ${style}`:''} Use formal language only, no contractions. Return ONLY valid JSON:\n{"questions":["Question 1?","Question 2?","Question 3?","Question 4?","Question 5?"]}\n\n${ctx}`;
         } else if (type==='flashcard') {
-            prompt = `Generate exactly 15 flashcards of key terms and definitions from the document.\nIMPORTANT: Do not use apostrophes, single quotes, or special characters inside any string values.\nReturn ONLY valid JSON with no extra text:\n{"flashcards":[{"front":"Term","back":"Definition"}]}\n\n${ctx}`;
+            prompt = `Generate exactly 15 flashcards from the document. Use formal language only, no contractions. Return ONLY valid JSON:\n{"flashcards":[{"front":"Term","back":"Definition"}]}\n\n${ctx}`;
         }
 
         try {
             const raw = await callAI(prompt);
-            const s=raw.indexOf('{'), e=raw.lastIndexOf('}');
-            if (s===-1||e===-1) throw new Error('Invalid response format');
-
-            // Robust JSON sanitization
-            let cleaned = raw.substring(s, e+1);
-            // Replace curly/smart quotes with straight quotes
-            cleaned = cleaned.replace(/[\u2018\u2019\u201A\u201B]/g, "\'");
-            cleaned = cleaned.replace(/[\u201C\u201D\u201E\u201F]/g, '\"');
-            // Remove control characters
-            cleaned = cleaned.replace(/[\u0000-\u001F\u007F]/g, ' ');
-            // Fix trailing commas
-            cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
-
-            let parsed;
-            try {
-                parsed = JSON.parse(cleaned);
-            } catch(parseErr) {
-                // Last resort: extract strings with regex for theory questions
-                if (type === 'theory') {
-                    const matches = [...cleaned.matchAll(/"([^"]{10,}\?+)"/g)].map(m => m[1]).filter(q => q.includes('?') || q.length > 20);
-                    if (matches.length >= 3) { parsed = { questions: matches.slice(0, 5) }; }
-                    else throw parseErr;
-                } else { throw parseErr; }
-            }
-
+            const parsed = parseAIJson(raw);
             if (type==='quiz')      { quizData=parsed.quiz; renderQuiz(); }
             if (type==='theory')    { theoryQuestions=parsed.questions; theoryTotalScore=0; currentTheoryIndex=0; renderTheory(); }
             if (type==='flashcard') { flashcardData=parsed.flashcards; setupFlashcards(); }
         } catch(e) { alert('Generation failed: '+e.message); console.error(e); }
         btn.innerHTML=orig; btn.disabled=false;
-    }
+    };
 
     // ── TIMER ─────────────────────────────────────────────────────────────────
     function startTimer(minutes) {
-        if (minutes <= 0) return;
-        timerTotal   = minutes * 60;
-        timerSeconds = timerTotal;
-        document.getElementById('timer-bar').style.display  = 'flex';
-        document.getElementById('timer-display').innerText  = formatTime(timerSeconds);
-        document.getElementById('timer-fill').style.width   = '100%';
-
-        timerInterval = setInterval(() => {
+        if (minutes<=0) return;
+        timerTotal=minutes*60; timerSeconds=timerTotal;
+        document.getElementById('timer-bar').style.display='flex';
+        document.getElementById('timer-display').innerText=formatTime(timerSeconds);
+        document.getElementById('timer-fill').style.width='100%';
+        timerInterval = setInterval(()=>{
             timerSeconds--;
-            const pct = (timerSeconds / timerTotal) * 100;
-            const display = document.getElementById('timer-display');
-            const fill    = document.getElementById('timer-fill');
-
-            display.innerText = formatTime(timerSeconds);
-            fill.style.width  = pct + '%';
-
-            if (timerSeconds <= 60) {
-                display.className = 'timer-display danger';
-                fill.className    = 'timer-progress-fill danger';
-            } else if (timerSeconds <= timerTotal * 0.25) {
-                display.className = 'timer-display warning';
-                fill.className    = 'timer-progress-fill warning';
-            } else {
-                display.className = 'timer-display normal';
-                fill.className    = 'timer-progress-fill';
-            }
-
-            if (timerSeconds <= 0) {
-                clearInterval(timerInterval);
-                alert('⏰ Time is up! Submitting your exam...');
-                submitQuiz();
-            }
-        }, 1000);
+            const pct=(timerSeconds/timerTotal)*100;
+            const display=document.getElementById('timer-display'), fill=document.getElementById('timer-fill');
+            display.innerText=formatTime(timerSeconds); fill.style.width=pct+'%';
+            if (timerSeconds<=60) { display.className='timer-display danger'; fill.className='timer-progress-fill danger'; }
+            else if (timerSeconds<=timerTotal*0.25) { display.className='timer-display warning'; fill.className='timer-progress-fill warning'; }
+            else { display.className='timer-display normal'; fill.className='timer-progress-fill'; }
+            if (timerSeconds<=0) { clearInterval(timerInterval); alert('Time is up! Submitting...'); submitQuiz(); }
+        },1000);
     }
+    function stopTimer() { if(timerInterval){clearInterval(timerInterval);timerInterval=null;} const b=document.getElementById('timer-bar'); if(b)b.style.display='none'; }
+    function formatTime(s) { return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`; }
 
-    function stopTimer() {
-        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-        const bar = document.getElementById('timer-bar');
-        if (bar) bar.style.display = 'none';
-    }
-
-    function formatTime(seconds) {
-        const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-        const s = (seconds % 60).toString().padStart(2, '0');
-        return `${m}:${s}`;
-    }
-
-    window.submitQuiz = function() {
-        stopTimer();
-        if (examMode) {
-            // Grade all unanswered as wrong
-            quizData.forEach((q, i) => {
-                const container = document.getElementById(`opts-${i}`);
-                if (!container || container.classList.contains('answered')) return;
-                container.classList.add('answered');
-                Array.from(container.children).forEach(o => {
-                    o.style.pointerEvents = 'none';
-                    if (o.innerText === q.a) o.classList.add('correct');
-                });
-                const parentDiv = container.closest('.quiz-card');
-                if (parentDiv) { const exp = parentDiv.querySelector('.explanation'); if (exp) exp.style.display = 'block'; }
-            });
-        }
-        const pct = Math.round((score / quizData.length) * 100);
-        document.getElementById('quiz-active').style.display  = 'none';
-        document.getElementById('quiz-result').style.display  = 'block';
-        document.getElementById('final-score').innerText      = pct + '%';
-        document.getElementById('result-msg').innerText = pct >= 70 ? '🎉 Great job! You passed.' : pct >= 50 ? '📚 Not bad! Keep studying.' : "💪 Keep practicing, you'll get there!";
-    }
-
+    // ── QUIZ ──────────────────────────────────────────────────────────────────
     function renderQuiz() {
-        score=0; answeredCount=0; userAnswers={};
-        stopTimer();
-        const timeLimit = parseInt(document.getElementById('q-time')?.value || '0');
-        examMode = document.getElementById('q-mode')?.value === 'exam';
+        score=0; answeredCount=0; userAnswers={}; stopTimer();
+        const timeLimit=parseInt(document.getElementById('q-time')?.value||'0');
+        examMode=document.getElementById('q-mode')?.value==='exam';
         document.getElementById('quiz-setup').style.display='none';
         document.getElementById('quiz-result').style.display='none';
         document.getElementById('quiz-active').style.display='block';
         document.getElementById('current-score').innerText='0';
         document.getElementById('total-q').innerText=quizData.length;
-        if (timeLimit > 0) startTimer(timeLimit);
+        if (timeLimit>0) startTimer(timeLimit);
         const list=document.getElementById('quiz-list'); list.innerHTML='';
         quizData.forEach((q,i)=>{
             const div=document.createElement('div'); div.className='quiz-card';
@@ -594,25 +550,42 @@
     function checkAns(idx,el,sel,cor,parentDiv) {
         const c=document.getElementById(`opts-${idx}`); if(c.classList.contains('answered'))return;
         c.classList.add('answered'); Array.from(c.children).forEach(o=>o.style.pointerEvents='none');
-        userAnswers[idx] = sel;
-        answeredCount++;
+        userAnswers[idx]=sel; answeredCount++;
         if (examMode) {
-            // In exam mode just highlight selected, no reveal
-            el.style.background = 'rgba(61,114,180,0.25)';
-            el.style.borderColor = 'var(--accent)';
+            el.style.background='rgba(61,114,180,0.25)'; el.style.borderColor='var(--accent)';
             document.getElementById('current-score').innerText=answeredCount+' answered';
-            if(answeredCount===quizData.length) setTimeout(submitQuiz, 500);
+            if(answeredCount===quizData.length) setTimeout(submitQuiz,500);
         } else {
             if(sel===cor){el.classList.add('correct');score++;}else{el.classList.add('wrong');}
             Array.from(c.children).forEach(o=>{if(o.innerText===cor)o.classList.add('correct');});
             parentDiv.querySelector('.explanation').style.display='block';
             document.getElementById('current-score').innerText=score;
-            if(answeredCount===quizData.length) setTimeout(submitQuiz, 800);
+            if(answeredCount===quizData.length) setTimeout(submitQuiz,800);
         }
     }
-    window.resetQuiz = function(){stopTimer();document.getElementById('quiz-result').style.display='none';document.getElementById('quiz-active').style.display='none';document.getElementById('quiz-setup').style.display='block';}
 
-    function renderTheory(){
+    window.submitQuiz = function() {
+        stopTimer();
+        if (examMode) {
+            quizData.forEach((q,i)=>{
+                const c=document.getElementById(`opts-${i}`);
+                if(!c||c.classList.contains('answered'))return;
+                c.classList.add('answered');
+                Array.from(c.children).forEach(o=>{ o.style.pointerEvents='none'; if(o.innerText===q.a)o.classList.add('correct'); });
+                const pd=c.closest('.quiz-card'); if(pd){const ex=pd.querySelector('.explanation');if(ex)ex.style.display='block';}
+            });
+        }
+        const pct=Math.round((score/quizData.length)*100);
+        document.getElementById('quiz-active').style.display='none';
+        document.getElementById('quiz-result').style.display='block';
+        document.getElementById('final-score').innerText=pct+'%';
+        document.getElementById('result-msg').innerText=pct>=70?'Great job! You passed.':pct>=50?'Not bad! Keep studying.':'Keep practicing, you will get there!';
+    };
+
+    window.resetQuiz=function(){stopTimer();document.getElementById('quiz-result').style.display='none';document.getElementById('quiz-active').style.display='none';document.getElementById('quiz-setup').style.display='block';};
+
+    // ── THEORY ────────────────────────────────────────────────────────────────
+    function renderTheory() {
         document.getElementById('theory-setup').style.display='none';
         document.getElementById('theory-result').style.display='none';
         document.getElementById('theory-active').style.display='block';
@@ -625,28 +598,25 @@
         document.getElementById('btn-next').style.display='none';
     }
 
-    window.gradeAnswer = async function(){
+    window.gradeAnswer = async function() {
         const ans=document.getElementById('t-answer').value.trim();
         if(!ans){alert('Write an answer first.');return;}
         const btn=document.getElementById('btn-grade');
         btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Grading...'; btn.disabled=true;
-        try{
+        try {
             const raw=await callAI(`Grade this answer out of 10.\nQuestion: "${theoryQuestions[currentTheoryIndex]}"\nAnswer: "${ans}"\nContext: ${pdfText.substring(0,4000)}\n\nRespond ONLY with:\nScore: X/10\nFeedback: [2-3 sentences]`);
             const fb=document.getElementById('t-feedback'); fb.innerHTML=marked.parse(raw); fb.style.display='block';
             const m=raw.match(/(\d+)\/10/);
             if(m){const s=parseInt(m[1]);theoryTotalScore+=s;document.getElementById('theory-score').innerText=theoryTotalScore;fb.className=`grading-box ${s>=7?'good':s>=4?'avg':'bad'}`;}
             btn.style.display='none'; document.getElementById('btn-next').style.display='flex';
-        }catch(e){alert('Grading failed. Try again.');}
+        } catch(e) { alert('Grading failed. Try again.'); }
         btn.innerHTML='<i class="fa-solid fa-check"></i> Grade Answer'; btn.disabled=false;
-    }
+    };
 
-    window.nextTheoryQ = function(){
-        currentTheoryIndex++;
-        if(currentTheoryIndex<theoryQuestions.length){renderTheory();}
-        else{document.getElementById('theory-active').style.display='none';document.getElementById('theory-result').style.display='block';document.getElementById('final-theory-score').innerText=theoryTotalScore;}
-    }
-    window.resetTheory = function(){document.getElementById('theory-result').style.display='none';document.getElementById('theory-setup').style.display='block';}
+    window.nextTheoryQ=function(){currentTheoryIndex++;if(currentTheoryIndex<theoryQuestions.length){renderTheory();}else{document.getElementById('theory-active').style.display='none';document.getElementById('theory-result').style.display='block';document.getElementById('final-theory-score').innerText=theoryTotalScore;}};
+    window.resetTheory=function(){document.getElementById('theory-result').style.display='none';document.getElementById('theory-setup').style.display='block';};
 
+    // ── FLASHCARDS ────────────────────────────────────────────────────────────
     function setupFlashcards(){currentCardIndex=0;document.getElementById('fc-setup').style.display='none';document.getElementById('fc-active').style.display='block';updateCard();}
     function updateCard(){const c=flashcardData[currentCardIndex];document.getElementById('fc-front').innerText=c.front;document.getElementById('fc-back').innerText=c.back;document.getElementById('fc-counter').innerText=`Card ${currentCardIndex+1} of ${flashcardData.length}`;document.getElementById('active-card').classList.remove('flipped');}
     window.toggleFlip=()=>document.getElementById('active-card').classList.toggle('flipped');
@@ -654,20 +624,21 @@
     window.prevCard=()=>{if(currentCardIndex>0){currentCardIndex--;updateCard();}};
     window.resetFlashcards=()=>{document.getElementById('fc-active').style.display='none';document.getElementById('fc-setup').style.display='block';};
 
-    window.sendMessage=async function(){
+    // ── CHAT ──────────────────────────────────────────────────────────────────
+    window.sendMessage = async function() {
         const input=document.getElementById('chat-input'); const msg=input.value.trim(); if(!msg)return;
         const history=document.getElementById('chat-history');
         history.innerHTML+=`<div class="msg user">${msg}</div>`; input.value='';
         const typing=document.createElement('div'); typing.className='msg ai'; typing.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Thinking...';
         history.appendChild(typing); history.scrollTop=history.scrollHeight;
         chatHistory.push({role:'user',content:msg});
-        try{
+        try {
             const sys=pdfText?`You are a helpful study assistant. Material:\n\n${pdfText.substring(0,10000)}\n\nAnswer questions based on this material.`:'You are a helpful study assistant.';
             const fullPrompt=`${sys}\n\nConversation:\n${chatHistory.slice(-6).map(m=>`${m.role}: ${m.content}`).join('\n')}\n\nassistant:`;
             const reply=await callAI(fullPrompt);
             chatHistory.push({role:'assistant',content:reply});
             typing.innerHTML=marked.parse(reply);
-        }catch(e){typing.innerHTML='❌ Error: '+e.message;}
+        } catch(e) { typing.innerHTML='Error: '+e.message; }
         history.scrollTop=history.scrollHeight;
     };
 </script>
