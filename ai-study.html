@@ -291,11 +291,11 @@
     </div>
 
     <!-- CHAT -->
-    <div id="chat-section" class="section-view">
-        <div class="chat-history" id="chat-history">
+    <div id="chat-section" class="section-view" style="padding:0; overflow:hidden;">
+        <div class="chat-history" id="chat-history" style="flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px;">
             <div class="msg ai">👋 Hi! I've read your document and I'm ready to help.<br><br>Ask me anything — explain a topic, summarize a chapter, or clarify any concept.</div>
         </div>
-        <div class="chat-input-area">
+        <div class="chat-input-area" style="flex-shrink:0;">
             <input type="text" id="chat-input" placeholder="Ask anything about this material..." onkeypress="if(event.key==='Enter') sendMessage()">
             <button class="send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
@@ -424,19 +424,23 @@
 
         if (type==='quiz') {
             const count=document.getElementById('q-count').value, diff=document.getElementById('q-diff').value;
-            prompt = `Generate exactly ${count} multiple-choice questions at ${diff} difficulty from the document below.\nReturn ONLY valid JSON:\n{"quiz":[{"q":"question","options":["A. opt","B. opt","C. opt","D. opt"],"a":"A. opt","explanation":"why"}]}\n\n${ctx}`;
+            prompt = `Generate exactly ${count} multiple-choice questions at ${diff} difficulty from the document below.\nIMPORTANT: Do not use apostrophes, single quotes, or special characters inside any string values.\nReturn ONLY valid JSON with no extra text:\n{"quiz":[{"q":"question text","options":["A. option","B. option","C. option","D. option"],"a":"A. option","explanation":"reason"}]}\n\n${ctx}`;
         } else if (type==='theory') {
             const diff=document.getElementById('t-diff').value, style=document.getElementById('lecturer-style').value;
-            prompt = `Generate exactly 5 theory questions at ${diff} difficulty.${style?` Style: ${style}`:''}\nReturn ONLY valid JSON:\n{"questions":["Q1?","Q2?","Q3?","Q4?","Q5?"]}\n\n${ctx}`;
+            prompt = `Generate exactly 5 theory exam questions at ${diff} difficulty.${style?` Lecturer style: ${style}`:''}\nIMPORTANT: Do not use apostrophes, single quotes, or special characters inside any string values.\nReturn ONLY valid JSON with no extra text:\n{"questions":["Question one?","Question two?","Question three?","Question four?","Question five?"]}\n\n${ctx}`;
         } else if (type==='flashcard') {
-            prompt = `Generate exactly 15 flashcards of key terms and definitions.\nReturn ONLY valid JSON:\n{"flashcards":[{"front":"Term","back":"Definition"}]}\n\n${ctx}`;
+            prompt = `Generate exactly 15 flashcards of key terms and definitions from the document.\nIMPORTANT: Do not use apostrophes, single quotes, or special characters inside any string values.\nReturn ONLY valid JSON with no extra text:\n{"flashcards":[{"front":"Term","back":"Definition"}]}\n\n${ctx}`;
         }
 
         try {
             const raw = await callAI(prompt);
             const s=raw.indexOf('{'), e=raw.lastIndexOf('}');
             if (s===-1||e===-1) throw new Error('Invalid response format');
-            const parsed = JSON.parse(raw.substring(s,e+1));
+            // Sanitize: remove control characters and fix trailing commas
+            const cleaned = raw.substring(s,e+1)
+                .replace(/[\u0000-\u001F\u007F]/g, ' ')
+                .replace(/,(\s*[}\]])/g, '$1');
+            const parsed = JSON.parse(cleaned);
             if (type==='quiz')      { quizData=parsed.quiz; renderQuiz(); }
             if (type==='theory')    { theoryQuestions=parsed.questions; theoryTotalScore=0; currentTheoryIndex=0; renderTheory(); }
             if (type==='flashcard') { flashcardData=parsed.flashcards; setupFlashcards(); }
