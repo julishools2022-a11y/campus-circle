@@ -8,6 +8,11 @@
     <script src="https://js.paystack.co/v1/inline.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://js.paystack.co" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -109,6 +114,8 @@
 
         .res-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
         .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn-ai { background: linear-gradient(135deg, #7c3aed, #9f5cf7); color: white; border: none; border-radius: 10px; padding: 10px; font-weight: 700; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
+        .btn-ai:hover { opacity: 0.9; transform: translateY(-1px); }
 
         .btn { border: none; padding: 11px; border-radius: 10px; font-size: 0.88rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; text-decoration: none; font-family: inherit; transition: transform 0.1s, opacity 0.2s; }
         .btn:active { transform: scale(0.97); }
@@ -116,7 +123,6 @@
         .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
         .btn-success { background: linear-gradient(135deg, #059669, var(--success)); color: white; box-shadow: 0 3px 10px rgba(16,185,129,0.25); }
         .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .btn-ai { background: linear-gradient(135deg, #7c3aed, #9f5cf7); color: white; box-shadow: 0 3px 10px rgba(124,58,237,0.3); }
 
         .hardcopy-badge { position: absolute; top: 0; right: 0; background: var(--warning); color: #78350f; font-size: 0.62rem; font-weight: 800; padding: 4px 10px; border-bottom-left-radius: 10px; border-top-right-radius: 15px; }
         .empty-state { grid-column: 1/-1; text-align: center; padding: 50px 20px; color: var(--text-muted); }
@@ -214,6 +220,82 @@
         </div>
     </div>
 
+    <!-- SUBSCRIPTION BANNER -->
+    <div id="sub-banner" style="margin:0 16px 12px;display:none;">
+        <div style="background:linear-gradient(135deg,rgba(61,114,180,0.15),rgba(91,155,213,0.1));border:1px solid rgba(61,114,180,0.35);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div>
+                <div style="font-weight:800;font-size:0.9rem;color:#64b5f6;">🎓 Get Unlimited Access</div>
+                <div style="font-size:0.78rem;color:#7a9cc0;margin-top:3px;">Department Bundle ₦2,000 &nbsp;·&nbsp; Semester Pass ₦3,500</div>
+            </div>
+            <button onclick="openSubModal()" style="background:linear-gradient(135deg,#3d72b4,#5b9bd5);color:white;border:none;padding:9px 16px;border-radius:10px;font-weight:700;font-size:0.82rem;cursor:pointer;font-family:inherit;white-space:nowrap;">Subscribe</button>
+        </div>
+    </div>
+
+    <!-- ACTIVE SUB BADGE -->
+    <div id="active-sub-banner" style="margin:0 16px 12px;display:none;">
+        <div style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px;">
+            <i class="fa-solid fa-circle-check" style="color:#10b981;font-size:1.2rem;"></i>
+            <div>
+                <div style="font-weight:800;font-size:0.88rem;color:#10b981;" id="sub-badge-title">Semester Pass Active</div>
+                <div style="font-size:0.75rem;color:#7a9cc0;" id="sub-badge-expiry">Expires —</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUBSCRIPTION MODAL -->
+    <div id="subModal" class="modal" style="z-index:3000;">
+        <div class="modal-card" style="max-width:440px;">
+            <div style="text-align:center;margin-bottom:16px;">
+                <div style="font-size:2rem;margin-bottom:6px;">🎓</div>
+                <h3 style="margin:0 0 4px;color:#e2eaf4;">Choose a Plan</h3>
+                <p style="margin:0;font-size:0.85rem;color:#7a9cc0;">One payment. Unlimited access for 6 months.</p>
+            </div>
+
+            <!-- DEPT BUNDLE -->
+            <div onclick="buyPlan('dept')" style="background:#1a2f4a;border:1.5px solid rgba(61,114,180,0.3);border-radius:14px;padding:18px;margin-bottom:12px;cursor:pointer;transition:border-color 0.2s;" onmouseover="this.style.borderColor='#5b9bd5'" onmouseout="this.style.borderColor='rgba(61,114,180,0.3)'">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+                    <div style="flex:1;">
+                        <div style="font-weight:800;font-size:1rem;color:#e2eaf4;">📚 Department Bundle</div>
+                        <div style="font-size:0.8rem;color:#7a9cc0;margin-top:6px;line-height:1.6;">
+                            ✅ All materials for <strong style="color:#e2eaf4;">your department only</strong><br>
+                            ✅ Your current level (e.g. 200L Mass Comm)<br>
+                            ✅ Any new uploads added to your dept<br>
+                            ❌ Does <strong style="color:#ef4444;">not</strong> include other departments<br>
+                            🕐 Valid for <strong style="color:#e2eaf4;">6 months</strong>
+                        </div>
+                    </div>
+                    <div style="text-align:right;flex-shrink:0;">
+                        <div style="font-size:1.3rem;font-weight:900;color:#64b5f6;">₦2,000</div>
+                        <div style="font-size:0.7rem;color:#7a9cc0;">one-time</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEMESTER PASS -->
+            <div onclick="buyPlan('semester')" style="background:linear-gradient(135deg,rgba(61,114,180,0.2),rgba(91,155,213,0.15));border:1.5px solid #5b9bd5;border-radius:14px;padding:18px;margin-bottom:16px;cursor:pointer;position:relative;overflow:hidden;">
+                <div style="position:absolute;top:0;right:0;background:linear-gradient(135deg,#3d72b4,#5b9bd5);color:white;font-size:0.65rem;font-weight:800;padding:4px 12px;border-bottom-left-radius:10px;">BEST VALUE</div>
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+                    <div style="flex:1;">
+                        <div style="font-weight:800;font-size:1rem;color:#e2eaf4;">🚀 Semester Pass</div>
+                        <div style="font-size:0.8rem;color:#7a9cc0;margin-top:6px;line-height:1.6;">
+                            ✅ <strong style="color:#e2eaf4;">Every single material</strong> on Campus Circle<br>
+                            ✅ All departments — Law, Engineering, Mass Comm...<br>
+                            ✅ All levels — 100L to 500L + Past Questions<br>
+                            ✅ Any new uploads from <strong style="color:#e2eaf4;">any department</strong><br>
+                            🕐 Valid for <strong style="color:#e2eaf4;">6 months</strong>
+                        </div>
+                    </div>
+                    <div style="text-align:right;flex-shrink:0;">
+                        <div style="font-size:1.3rem;font-weight:900;color:#64b5f6;">₦3,500</div>
+                        <div style="font-size:0.7rem;color:#7a9cc0;">one-time</div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="closeSubModal()" class="btn btn-secondary" style="width:100%;">Maybe Later</button>
+        </div>
+    </div>
+
     <div id="resources-list" class="resources-grid">
         <div class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i><h3>Loading Library...</h3></div>
     </div>
@@ -256,12 +338,90 @@
         const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         let isAdmin = false, purchasedIds = new Set(), currentOrder = null, currentUser = null;
+        let activeSub = null; // { type: 'dept'|'semester', dept_id, level, expires_at }
+
+        // ── SUBSCRIPTION PLANS ────────────────────────────────────────────
+        const PLANS = {
+            dept:     { label: 'Department Bundle', price: 2000, desc: 'All materials for your dept & level', months: 6 },
+            semester: { label: 'Semester Pass',     price: 3500, desc: 'Everything on Campus Circle',        months: 6 }
+        };
 
         function isGoogleDriveUrl(u) { return u && u.includes('drive.google.com'); }
         function isImageUrl(u) { return u && /\.(jpeg|jpg|png|webp|gif)$/i.test(u); }
         function extractDriveFileId(u) { let m = u.match(/\/file\/d\/([a-zA-Z0-9_-]+)/); if (m) return m[1]; m = u.match(/[?&]id=([a-zA-Z0-9_-]+)/); if (m) return m[1]; m = u.match(/open\?id=([a-zA-Z0-9_-]+)/); if (m) return m[1]; return null; }
         function getDriveEmbedUrl(u) { const id = extractDriveFileId(u); return id ? `https://drive.google.com/file/d/${id}/preview` : u; }
         function getDriveOpenUrl(u) { const id = extractDriveFileId(u); return id ? `https://drive.google.com/file/d/${id}/preview?rm=minimal` : u; }
+
+        // ── SUBSCRIPTION HELPERS ──────────────────────────────────────────────────
+        function hasActiveSub(res) {
+            if (!activeSub) return false;
+            if (activeSub.type === 'semester') return true;
+            if (activeSub.type === 'dept') {
+                // Must match the actual resource's department_id
+                const deptMatch = activeSub.dept_id && activeSub.dept_id === String(res.department_id);
+                // Level MUST match — null level means they didn't pick one, so lock everything
+                const levelMatch = activeSub.level && activeSub.level === res.level;
+                return deptMatch && levelMatch;
+            }
+            return false;
+        }
+
+        function openSubModal() {
+            document.getElementById('subModal').style.display = 'flex';
+        }
+        function closeSubModal() {
+            document.getElementById('subModal').style.display = 'none';
+        }
+
+        function buyPlan(type) {
+            if (!currentUser) return alert('Please log in first');
+            const plan = PLANS[type];
+            const deptId  = document.getElementById('dept-select').value;
+            const deptName = document.getElementById('dept-select').options[document.getElementById('dept-select').selectedIndex]?.text || '';
+            const level   = document.getElementById('level-select').value;
+            if (type === 'dept' && !deptId) return alert('Please select a department first, then subscribe.');
+            if (type === 'dept' && !level) return alert('Please select your level (e.g. 200L) before subscribing to a Department Bundle.');
+            closeSubModal();
+            PaystackPop.setup({
+                key: PAYSTACK_KEY,
+                email: currentUser.email,
+                amount: plan.price * 100,
+                ref: 'SUB-' + type.toUpperCase() + '-' + Date.now(),
+                metadata: { plan_type: type },
+                callback: (resp) => processSubPayment(resp, type, plan, deptId, deptName, level),
+                onClose: () => {}
+            }).openIframe();
+        }
+
+        async function processSubPayment(resp, type, plan, deptId, deptName, level) {
+            try {
+                const expiresAt = new Date();
+                expiresAt.setMonth(expiresAt.getMonth() + plan.months);
+                const subRecord = {
+                    user_id:    currentUser.id,
+                    type:       type,
+                    dept_id:    type === 'dept' ? deptId : null,
+                    dept_name:  type === 'dept' ? deptName : null,
+                    level:      type === 'dept' ? (level || null) : null,
+                    amount_paid: plan.price,
+                    paystack_ref: resp.reference,
+                    expires_at: expiresAt.toISOString()
+                };
+                const { error } = await _supabase.from('subscriptions').insert([subRecord]);
+                if (error) console.error('Sub insert error:', error.message);
+                activeSub = subRecord;
+                loadResources();
+                _supabase.from('notifications').insert([{ user_id: currentUser.id, title: '🎉 Subscription Active!', message: `Your ${plan.label} is now active for 6 months. Enjoy unlimited access!` }]).catch(() => {});
+                sendEmailNotification(currentUser.email, 'Subscription Confirmed — Campus Circle',
+                    `Hi!\n\nYour ${plan.label} subscription is now active!\n\nPlan: ${plan.label}\nAmount: ₦${plan.price.toLocaleString()}\nExpires: ${expiresAt.toDateString()}\n\nEnjoy unlimited access to Campus Circle!\n\nThank you!\nCampus Circle Team`);
+                sendEmailNotification('campuscircle26@gmail.com', `New Subscription — ${plan.label}`,
+                    `New sub!\n\nUser: ${currentUser.email}\nPlan: ${plan.label}\nDept: ${deptName || 'All'}\nLevel: ${level || 'All'}\nAmount: ₦${plan.price}\nRef: ${resp.reference}`);
+                alert('✅ Subscription Active! You now have unlimited access for 6 months.');
+            } catch (e) {
+                console.error('Sub payment error:', e);
+                alert('Payment received! Ref: ' + resp.reference + '. Contact admin if access is not granted.');
+            }
+        }
 
         // ── REFUND POLICY ─────────────────────────────────────────────────────
         let pendingPurchase = null;
@@ -298,6 +458,11 @@
                 ]);
                 if (adminReq.data) { isAdmin = true; document.getElementById('admin-fab').style.display = 'flex'; }
                 if (paymentsReq.data) paymentsReq.data.forEach(p => purchasedIds.add(p.resource_id.toString()));
+                // Load active subscription
+                const now = new Date().toISOString();
+                const { data: subData } = await _supabase.from('subscriptions')
+                    .select('*').eq('user_id', user.id).gte('expires_at', now).order('created_at', { ascending: false }).limit(1).maybeSingle();
+                if (subData) activeSub = subData;
                 const sel = document.getElementById('faculty-select');
                 sel.innerHTML = '<option value="">Select Faculty...</option>';
                 if (facultiesReq.data) facultiesReq.data.forEach(f => sel.innerHTML += `<option value="${f.id}">${f.name}</option>`);
@@ -306,6 +471,17 @@
                     if (dd?.length > 0) { const d = dd[0]; document.getElementById('faculty-select').value = d.faculty_id; await loadDepartments(); document.getElementById('dept-select').value = d.id; document.getElementById('dept-select').disabled = false; document.getElementById('level-select').disabled = false; loadResources(); }
                 }
                 loadNotifications();
+                // Show correct subscription banner
+                if (activeSub) {
+                    document.getElementById('sub-banner').style.display = 'none';
+                    document.getElementById('active-sub-banner').style.display = 'block';
+                    const plan = PLANS[activeSub.type] || { label: activeSub.type };
+                    document.getElementById('sub-badge-title').textContent = (activeSub.type === 'semester' ? '🚀 Semester Pass' : '📚 Department Bundle') + ' Active';
+                    const exp = activeSub.expires_at ? new Date(activeSub.expires_at).toDateString() : '';
+                    document.getElementById('sub-badge-expiry').textContent = exp ? 'Expires ' + exp : '';
+                } else {
+                    document.getElementById('sub-banner').style.display = 'block';
+                }
             } catch (e) { console.error("Init Error", e); }
         }
 
@@ -341,13 +517,16 @@
             const { data, error } = await query;
             if (error || !data || data.length === 0) { list.innerHTML = `<div class="empty-state"><i class="fa-regular fa-folder-open"></i><h3>No Materials Found</h3><p>Try a different department or level.</p></div>`; return; }
             list.innerHTML = data.map(res => {
-                const isOwned = purchasedIds.has(res.id.toString()) || isAdmin;
+                const isOwned = purchasedIds.has(res.id.toString()) || isAdmin || hasActiveSub(res);
                 const price = res.softcopy_price || 100;
                 const isImg = isImageUrl(res.file_url);
                 const safeUrl = encodeURIComponent(res.file_url);
                 const safeTitle = encodeURIComponent(res.title);
                 let btns = isOwned
-                    ? `<button class="btn btn-success" onclick="openReader('${safeUrl}','${safeTitle}')"><i class="fa-solid fa-book-open"></i> Read Now</button>`
+                    ? `<div class="btn-row">
+                        <button class="btn btn-success" onclick="openReader('${safeUrl}','${safeTitle}')"><i class="fa-solid fa-book-open"></i> Read Now</button>
+                        ${res.file_url && !isImg ? `<button class="btn btn-ai" onclick="openStudyCompanion('${safeUrl}','${safeTitle}')"><i class="fa-solid fa-robot"></i> Study AI</button>` : ''}
+                       </div>`
                     : `<div class="btn-row"><button class="btn btn-primary" onclick="buySoftcopyWithPolicy('${res.id}','${price}','${res.title.replace(/'/g, "")}','${res.uploader_id || ''}')"><i class="fa-solid fa-unlock"></i> Buy PDF</button>${res.is_hardcopy_available ? `<button class="btn btn-secondary" onclick="openOrderModal('${res.id}','${res.title.replace(/'/g, "")}','${res.hardcopy_price}')"><i class="fa-solid fa-truck"></i> Print</button>` : `<button class="btn btn-secondary" disabled>No Print</button>`}</div>`;
                 return `<div class="res-card">
                     ${res.is_hardcopy_available ? `<div class="hardcopy-badge">📖 Print Available</div>` : ''}
@@ -355,7 +534,7 @@
                         <div class="file-icon ${isImg ? 'doc' : 'pdf'}"><i class="fa-solid ${isImg ? 'fa-camera' : 'fa-file-pdf'}"></i></div>
                         <div><div class="res-title">${res.title}</div><span class="badge-level">${res.level}</span></div>
                     </div>
-                    <div class="res-price-tag ${isOwned ? 'paid' : ''}">₦${isOwned ? 'PAID ✓' : Number(price).toLocaleString()}</div>
+                    <div class="res-price-tag ${isOwned ? 'paid' : ''}">₦${hasActiveSub(res) ? 'SUBSCRIBED ✓' : isOwned ? 'PAID ✓' : Number(price).toLocaleString()}</div>
                     <div class="res-actions">${btns}</div>
                     ${isAdmin ? `<button style="background:none;border:none;color:var(--danger);margin-top:6px;font-size:0.7rem;align-self:flex-end;cursor:pointer;font-family:inherit;" onclick="deleteResource('${res.id}')">Delete</button>` : ''}
                 </div>`;
