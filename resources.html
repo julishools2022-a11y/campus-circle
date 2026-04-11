@@ -525,8 +525,7 @@
                 let btns = isOwned
                     ? `<div class="btn-row">
                         <button class="btn btn-success" onclick="openReader('${safeUrl}','${safeTitle}')"><i class="fa-solid fa-book-open"></i> Read Now</button>
-                        ${res.file_url && !isImg ? `<button class="btn btn-ai" onclick="openStudyCompanion('${safeUrl}','${safeTitle}')"><i class="fa-solid fa-robot"></i> Study AI</button>` : ''}
-                       </div>`
+                        ${res.file_url && !isImg ? 
                     : `<div class="btn-row"><button class="btn btn-primary" onclick="buySoftcopyWithPolicy('${res.id}','${price}','${res.title.replace(/'/g, "")}','${res.uploader_id || ''}')"><i class="fa-solid fa-unlock"></i> Buy PDF</button>${res.is_hardcopy_available ? `<button class="btn btn-secondary" onclick="openOrderModal('${res.id}','${res.title.replace(/'/g, "")}','${res.hardcopy_price}')"><i class="fa-solid fa-truck"></i> Print</button>` : `<button class="btn btn-secondary" disabled>No Print</button>`}</div>`;
                 return `<div class="res-card">
                     ${res.is_hardcopy_available ? `<div class="hardcopy-badge">📖 Print Available</div>` : ''}
