@@ -114,8 +114,6 @@
 
         .res-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
         .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .btn-ai { background: linear-gradient(135deg, #7c3aed, #9f5cf7); color: white; border: none; border-radius: 10px; padding: 10px; font-weight: 700; cursor: pointer; font-family: 'Outfit', sans-serif; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
-        .btn-ai:hover { opacity: 0.9; transform: translateY(-1px); }
 
         .btn { border: none; padding: 11px; border-radius: 10px; font-size: 0.88rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; text-decoration: none; font-family: inherit; transition: transform 0.1s, opacity 0.2s; }
         .btn:active { transform: scale(0.97); }
@@ -523,9 +521,7 @@
                 const safeUrl = encodeURIComponent(res.file_url);
                 const safeTitle = encodeURIComponent(res.title);
                 let btns = isOwned
-                    ? `<div class="btn-row">
-                        <button class="btn btn-success" onclick="openReader('${safeUrl}','${safeTitle}')"><i class="fa-solid fa-book-open"></i> Read Now</button>
-                        
+                    ? `<button class="btn btn-success" onclick="openReader('${safeUrl}','${safeTitle}')"><i class="fa-solid fa-book-open"></i> Read Now</button>`
                     : `<div class="btn-row"><button class="btn btn-primary" onclick="buySoftcopyWithPolicy('${res.id}','${price}','${res.title.replace(/'/g, "")}','${res.uploader_id || ''}')"><i class="fa-solid fa-unlock"></i> Buy PDF</button>${res.is_hardcopy_available ? `<button class="btn btn-secondary" onclick="openOrderModal('${res.id}','${res.title.replace(/'/g, "")}','${res.hardcopy_price}')"><i class="fa-solid fa-truck"></i> Print</button>` : `<button class="btn btn-secondary" disabled>No Print</button>`}</div>`;
                 return `<div class="res-card">
                     ${res.is_hardcopy_available ? `<div class="hardcopy-badge">📖 Print Available</div>` : ''}
@@ -659,11 +655,6 @@
             }
         }
 
-        function openStudyCompanion(safeUrl, safeTitle) {
-            const url = decodeURIComponent(safeUrl);
-            const title = decodeURIComponent(safeTitle);
-            window.location.href = `ai-study.html?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
-        }
 
         function closeViewer() { document.getElementById('fileViewer').classList.remove('open'); document.getElementById('viewer-container').innerHTML = ''; document.getElementById('page-info').innerText = ''; document.body.style.overflow = ''; }
 
