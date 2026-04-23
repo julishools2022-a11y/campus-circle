@@ -7,15 +7,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Campus Circle">
     <link rel="apple-touch-icon" href="icon-192.png">
-<!-- Replace generic site name -->
-<meta name="application-name" content="Campus Circle">
-<meta property="og:site_name" content="Campus Circle">
-<meta property="og:title" content="Campus Circle | Your Academic Success Partner">
-<meta property="og:description" content="Empower your academic journey. Access lecture notes, past questions and more.">
-<meta property="og:url" content="https://campuscircle.name.ng">
+    <title>Campus Circle | Your Academic Success Partner</title>
 
-<!-- For Google specifically -->
-<title>Campus Circle | Your Academic Success Partner</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -413,14 +406,109 @@
         img { background: transparent; }
     </style>
     <link rel="manifest" href="manifest.json">
-    <meta name="google-site-verification" content="92j8ye55S6ibLTNj7himk9b7p2Emt1CrR1W91gl4ce0" />
 </head>
 <body>
+    <!-- INTRO SPLASH ANIMATION -->
+    <div id="cc-splash" style="position:fixed;inset:0;z-index:99999;background:#0a1628;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <style>
+            #cc-splash { transition: opacity 0.5s ease; }
+
+            /* LOGO POP */
+            .splash-logo {
+                width: 90px; height: 90px; border-radius: 24px;
+                background: linear-gradient(135deg, #3d72b4, #5b9bd5);
+                display: flex; align-items: center; justify-content: center;
+                box-shadow: 0 0 0 0 rgba(61,114,180,0.6);
+                animation: logo-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.1s both,
+                           wave-pulse 2s ease-in-out 0.8s infinite;
+                margin-bottom: 24px;
+            }
+            .splash-logo img { width: 58px; height: 58px; object-fit: contain; }
+
+            /* POP IN: scale from 0 with elastic overshoot */
+            @keyframes logo-pop {
+                0%   { transform: scale(0);     opacity: 0; }
+                60%  { transform: scale(1.15);  opacity: 1; }
+                80%  { transform: scale(0.95);  opacity: 1; }
+                100% { transform: scale(1);     opacity: 1; }
+            }
+
+            /* WAVE PULSE: ripple rings expanding outward */
+            @keyframes wave-pulse {
+                0%   { box-shadow: 0 0 0 0 rgba(61,114,180,0.5), 0 0 0 0 rgba(100,181,246,0.3); }
+                50%  { box-shadow: 0 0 0 20px rgba(61,114,180,0), 0 0 0 40px rgba(100,181,246,0); }
+                100% { box-shadow: 0 0 0 0 rgba(61,114,180,0), 0 0 0 0 rgba(100,181,246,0); }
+            }
+
+            /* LETTERS WAVE IN one by one */
+            .splash-letters { display: flex; align-items: center; gap: 0; }
+            .splash-letter {
+                font-family: 'Outfit', sans-serif;
+                font-size: 2rem; font-weight: 900;
+                color: #e2eaf4; letter-spacing: -0.5px;
+                opacity: 0;
+                display: inline-block;
+                animation: letter-wave 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+            }
+            .splash-letter.blue { color: #64b5f6; }
+
+            @keyframes letter-wave {
+                0%   { transform: translateY(20px) scale(0.5); opacity: 0; }
+                60%  { transform: translateY(-6px) scale(1.1); opacity: 1; }
+                100% { transform: translateY(0) scale(1); opacity: 1; }
+            }
+
+            .splash-tagline {
+                font-family: 'Outfit', sans-serif;
+                font-size: 0.82rem; color: #7a9cc0;
+                margin-top: 10px;
+                opacity: 0;
+                animation: fade-up 0.5s ease 1.2s forwards;
+            }
+            @keyframes fade-up {
+                from { opacity:0; transform: translateY(8px); }
+                to   { opacity:1; transform: translateY(0); }
+            }
+        </style>
+
+        <div class="splash-logo">
+            <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png"
+                 onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:2.5rem>📚</span>';">
+        </div>
+
+        <div class="splash-letters" id="splash-letters"></div>
+        <div class="splash-tagline">Your Academic Marketplace</div>
+    </div>
+
+    <script>
+        (function() {
+            var name = "CampusCircle";
+            var blue = [6,7,8,9,10,11]; // "Circle" letters index
+            var container = document.getElementById('splash-letters');
+            name.split('').forEach(function(ch, i) {
+                var span = document.createElement('span');
+                span.className = 'splash-letter' + (blue.indexOf(i) > -1 ? ' blue' : '');
+                span.textContent = ch;
+                span.style.animationDelay = (0.5 + i * 0.06) + 's';
+                container.appendChild(span);
+            });
+
+            window.addEventListener('load', function() {
+                setTimeout(function() {
+                    var s = document.getElementById('cc-splash');
+                    if (s) {
+                        s.style.opacity = '0';
+                        setTimeout(function() { s.remove(); }, 500);
+                    }
+                }, 2200);
+            });
+        })();
+    </script>
 
     <!-- HEADER -->
     <header class="header">
         <div class="logo-container" onclick="window.location.reload()">
-            <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png" alt="Campus Circle Logo" class="brand-logo">
+            <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000387646-removebg-preview.png" alt="Campus Circle Logo" class="brand-logo">
             <span class="logo-text">Campus <span>Circle</span></span>
         </div>
 
@@ -583,7 +671,7 @@
         <div class="footer-grid">
             <div class="footer-col">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
-                    <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png" style="height:38px;">
+                    <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000387646-removebg-preview.png" style="height:38px;">
                     <span style="font-weight:900;font-size:1rem;color:var(--text);">Campus Circle</span>
                 </div>
                 <p style="font-size:0.87rem;line-height:1.7;color:var(--text-muted);">Empowering UNIZIK students with accessible resources and technology for academic excellence.</p>
@@ -617,7 +705,7 @@
             <div class="close-gate" onclick="closeGatekeeper()">✕</div>
             <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png" class="gate-img" alt="Logo">
             <h3 class="gate-title">Join to Continue</h3>
-            <p class="gate-sub">Unlock unlimited access to lecture notes, past questions, and study tools.</p>
+            <p class="gate-sub">Unlock unlimited access to lecture notes, past questions, and study tools. It's free and takes less than a minute.</p>
             <a href="signin.html" class="gate-btn-primary">Sign Up for Free 🚀</a>
             <a href="Login.html" class="gate-btn-secondary">Already have an account? Log In</a>
         </div>
