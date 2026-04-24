@@ -408,100 +408,130 @@
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <!-- INTRO SPLASH ANIMATION -->
-    <div id="cc-splash" style="position:fixed;inset:0;z-index:99999;background:#0a1628;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <style>
-            #cc-splash { transition: opacity 0.6s ease; }
-            .splash-logo {
-                width: 90px; height: 90px; border-radius: 24px;
-                background: linear-gradient(135deg, #3d72b4, #5b9bd5);
-                display: flex; align-items: center; justify-content: center;
-                box-shadow: 0 0 0 0 rgba(61,114,180,0.6);
-                animation: logo-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.2s both,
-                           wave-pulse 2s ease-in-out 1s infinite;
-                margin-bottom: 24px;
-            }
-            .splash-logo img { width: 58px; height: 58px; object-fit: contain; }
-            @keyframes logo-pop {
-                0%   { transform: scale(0); opacity: 0; }
-                60%  { transform: scale(1.15); opacity: 1; }
-                80%  { transform: scale(0.95); opacity: 1; }
-                100% { transform: scale(1); opacity: 1; }
-            }
-            @keyframes wave-pulse {
-                0%   { box-shadow: 0 0 0 0 rgba(61,114,180,0.5), 0 0 0 0 rgba(100,181,246,0.3); }
-                50%  { box-shadow: 0 0 0 20px rgba(61,114,180,0), 0 0 0 40px rgba(100,181,246,0); }
-                100% { box-shadow: 0 0 0 0 rgba(61,114,180,0), 0 0 0 0 rgba(100,181,246,0); }
-            }
-            .splash-letters { display: flex; align-items: center; }
-            .splash-letter {
-                font-family: 'Outfit', sans-serif;
-                font-size: 2rem; font-weight: 900;
-                color: #e2eaf4; letter-spacing: -0.5px;
-                opacity: 0; display: inline-block;
-                animation: letter-wave 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
-            }
-            .splash-letter.blue { color: #64b5f6; }
-            @keyframes letter-wave {
-                0%   { transform: translateY(20px) scale(0.5); opacity: 0; }
-                60%  { transform: translateY(-6px) scale(1.1); opacity: 1; }
-                100% { transform: translateY(0) scale(1); opacity: 1; }
-            }
-            .splash-tagline {
-                font-family: 'Outfit', sans-serif;
-                font-size: 0.82rem; color: #7a9cc0; margin-top: 10px;
-                opacity: 0;
-                animation: fade-up 0.5s ease 1.4s forwards;
-            }
-            @keyframes fade-up {
-                from { opacity:0; transform: translateY(8px); }
-                to   { opacity:1; transform: translateY(0); }
-            }
-        </style>
+    <!-- INTRO SPLASH -->
+    <style>
+        #cc-splash {
+            position: fixed; inset: 0; z-index: 99999;
+            background: #0a1628;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            opacity: 1;
+            transition: opacity 0.7s ease;
+        }
+        #cc-splash.hide { opacity: 0; pointer-events: none; }
 
-        <div class="splash-logo">
-            <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png"
-                 onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:2.5rem>📚</span>';">
+        .s-logo {
+            width: 88px; height: 88px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, #3d72b4, #64b5f6);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.6rem;
+            margin-bottom: 22px;
+            animation: s-pop 0.7s cubic-bezier(0.34,1.8,0.64,1) 0.1s both;
+        }
+        .s-logo img { width: 60px; height: 60px; object-fit: contain; }
+
+        @keyframes s-pop {
+            0%   { transform: scale(0) rotate(-10deg); opacity: 0; }
+            70%  { transform: scale(1.2) rotate(3deg); opacity: 1; }
+            85%  { transform: scale(0.92) rotate(-1deg); }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .s-wave {
+            display: flex;
+            gap: 0px;
+        }
+        .s-wave span {
+            display: inline-block;
+            font-size: 1.9rem;
+            font-weight: 900;
+            font-family: Arial, sans-serif;
+            color: #e2eaf4;
+            opacity: 0;
+            animation: s-letter 0.45s cubic-bezier(0.34,1.7,0.64,1) both;
+        }
+        .s-wave span.b { color: #64b5f6; }
+
+        @keyframes s-letter {
+            0%   { transform: translateY(25px) scale(0.4); opacity: 0; }
+            65%  { transform: translateY(-7px) scale(1.1); opacity: 1; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        .s-sub {
+            font-family: Arial, sans-serif;
+            font-size: 0.8rem;
+            color: #7a9cc0;
+            margin-top: 10px;
+            opacity: 0;
+            animation: s-fade 0.5s ease 1.6s forwards;
+        }
+
+        /* wave rings */
+        .s-ring {
+            position: absolute;
+            width: 88px; height: 88px;
+            border-radius: 22px;
+            border: 2px solid rgba(100,181,246,0.4);
+            animation: s-ring 1.8s ease-out 0.8s infinite;
+        }
+        .s-ring2 {
+            position: absolute;
+            width: 88px; height: 88px;
+            border-radius: 22px;
+            border: 2px solid rgba(61,114,180,0.3);
+            animation: s-ring 1.8s ease-out 1.1s infinite;
+        }
+        @keyframes s-ring {
+            0%   { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+
+        @keyframes s-fade {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+
+    <div id="cc-splash">
+        <div style="position:relative; display:flex; align-items:center; justify-content:center; margin-bottom:22px;">
+            <div class="s-ring"></div>
+            <div class="s-ring2"></div>
+            <div class="s-logo">
+                <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png"
+                     onerror="this.outerHTML='📚'">
+            </div>
         </div>
-        <div class="splash-letters" id="splash-letters"></div>
-        <div class="splash-tagline">Your Academic Marketplace</div>
+        <div class="s-wave" id="s-wave"></div>
+        <div class="s-sub">Your Academic Marketplace</div>
     </div>
 
     <script>
-        // Force show on every reload — clear any cached state
-        document.getElementById('cc-splash').style.display = 'flex';
-        document.getElementById('cc-splash').style.opacity = '1';
-
-        // Build letters immediately — don't wait for anything
-        (function() {
-            var name = "CampusCircle";
-            var blueStart = 6; // "Circle" starts at index 6
-            var container = document.getElementById('splash-letters');
-            if (!container) return;
-            name.split('').forEach(function(ch, i) {
-                var span = document.createElement('span');
-                span.className = 'splash-letter' + (i >= blueStart ? ' blue' : '');
-                span.textContent = ch;
-                span.style.animationDelay = (0.6 + i * 0.07) + 's';
-                container.appendChild(span);
+        (function(){
+            var letters = "CampusCircle".split("");
+            var wave = document.getElementById("s-wave");
+            letters.forEach(function(ch, i){
+                var s = document.createElement("span");
+                s.textContent = ch;
+                if(i >= 6) s.className = "b";
+                s.style.animationDelay = (0.5 + i * 0.07) + "s";
+                wave.appendChild(s);
             });
 
-            // Use setTimeout instead of window.load — more reliable on live servers
-            function hideSplash() {
-                var s = document.getElementById('cc-splash');
-                if (s) {
-                    s.style.opacity = '0';
-                    setTimeout(function() { if (s.parentNode) s.remove(); }, 600);
-                }
+            function hide(){
+                var el = document.getElementById("cc-splash");
+                if(el){ el.classList.add("hide"); setTimeout(function(){ if(el.parentNode) el.remove(); }, 700); }
             }
 
-            // Hide after 2.5s regardless of load state
-            var timer = setTimeout(hideSplash, 2500);
+            // Always show for at least 2.5s
+            var gone = false;
+            var minTimer = setTimeout(function(){
+                gone = true; hide();
+            }, 2500);
 
-            // Or hide when page is fully loaded, whichever is LATER
-            window.addEventListener('load', function() {
-                clearTimeout(timer);
-                setTimeout(hideSplash, 1800);
+            window.addEventListener("load", function(){
+                if(!gone){ clearTimeout(minTimer); setTimeout(hide, 2000); }
             });
         })();
     </script>
