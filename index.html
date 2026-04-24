@@ -411,59 +411,47 @@
     <!-- INTRO SPLASH ANIMATION -->
     <div id="cc-splash" style="position:fixed;inset:0;z-index:99999;background:#0a1628;display:flex;flex-direction:column;align-items:center;justify-content:center;">
         <style>
-            #cc-splash { transition: opacity 0.5s ease; }
-
-            /* LOGO POP */
+            #cc-splash { transition: opacity 0.6s ease; }
             .splash-logo {
                 width: 90px; height: 90px; border-radius: 24px;
                 background: linear-gradient(135deg, #3d72b4, #5b9bd5);
                 display: flex; align-items: center; justify-content: center;
                 box-shadow: 0 0 0 0 rgba(61,114,180,0.6);
-                animation: logo-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.1s both,
-                           wave-pulse 2s ease-in-out 0.8s infinite;
+                animation: logo-pop 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.2s both,
+                           wave-pulse 2s ease-in-out 1s infinite;
                 margin-bottom: 24px;
             }
             .splash-logo img { width: 58px; height: 58px; object-fit: contain; }
-
-            /* POP IN: scale from 0 with elastic overshoot */
             @keyframes logo-pop {
-                0%   { transform: scale(0);     opacity: 0; }
-                60%  { transform: scale(1.15);  opacity: 1; }
-                80%  { transform: scale(0.95);  opacity: 1; }
-                100% { transform: scale(1);     opacity: 1; }
+                0%   { transform: scale(0); opacity: 0; }
+                60%  { transform: scale(1.15); opacity: 1; }
+                80%  { transform: scale(0.95); opacity: 1; }
+                100% { transform: scale(1); opacity: 1; }
             }
-
-            /* WAVE PULSE: ripple rings expanding outward */
             @keyframes wave-pulse {
                 0%   { box-shadow: 0 0 0 0 rgba(61,114,180,0.5), 0 0 0 0 rgba(100,181,246,0.3); }
                 50%  { box-shadow: 0 0 0 20px rgba(61,114,180,0), 0 0 0 40px rgba(100,181,246,0); }
                 100% { box-shadow: 0 0 0 0 rgba(61,114,180,0), 0 0 0 0 rgba(100,181,246,0); }
             }
-
-            /* LETTERS WAVE IN one by one */
-            .splash-letters { display: flex; align-items: center; gap: 0; }
+            .splash-letters { display: flex; align-items: center; }
             .splash-letter {
                 font-family: 'Outfit', sans-serif;
                 font-size: 2rem; font-weight: 900;
                 color: #e2eaf4; letter-spacing: -0.5px;
-                opacity: 0;
-                display: inline-block;
+                opacity: 0; display: inline-block;
                 animation: letter-wave 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
             }
             .splash-letter.blue { color: #64b5f6; }
-
             @keyframes letter-wave {
                 0%   { transform: translateY(20px) scale(0.5); opacity: 0; }
                 60%  { transform: translateY(-6px) scale(1.1); opacity: 1; }
                 100% { transform: translateY(0) scale(1); opacity: 1; }
             }
-
             .splash-tagline {
                 font-family: 'Outfit', sans-serif;
-                font-size: 0.82rem; color: #7a9cc0;
-                margin-top: 10px;
+                font-size: 0.82rem; color: #7a9cc0; margin-top: 10px;
                 opacity: 0;
-                animation: fade-up 0.5s ease 1.2s forwards;
+                animation: fade-up 0.5s ease 1.4s forwards;
             }
             @keyframes fade-up {
                 from { opacity:0; transform: translateY(8px); }
@@ -475,32 +463,45 @@
             <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png"
                  onerror="this.style.display='none';this.parentElement.innerHTML='<span style=font-size:2.5rem>📚</span>';">
         </div>
-
         <div class="splash-letters" id="splash-letters"></div>
         <div class="splash-tagline">Your Academic Marketplace</div>
     </div>
 
     <script>
+        // Force show on every reload — clear any cached state
+        document.getElementById('cc-splash').style.display = 'flex';
+        document.getElementById('cc-splash').style.opacity = '1';
+
+        // Build letters immediately — don't wait for anything
         (function() {
             var name = "CampusCircle";
-            var blue = [6,7,8,9,10,11]; // "Circle" letters index
+            var blueStart = 6; // "Circle" starts at index 6
             var container = document.getElementById('splash-letters');
+            if (!container) return;
             name.split('').forEach(function(ch, i) {
                 var span = document.createElement('span');
-                span.className = 'splash-letter' + (blue.indexOf(i) > -1 ? ' blue' : '');
+                span.className = 'splash-letter' + (i >= blueStart ? ' blue' : '');
                 span.textContent = ch;
-                span.style.animationDelay = (0.5 + i * 0.06) + 's';
+                span.style.animationDelay = (0.6 + i * 0.07) + 's';
                 container.appendChild(span);
             });
 
+            // Use setTimeout instead of window.load — more reliable on live servers
+            function hideSplash() {
+                var s = document.getElementById('cc-splash');
+                if (s) {
+                    s.style.opacity = '0';
+                    setTimeout(function() { if (s.parentNode) s.remove(); }, 600);
+                }
+            }
+
+            // Hide after 2.5s regardless of load state
+            var timer = setTimeout(hideSplash, 2500);
+
+            // Or hide when page is fully loaded, whichever is LATER
             window.addEventListener('load', function() {
-                setTimeout(function() {
-                    var s = document.getElementById('cc-splash');
-                    if (s) {
-                        s.style.opacity = '0';
-                        setTimeout(function() { s.remove(); }, 500);
-                    }
-                }, 2200);
+                clearTimeout(timer);
+                setTimeout(hideSplash, 1800);
             });
         })();
     </script>
