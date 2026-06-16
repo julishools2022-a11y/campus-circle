@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login | Campus Circle E-Voting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root{--bg:#0a1628;--surface:#112236;--surface2:#1a2f4a;--primary:#3d72b4;--primary-bright:#5b9bd5;--accent:#64b5f6;--text:#e2eaf4;--muted:#7a9cc0;--border:rgba(61,114,180,0.2);--success:#22c55e;--danger:#ef4444;}
+        *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+        body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+
+        .login-card{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:32px 24px;max-width:400px;width:100%;}
+
+        .logo-wrap{text-align:center;margin-bottom:24px;}
+        .logo-icon{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--primary),var(--primary-bright));display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 14px;box-shadow:0 8px 24px rgba(61,114,180,0.35);}
+        h1{font-size:1.4rem;font-weight:800;text-align:center;margin-bottom:6px;}
+        h1 span{color:var(--accent);}
+        .subtitle{text-align:center;color:var(--muted);font-size:0.85rem;margin-bottom:28px;line-height:1.5;}
+
+        .step{display:none;}
+        .step.active{display:block;animation:fadeIn 0.3s ease;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+        .form-group{margin-bottom:16px;}
+        .form-group label{display:block;font-size:0.8rem;font-weight:600;color:var(--muted);margin-bottom:6px;}
+        input{width:100%;padding:13px 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Outfit',sans-serif;font-size:0.95rem;transition:0.2s;letter-spacing:0.5px;}
+        input:focus{border-color:var(--primary);outline:none;}
+        input::placeholder{color:var(--muted);letter-spacing:normal;}
+
+        .otp-input{text-align:center;font-size:1.6rem;font-weight:800;letter-spacing:10px;padding:14px;}
+
+        .password-wrap{position:relative;}
+        .password-toggle{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);cursor:pointer;font-size:0.9rem;}
+
+        .btn-primary{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--primary-bright));color:white;font-weight:700;font-size:0.95rem;cursor:pointer;font-family:'Outfit',sans-serif;box-shadow:0 4px 14px rgba(61,114,180,0.3);display:flex;align-items:center;justify-content:center;gap:8px;}
+        .btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
+
+        .btn-link{width:100%;background:none;border:none;color:var(--accent);font-size:0.82rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;text-align:center;margin-top:14px;}
+
+        .info-box{background:rgba(61,114,180,0.08);border:1px solid rgba(61,114,180,0.2);border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:0.8rem;color:var(--muted);line-height:1.5;}
+        .info-box i{color:var(--accent);margin-right:6px;}
+        .info-box strong{color:var(--text);}
+
+        .resend-row{text-align:center;margin-top:14px;font-size:0.82rem;color:var(--muted);}
+        .resend-row span{color:var(--accent);font-weight:700;cursor:pointer;}
+        .resend-row span.disabled{color:var(--muted);cursor:default;}
+
+        .back-link{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:0.82rem;margin-bottom:18px;cursor:pointer;font-weight:600;}
+
+        #error-box{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:0.82rem;color:var(--danger);display:none;align-items:flex-start;gap:8px;line-height:1.5;}
+        #error-box.show{display:flex;}
+
+        .pw-rules{font-size:0.75rem;color:var(--muted);margin-top:-8px;margin-bottom:14px;line-height:1.5;}
+        .pw-rules .ok{color:var(--success);}
+
+        .footer-note{text-align:center;margin-top:24px;font-size:0.75rem;color:var(--muted);line-height:1.6;}
+
+        .spinner-center{text-align:center;padding:30px 0;}
+        .spinner{width:28px;height:28px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+    <div class="logo-wrap">
+        <div class="logo-icon">🗳️</div>
+        <h1>Campus<span>Circle</span> E-Voting</h1>
+        <div class="subtitle">Secure online elections for Departmental, Faculty &amp; SUG positions</div>
+    </div>
+
+    <div id="error-box"><i class="fa-solid fa-circle-exclamation"></i><span id="error-text"></span></div>
+
+    <!-- STEP 0: CHECKING MATRIC -->
+    <div class="step active" id="step-matric">
+        <div class="info-box">
+            <i class="fa-solid fa-id-card"></i>
+            Enter your matric number to log in or activate your account.
+        </div>
+        <div class="form-group">
+            <label>Matric Number</label>
+            <input id="matric-input" placeholder="e.g. 2023/SE/001" autocomplete="off" autocapitalize="characters">
+        </div>
+        <button class="btn-primary" id="btn-check-matric" onclick="checkMatric()">
+            <i class="fa-solid fa-arrow-right"></i> Continue
+        </button>
+    </div>
+
+    <!-- STEP A: RETURNING USER — PASSWORD LOGIN -->
+    <div class="step" id="step-password">
+        <div class="back-link" onclick="goToStep('matric')"><i class="fa-solid fa-arrow-left"></i> Use a different matric number</div>
+        <div class="info-box">
+            <i class="fa-solid fa-user-check"></i>
+            Welcome back, <strong id="welcome-name">-</strong>. Enter your password to continue.
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <div class="password-wrap">
+                <input id="password-input" type="password" placeholder="Your password" autocomplete="current-password">
+                <i class="fa-solid fa-eye password-toggle" onclick="togglePassword('password-input', this)"></i>
+            </div>
+        </div>
+        <button class="btn-primary" id="btn-login" onclick="loginWithPassword()">
+            <i class="fa-solid fa-right-to-bracket"></i> Log In
+        </button>
+        <button class="btn-link" onclick="startForgotPassword()">Forgot password?</button>
+    </div>
+
+    <!-- STEP B: NEW USER — OTP VERIFICATION -->
+    <div class="step" id="step-otp">
+        <div class="back-link" onclick="goToStep('matric')"><i class="fa-solid fa-arrow-left"></i> Change matric number</div>
+        <div class="info-box" id="otp-info-box">
+            <i class="fa-solid fa-envelope-circle-check"></i>
+            We sent a 6-digit code to <strong id="masked-email">-</strong>. Enter it below to continue.
+        </div>
+        <div class="form-group">
+            <label>Verification Code</label>
+            <input id="otp-input" class="otp-input" placeholder="------" maxlength="6" inputmode="numeric" autocomplete="off">
+        </div>
+        <button class="btn-primary" id="btn-verify-otp" onclick="verifyOtp()">
+            <i class="fa-solid fa-check"></i> Verify Code
+        </button>
+        <div class="resend-row">
+            Didn't get a code? <span id="resend-btn" onclick="resendOtp()">Resend</span>
+            <span id="resend-timer" style="display:none;"></span>
+        </div>
+    </div>
+
+    <!-- STEP C: SET PASSWORD (activation or reset) -->
+    <div class="step" id="step-setpw">
+        <div class="info-box">
+            <i class="fa-solid fa-lock"></i>
+            <span id="setpw-info">Create a password for your voting account. You'll use your matric number + this password to log in next time — no more codes needed.</span>
+        </div>
+        <div class="form-group">
+            <label>New Password</label>
+            <div class="password-wrap">
+                <input id="newpw-input" type="password" placeholder="Minimum 8 characters" autocomplete="new-password" oninput="checkPwStrength()">
+                <i class="fa-solid fa-eye password-toggle" onclick="togglePassword('newpw-input', this)"></i>
+            </div>
+        </div>
+        <div class="pw-rules" id="pw-rules">At least 8 characters</div>
+        <div class="form-group">
+            <label>Confirm Password</label>
+            <div class="password-wrap">
+                <input id="confirmpw-input" type="password" placeholder="Re-enter password" autocomplete="new-password">
+                <i class="fa-solid fa-eye password-toggle" onclick="togglePassword('confirmpw-input', this)"></i>
+            </div>
+        </div>
+        <button class="btn-primary" id="btn-set-password" onclick="setPassword()">
+            <i class="fa-solid fa-shield-halved"></i> Set Password &amp; Continue
+        </button>
+    </div>
+
+    <!-- LOADING / FINAL STATE -->
+    <div class="step" id="step-loading">
+        <div class="spinner-center"><div class="spinner"></div></div>
+    </div>
+
+    <div class="footer-note">
+        Having trouble logging in? Contact your department's election admin or the SUG electoral committee.
+    </div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBOHwOgJn80vtEyhy70D0VP4z6cAYgEsu8",
+        authDomain: "campuscircle-49461.firebaseapp.com",
+        projectId: "campuscircle-49461",
+        storageBucket: "campuscircle-49461.firebasestorage.app",
+        messagingSenderId: "920560772166",
+        appId: "1:920560772166:web:e53d6a3c22fbd56b4c5647"
+    };
+
+    const SEND_OTP_URL = "https://nijjgpgxdhsrtftuqcoy.supabase.co/functions/v1/send-otp";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g";
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    // ── STATE ────────────────────────────────────────────────────────────────
+    let currentMatric = null;   // sanitized doc id (slashes -> dashes)
+    let currentStudent = null;  // full student record
+    let otpPurpose = 'activation'; // 'activation' | 'reset'
+    let resendTimerInterval = null;
+
+    // ── HELPERS ──────────────────────────────────────────────────────────────
+    function showError(msg) {
+        document.getElementById('error-text').textContent = msg;
+        document.getElementById('error-box').classList.add('show');
+    }
+    function hideError() {
+        document.getElementById('error-box').classList.remove('show');
+    }
+    function goToStep(step) {
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById(`step-${step}`).classList.add('active');
+        hideError();
+    }
+    window.goToStep = goToStep;
+
+    function sanitizeMatric(m) {
+        return m.trim().toUpperCase().replace(/\s+/g, '');
+    }
+    function maskEmail(email) {
+        const [user, domain] = email.split('@');
+        if (user.length <= 2) return `${user[0]}***@${domain}`;
+        return `${user.slice(0,2)}${'*'.repeat(Math.max(user.length-2,3))}@${domain}`;
+    }
+    function generateOtp() {
+        return Math.floor(100000 + Math.random() * 900000).toString();
+    }
+    window.togglePassword = function(id, iconEl) {
+        const input = document.getElementById(id);
+        if (input.type === 'password') { input.type = 'text'; iconEl.classList.replace('fa-eye','fa-eye-slash'); }
+        else { input.type = 'password'; iconEl.classList.replace('fa-eye-slash','fa-eye'); }
+    };
+
+    // ── STEP 1: CHECK MATRIC ─────────────────────────────────────────────────
+    window.checkMatric = async function() {
+        hideError();
+        const raw = document.getElementById('matric-input').value;
+        const matric = sanitizeMatric(raw);
+        if (!matric) { showError('Please enter your matric number.'); return; }
+
+        const btn = document.getElementById('btn-check-matric');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Checking...';
+
+        try {
+            const docId = matric.replace(/\//g, '-');
+            const studentRef = doc(db, 'students', docId);
+            const studentSnap = await getDoc(studentRef);
+
+            if (!studentSnap.exists()) {
+                showError('Matric number not found. Please check and try again, or contact your election admin.');
+                return;
+            }
+
+            currentMatric = docId;
+            currentStudent = studentSnap.data();
+
+            if (currentStudent.isActivated) {
+                document.getElementById('welcome-name').textContent = currentStudent.fullName || matric;
+                goToStep('password');
+            } else {
+                otpPurpose = 'activation';
+                await sendOtpEmail();
+            }
+
+        } catch (e) {
+            console.error(e);
+            showError('Something went wrong. Please try again.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-arrow-right"></i> Continue';
+        }
+    };
+
+    // ── SEND OTP (activation or reset) ──────────────────────────────────────
+    async function sendOtpEmail() {
+        const otpCode = generateOtp();
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+        await setDoc(doc(db, 'otpRequests', currentMatric), {
+            matricNumber: currentStudent.matricNumber,
+            otpCode,
+            email: currentStudent.schoolEmail,
+            purpose: otpPurpose,
+            expiresAt,
+            attempts: 0,
+            createdAt: serverTimestamp()
+        });
+
+        try {
+            const resp = await fetch(SEND_OTP_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                },
+                body: JSON.stringify({
+                    email: currentStudent.schoolEmail,
+                    otp: otpCode,
+                    fullName: currentStudent.fullName,
+                    purpose: otpPurpose
+                })
+            });
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                console.error('send-otp failed:', err);
+                showError('Could not send verification email. Please try again or contact an admin.');
+                return;
+            }
+        } catch (e) {
+            console.error('send-otp request error:', e);
+            showError('Could not reach the email service. Please check your connection and try again.');
+            return;
+        }
+
+        const masked = maskEmail(currentStudent.schoolEmail);
+        document.getElementById('masked-email').textContent = masked;
+
+        const infoBox = document.getElementById('otp-info-box');
+        if (otpPurpose === 'reset') {
+            infoBox.innerHTML = `<i class="fa-solid fa-key"></i> Password reset code sent to <strong>${masked}</strong>.`;
+        } else {
+            infoBox.innerHTML = `<i class="fa-solid fa-envelope-circle-check"></i> Welcome! We sent a 6-digit activation code to <strong>${masked}</strong>.`;
+        }
+
+        goToStep('otp');
+        startResendTimer();
+    }
+
+    // ── STEP 2: VERIFY OTP ───────────────────────────────────────────────────
+    window.verifyOtp = async function() {
+        hideError();
+        const code = document.getElementById('otp-input').value.trim();
+        if (code.length !== 6) { showError('Enter the 6-digit code sent to your email.'); return; }
+        if (!currentMatric) { showError('Session expired. Please start again.'); goToStep('matric'); return; }
+
+        const btn = document.getElementById('btn-verify-otp');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Verifying...';
+
+        try {
+            const otpRef = doc(db, 'otpRequests', currentMatric);
+            const otpSnap = await getDoc(otpRef);
+
+            if (!otpSnap.exists()) { showError('Code expired. Please request a new one.'); return; }
+
+            const otpData = otpSnap.data();
+            const expiresAt = otpData.expiresAt?.toDate ? otpData.expiresAt.toDate() : new Date(otpData.expiresAt);
+
+            if (new Date() > expiresAt) { showError('Code expired. Please request a new one.'); return; }
+            if (otpData.attempts >= 5) { showError('Too many attempts. Please request a new code.'); return; }
+            if (otpData.otpCode !== code) {
+                await setDoc(otpRef, { ...otpData, attempts: (otpData.attempts || 0) + 1 }, { merge: true });
+                showError('Incorrect code. Please try again.');
+                return;
+            }
+
+            const setpwInfo = document.getElementById('setpw-info');
+            setpwInfo.textContent = otpPurpose === 'reset'
+                ? 'Code verified! Set a new password for your voting account.'
+                : "Create a password for your voting account. You'll use your matric number + this password to log in next time — no more codes needed.";
+
+            goToStep('setpw');
+
+        } catch (e) {
+            console.error(e);
+            showError('Something went wrong. Please try again.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Verify Code';
+        }
+    };
+
+    // ── RESEND OTP ───────────────────────────────────────────────────────────
+    window.resendOtp = async function() {
+        if (!currentMatric) return;
+        const resendBtn = document.getElementById('resend-btn');
+        if (resendBtn.classList.contains('disabled')) return;
+        await sendOtpEmail();
+    };
+
+    function startResendTimer() {
+        let seconds = 60;
+        const resendBtn = document.getElementById('resend-btn');
+        const timerEl = document.getElementById('resend-timer');
+        resendBtn.classList.add('disabled');
+        resendBtn.style.display = 'none';
+        timerEl.style.display = 'inline';
+
+        if (resendTimerInterval) clearInterval(resendTimerInterval);
+        resendTimerInterval = setInterval(() => {
+            seconds--;
+            timerEl.textContent = `(${seconds}s)`;
+            if (seconds <= 0) {
+                clearInterval(resendTimerInterval);
+                resendBtn.classList.remove('disabled');
+                resendBtn.style.display = 'inline';
+                timerEl.style.display = 'none';
+            }
+        }, 1000);
+    }
+
+    // ── PASSWORD STRENGTH CHECK ─────────────────────────────────────────────
+    window.checkPwStrength = function() {
+        const pw = document.getElementById('newpw-input').value;
+        const rules = document.getElementById('pw-rules');
+        if (pw.length >= 8) {
+            rules.innerHTML = '<span class="ok"><i class="fa-solid fa-check"></i> At least 8 characters</span>';
+        } else {
+            rules.textContent = 'At least 8 characters';
+        }
+    };
+
+    // ── STEP 3: SET PASSWORD ─────────────────────────────────────────────────
+    window.setPassword = async function() {
+        hideError();
+        const pw = document.getElementById('newpw-input').value;
+        const confirmPw = document.getElementById('confirmpw-input').value;
+
+        if (pw.length < 8) { showError('Password must be at least 8 characters.'); return; }
+        if (pw !== confirmPw) { showError('Passwords do not match.'); return; }
+        if (!currentMatric || !currentStudent) { showError('Session expired. Please start again.'); goToStep('matric'); return; }
+
+        const btn = document.getElementById('btn-set-password');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Setting up your account...';
+
+        try {
+            const email = currentStudent.schoolEmail;
+
+            if (otpPurpose === 'reset') {
+                // Identity already verified via OTP. Firebase client SDK can't directly
+                // overwrite another auth user's password, so we trigger Firebase's
+                // official reset-link email as the final step.
+                await sendPasswordResetEmail(auth, email);
+                goToStep('loading');
+                document.getElementById('step-loading').innerHTML = `
+                    <div style="text-align:center;padding:10px 0;">
+                        <i class="fa-solid fa-envelope-circle-check" style="font-size:2.2rem;color:var(--accent);display:block;margin-bottom:14px;"></i>
+                        <h3 style="font-size:1rem;font-weight:800;margin-bottom:8px;">Check your email</h3>
+                        <p style="font-size:0.85rem;color:var(--muted);line-height:1.6;margin-bottom:18px;">
+                            We've sent a secure password reset link to <strong style="color:var(--text)">${maskEmail(email)}</strong>.
+                            Open it from your school email to finish resetting your password, then come back here to log in.
+                        </p>
+                        <button class="btn-primary" onclick="location.reload()"><i class="fa-solid fa-arrow-left"></i> Back to Login</button>
+                    </div>`;
+                await deleteDoc(doc(db, 'otpRequests', currentMatric));
+                return;
+            }
+
+            // ACTIVATION: create the Firebase Auth account
+            const cred = await createUserWithEmailAndPassword(auth, email, pw);
+            const uid = cred.user.uid;
+
+            await setDoc(doc(db, 'students', currentMatric), {
+                authUid: uid,
+                isActivated: true,
+                activatedAt: serverTimestamp()
+            }, { merge: true });
+
+            await setDoc(doc(db, 'authBindings', uid), { matric: currentMatric }, { merge: true });
+
+            await deleteDoc(doc(db, 'otpRequests', currentMatric));
+
+            redirectAfterAuth(currentStudent.isAdmin);
+
+        } catch (e) {
+            console.error(e);
+            if (e.code === 'auth/email-already-in-use') {
+                showError('This email is already registered. Try logging in with your password instead, or use "Forgot password".');
+            } else if (e.code === 'auth/weak-password') {
+                showError('Password is too weak. Use at least 8 characters.');
+            } else {
+                showError('Something went wrong: ' + e.message);
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-shield-halved"></i> Set Password &amp; Continue';
+        }
+    };
+
+    // ── RETURNING USER: PASSWORD LOGIN ───────────────────────────────────────
+    window.loginWithPassword = async function() {
+        hideError();
+        const pw = document.getElementById('password-input').value;
+        if (!pw) { showError('Enter your password.'); return; }
+        if (!currentStudent) { showError('Session expired. Please start again.'); goToStep('matric'); return; }
+
+        const btn = document.getElementById('btn-login');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Logging in...';
+
+        try {
+            await signInWithEmailAndPassword(auth, currentStudent.schoolEmail, pw);
+            redirectAfterAuth(currentStudent.isAdmin);
+        } catch (e) {
+            console.error(e);
+            if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') {
+                showError('Incorrect password. Try again or use "Forgot password".');
+            } else if (e.code === 'auth/too-many-requests') {
+                showError('Too many attempts. Please wait a moment and try again.');
+            } else {
+                showError('Login failed: ' + e.message);
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Log In';
+        }
+    };
+
+    // ── FORGOT PASSWORD ──────────────────────────────────────────────────────
+    window.startForgotPassword = async function() {
+        hideError();
+        if (!currentStudent) { showError('Session expired. Please start again.'); goToStep('matric'); return; }
+        otpPurpose = 'reset';
+        await sendOtpEmail();
+    };
+
+    // ── REDIRECT ─────────────────────────────────────────────────────────────
+    function redirectAfterAuth(isAdmin) {
+        sessionStorage.setItem('voterMatric', currentMatric);
+        sessionStorage.setItem('voterEmail', currentStudent.schoolEmail);
+        if (isAdmin) {
+            window.location.href = 'admin-dashboard.html';
+        } else {
+            window.location.href = 'dashboard.html';
+        }
+    }
+</script>
+</body>
+</html>

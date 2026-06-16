@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vote | Campus Circle E-Voting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root{--bg:#0a1628;--surface:#112236;--surface2:#1a2f4a;--primary:#3d72b4;--primary-bright:#5b9bd5;--accent:#64b5f6;--text:#e2eaf4;--muted:#7a9cc0;--border:rgba(61,114,180,0.2);--success:#22c55e;--danger:#ef4444;--warning:#f59e0b;}
+        *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+        body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:100px;}
+
+        .header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;}
+        .back-btn{color:var(--muted);text-decoration:none;width:36px;height:36px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);flex-shrink:0;}
+        .header-info h1{font-size:1.02rem;font-weight:800;line-height:1.2;}
+        .header-info span{font-size:0.75rem;color:var(--muted);}
+
+        /* PROGRESS BAR */
+        .progress-wrap{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;}
+        .progress-text{font-size:0.75rem;color:var(--muted);margin-bottom:6px;display:flex;justify-content:space-between;}
+        .progress-text strong{color:var(--accent);}
+        .progress-track{height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;}
+        .progress-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;transition:width 0.3s ease;}
+
+        /* COUNTDOWN BANNER */
+        .countdown-banner{background:rgba(245,158,11,0.08);border-bottom:1px solid rgba(245,158,11,0.2);padding:8px 16px;text-align:center;font-size:0.75rem;color:#fbbf24;display:flex;align-items:center;justify-content:center;gap:6px;}
+
+        /* POSITION SECTION */
+        .position-section{padding:18px 16px;border-bottom:1px solid var(--border);}
+        .position-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+        .position-num{width:26px;height:26px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:800;color:var(--muted);flex-shrink:0;}
+        .position-num.done{background:rgba(34,197,94,0.15);border-color:rgba(34,197,94,0.3);color:var(--success);}
+        .position-title{font-size:1.05rem;font-weight:800;}
+        .position-sub{font-size:0.78rem;color:var(--muted);margin-bottom:14px;margin-left:34px;}
+
+        /* CANDIDATE CARD */
+        .candidate-card{background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer;transition:0.15s;display:flex;align-items:center;gap:12px;}
+        .candidate-card:active{transform:scale(0.98);}
+        .candidate-card.selected{border-color:var(--primary);background:rgba(61,114,180,0.08);}
+        .candidate-photo{width:50px;height:50px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0;}
+        .candidate-photo-placeholder{width:50px;height:50px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-bright));display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+        .candidate-info{flex:1;}
+        .candidate-info strong{display:block;font-size:0.95rem;font-weight:800;}
+        .candidate-info .manifesto-link{font-size:0.74rem;color:var(--accent);font-weight:600;margin-top:2px;display:inline-flex;align-items:center;gap:4px;}
+        .radio-circle{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:0.15s;}
+        .candidate-card.selected .radio-circle{border-color:var(--primary);background:var(--primary);}
+        .radio-circle i{font-size:0.7rem;color:white;opacity:0;}
+        .candidate-card.selected .radio-circle i{opacity:1;}
+
+        /* ABSTAIN OPTION */
+        .abstain-card{background:var(--surface);border:2px dashed var(--border);border-radius:14px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:12px;color:var(--muted);font-size:0.85rem;font-weight:600;}
+        .abstain-card.selected{border-color:var(--warning);color:#fbbf24;border-style:solid;background:rgba(245,158,11,0.06);}
+        .abstain-card .radio-circle{border-color:var(--border);}
+        .abstain-card.selected .radio-circle{border-color:var(--warning);background:var(--warning);}
+
+        /* MANIFESTO MODAL */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;display:none;align-items:flex-end;justify-content:center;}
+        .modal-overlay.show{display:flex;}
+        .modal{background:var(--surface);border-radius:24px 24px 0 0;padding:24px;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;}
+        .modal-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+        .modal-photo{width:60px;height:60px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0;}
+        .modal-photo-placeholder{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-bright));display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;}
+        .modal-header h3{font-size:1.1rem;font-weight:800;}
+        .modal-header span{font-size:0.8rem;color:var(--muted);}
+        .modal-section{margin-bottom:14px;}
+        .modal-section h4{font-size:0.78rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
+        .modal-section p{font-size:0.88rem;color:var(--text);line-height:1.6;}
+        .modal-socials{display:flex;gap:10px;margin-top:8px;}
+        .modal-socials a{color:var(--accent);font-size:1.2rem;}
+        .btn-close-modal{width:100%;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface2);color:var(--text);font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif;margin-top:8px;}
+
+        /* REVIEW STEP */
+        .review-item{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;}
+        .review-item .pos-label{font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:2px;}
+        .review-item .cand-name{font-size:0.95rem;font-weight:800;}
+        .review-item .abstain-tag{font-size:0.78rem;color:var(--warning);font-weight:600;}
+        .review-edit-btn{background:none;border:none;color:var(--accent);font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;}
+
+        /* SUBMIT BAR */
+        .submit-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:14px 16px;display:flex;gap:10px;z-index:50;}
+        .btn-secondary{flex:1;padding:14px;border:1px solid var(--border);border-radius:12px;background:transparent;color:var(--muted);font-weight:700;font-size:0.92rem;cursor:pointer;font-family:'Outfit',sans-serif;}
+        .btn-primary{flex:2;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--primary-bright));color:white;font-weight:700;font-size:0.92rem;cursor:pointer;font-family:'Outfit',sans-serif;box-shadow:0 4px 14px rgba(61,114,180,0.3);display:flex;align-items:center;justify-content:center;gap:8px;}
+        .btn-primary:disabled{opacity:0.5;cursor:not-allowed;}
+        .btn-primary.danger{background:linear-gradient(135deg,var(--danger),#dc2626);box-shadow:0 4px 14px rgba(239,68,68,0.3);}
+
+        /* CONFIRMATION SCREEN */
+        .confirm-screen{padding:60px 24px;text-align:center;}
+        .confirm-icon{width:90px;height:90px;border-radius:50%;background:rgba(34,197,94,0.12);border:2px solid rgba(34,197,94,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;animation:pop-in 0.5s cubic-bezier(0.34,1.56,0.64,1) both;}
+        @keyframes pop-in{0%{transform:scale(0);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+        .confirm-icon i{font-size:2.5rem;color:var(--success);}
+        .confirm-screen h2{font-size:1.4rem;font-weight:800;margin-bottom:8px;}
+        .confirm-screen p{color:var(--muted);font-size:0.9rem;line-height:1.6;margin-bottom:24px;}
+        .confirm-receipt{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:24px;text-align:left;}
+        .confirm-receipt-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.82rem;}
+        .confirm-receipt-row:last-child{border-bottom:none;}
+        .confirm-receipt-row span{color:var(--muted);}
+        .confirm-receipt-row strong{color:var(--text);}
+
+        .spinner-center{text-align:center;padding:60px 0;}
+        .spinner{width:32px;height:32px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        .blocked-state{text-align:center;padding:60px 24px;color:var(--muted);}
+        .blocked-state i{font-size:2.8rem;opacity:0.3;display:block;margin-bottom:14px;}
+        .blocked-state h3{color:var(--text);font-size:1.1rem;margin-bottom:8px;}
+        .blocked-state .btn-primary{display:inline-flex;width:auto;padding:12px 24px;margin-top:16px;}
+
+        #toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 20px;font-size:0.85rem;font-weight:600;display:none;z-index:999;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,0.3);max-width:90vw;text-align:center;}
+        #toast.error{border-color:rgba(239,68,68,0.4);color:var(--danger);}
+        #toast.success{border-color:rgba(34,197,94,0.4);color:var(--success);}
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="header-info">
+        <h1 id="header-title">Loading...</h1>
+        <span id="header-sub">Campus Circle E-Voting</span>
+    </div>
+</div>
+
+<div id="content">
+    <div class="spinner-center"><div class="spinner"></div></div>
+</div>
+
+<div id="manifesto-modal" class="modal-overlay">
+    <div class="modal" id="manifesto-modal-content"></div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, setDoc, runTransaction, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBOHwOgJn80vtEyhy70D0VP4z6cAYgEsu8",
+        authDomain: "campuscircle-49461.firebaseapp.com",
+        projectId: "campuscircle-49461",
+        storageBucket: "campuscircle-49461.firebasestorage.app",
+        messagingSenderId: "920560772166",
+        appId: "1:920560772166:web:e53d6a3c22fbd56b4c5647"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const params = new URLSearchParams(window.location.search);
+    const electionId = params.get('electionId');
+
+    let currentMatric = null;
+    let currentStudent = null;
+    let election = null;
+    let candidatesByPosition = {}; // { position: [candidate, ...] }
+    let selections = {}; // { position: candidateId | 'ABSTAIN' }
+    let reviewMode = false;
+
+    const hasVotedField = { sug: 'hasVotedSUG', faculty: 'hasVotedFaculty', department: 'hasVotedDepartment' };
+
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.className = type; t.style.display = 'block';
+        setTimeout(() => { t.style.display = 'none'; }, 3000);
+    }
+
+    window.onload = () => {
+        const matric = sessionStorage.getItem('voterMatric');
+        if (!matric) { window.location.href = 'evoting-login.html'; return; }
+        if (!electionId) { window.location.href = 'dashboard.html'; return; }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { window.location.href = 'evoting-login.html'; return; }
+
+            try {
+                const studentRef = doc(db, 'students', matric);
+                const studentSnap = await getDoc(studentRef);
+                if (!studentSnap.exists() || studentSnap.data().authUid !== user.uid) {
+                    window.location.href = 'evoting-login.html'; return;
+                }
+
+                currentMatric = matric;
+                currentStudent = studentSnap.data();
+
+                await loadElection();
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('content').innerHTML = `<div class="blocked-state"><i class="fa-solid fa-triangle-exclamation"></i><h3>Something went wrong</h3><p>Please go back and try again.</p></div>`;
+            }
+        });
+    };
+
+    async function loadElection() {
+        const electionSnap = await getDoc(doc(db, 'elections', electionId));
+        if (!electionSnap.exists()) {
+            renderBlocked('fa-circle-question', 'Election Not Found', 'This election does not exist or has been removed.');
+            return;
+        }
+        election = { id: electionId, ...electionSnap.data() };
+
+        // Eligibility check
+        const isEligible = checkEligibility(election, currentStudent);
+        if (!isEligible) {
+            renderBlocked('fa-lock', 'Not Eligible', "You're not eligible to vote in this election.");
+            return;
+        }
+
+        // Status check
+        if (election.status !== 'active') {
+            const msg = election.status === 'upcoming'
+                ? `This election hasn't started yet. It opens on ${formatDate(election.startDate)}.`
+                : 'This election has closed. Results may be available on the results page.';
+            renderBlocked(election.status === 'upcoming' ? 'fa-clock' : 'fa-flag-checkered',
+                election.status === 'upcoming' ? 'Election Not Open Yet' : 'Election Closed', msg, election.status === 'closed');
+            return;
+        }
+
+        // Already voted check
+        const votedField = hasVotedField[election.type];
+        if (currentStudent[votedField]) {
+            renderBlocked('fa-circle-check', 'Already Voted', "You've already cast your vote in this election. Thank you for participating!", true);
+            return;
+        }
+
+        // End date check (in case status hasn't been updated)
+        const endDate = toDate(election.endDate);
+        if (endDate && new Date() > endDate) {
+            renderBlocked('fa-flag-checkered', 'Election Closed', 'This election has ended.', true);
+            return;
+        }
+
+        document.getElementById('header-title').textContent = election.title;
+        document.getElementById('header-sub').textContent = `${(election.positions || []).length} position${(election.positions||[]).length !== 1 ? 's' : ''} to vote on`;
+
+        // Load candidates
+        const candSnap = await getDocs(query(collection(db, 'candidates'), where('electionId', '==', electionId)));
+        const allCandidates = candSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        candidatesByPosition = {};
+        (election.positions || []).forEach(pos => {
+            candidatesByPosition[pos] = allCandidates.filter(c => c.position === pos);
+        });
+
+        renderBallot();
+    }
+
+    function checkEligibility(e, student) {
+        if (e.type === 'sug') return true;
+        if (e.type === 'faculty') return e.scope?.faculty === student.faculty;
+        if (e.type === 'department') return e.scope?.faculty === student.faculty && e.scope?.department === student.department;
+        return false;
+    }
+
+    function toDate(d) {
+        if (!d) return null;
+        return d.toDate ? d.toDate() : new Date(d);
+    }
+
+    function formatDate(d) {
+        const date = toDate(d);
+        return date ? date.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-';
+    }
+
+    function renderBlocked(icon, title, message, showResultsLink) {
+        document.getElementById('header-title').textContent = election?.title || 'Election';
+        document.getElementById('header-sub').textContent = 'Campus Circle E-Voting';
+        document.getElementById('content').innerHTML = `
+            <div class="blocked-state">
+                <i class="fa-solid ${icon}"></i>
+                <h3>${title}</h3>
+                <p>${message}</p>
+                <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+                    <button class="btn-primary" onclick="window.location.href='dashboard.html'"><i class="fa-solid fa-house"></i> Back to Dashboard</button>
+                    ${showResultsLink ? `<button class="btn-primary" style="background:var(--surface2);color:var(--accent);" onclick="window.location.href='results.html?electionId=${electionId}'"><i class="fa-solid fa-chart-bar"></i> View Results</button>` : ''}
+                </div>
+            </div>`;
+    }
+
+    // ── BALLOT RENDERING ─────────────────────────────────────────────────────
+    function renderBallot() {
+        const positions = election.positions || [];
+        const answeredCount = Object.keys(selections).length;
+
+        let html = `
+        <div class="progress-wrap">
+            <div class="progress-text"><span>Your progress</span><strong>${answeredCount} / ${positions.length}</strong></div>
+            <div class="progress-track"><div class="progress-fill" style="width:${(answeredCount/positions.length)*100}%"></div></div>
+        </div>
+        <div class="countdown-banner"><i class="fa-solid fa-clock"></i> Voting closes ${formatDate(election.endDate)}</div>`;
+
+        positions.forEach((pos, i) => {
+            const candidates = candidatesByPosition[pos] || [];
+            const selected = selections[pos];
+            const done = selected !== undefined;
+
+            html += `<div class="position-section">
+                <div class="position-header">
+                    <div class="position-num ${done ? 'done' : ''}">${done ? '<i class="fa-solid fa-check"></i>' : (i+1)}</div>
+                    <div class="position-title">${pos}</div>
+                </div>
+                <div class="position-sub">${candidates.length} candidate${candidates.length !== 1 ? 's' : ''} · Tap to select</div>`;
+
+            candidates.forEach(c => {
+                const isSelected = selected === c.id;
+                html += `<div class="candidate-card ${isSelected ? 'selected' : ''}" onclick="selectCandidate('${pos}','${c.id}')">
+                    ${c.photoUrl ? `<img class="candidate-photo" src="${c.photoUrl}">` : `<div class="candidate-photo-placeholder">😊</div>`}
+                    <div class="candidate-info">
+                        <strong>${c.fullName}</strong>
+                        ${(c.manifesto || c.biography) ? `<span class="manifesto-link" onclick="event.stopPropagation();showManifesto('${c.id}')"><i class="fa-solid fa-circle-info"></i> View manifesto</span>` : ''}
+                    </div>
+                    <div class="radio-circle"><i class="fa-solid fa-check"></i></div>
+                </div>`;
+            });
+
+            // Abstain option
+            const abstainSelected = selected === 'ABSTAIN';
+            html += `<div class="abstain-card ${abstainSelected ? 'selected' : ''}" onclick="selectCandidate('${pos}','ABSTAIN')">
+                <div class="radio-circle"><i class="fa-solid fa-check"></i></div>
+                <span>Abstain from this position</span>
+            </div>`;
+
+            html += `</div>`;
+        });
+
+        html += `<div style="height:20px;"></div>`;
+
+        document.getElementById('content').innerHTML = html;
+
+        renderSubmitBar();
+    }
+
+    function renderSubmitBar() {
+        const positions = election.positions || [];
+        const answeredCount = Object.keys(selections).length;
+        const allAnswered = answeredCount === positions.length;
+
+        let bar = document.getElementById('submit-bar-el');
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = 'submit-bar-el';
+            bar.className = 'submit-bar';
+            document.body.appendChild(bar);
+        }
+
+        bar.innerHTML = `
+            <button class="btn-primary" id="btn-review" onclick="goToReview()" ${!allAnswered ? 'disabled' : ''}>
+                <i class="fa-solid fa-eye"></i> Review &amp; Submit ${!allAnswered ? `(${positions.length - answeredCount} left)` : ''}
+            </button>`;
+    }
+
+    window.selectCandidate = function(position, candidateId) {
+        selections[position] = candidateId;
+        renderBallot();
+
+        // Auto-scroll to next unanswered position
+        const positions = election.positions || [];
+        const currentIndex = positions.indexOf(position);
+        const nextUnanswered = positions.find((p, i) => i > currentIndex && selections[p] === undefined);
+        if (nextUnanswered) {
+            setTimeout(() => {
+                const sections = document.querySelectorAll('.position-section');
+                const nextIndex = positions.indexOf(nextUnanswered);
+                sections[nextIndex]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 200);
+        }
+    };
+
+    // ── MANIFESTO MODAL ──────────────────────────────────────────────────────
+    window.showManifesto = function(candidateId) {
+        let candidate = null;
+        for (const pos in candidatesByPosition) {
+            const found = candidatesByPosition[pos].find(c => c.id === candidateId);
+            if (found) { candidate = found; break; }
+        }
+        if (!candidate) return;
+
+        const social = candidate.socialLinks || {};
+        document.getElementById('manifesto-modal-content').innerHTML = `
+            <div class="modal-header">
+                ${candidate.photoUrl ? `<img class="modal-photo" src="${candidate.photoUrl}">` : `<div class="modal-photo-placeholder">😊</div>`}
+                <div>
+                    <h3>${candidate.fullName}</h3>
+                    <span>${candidate.position}</span>
+                </div>
+            </div>
+            ${candidate.biography ? `<div class="modal-section"><h4>Biography</h4><p>${candidate.biography}</p></div>` : ''}
+            ${candidate.manifesto ? `<div class="modal-section"><h4>Manifesto</h4><p>${candidate.manifesto}</p></div>` : ''}
+            ${(social.twitter || social.instagram) ? `<div class="modal-section"><h4>Social Links</h4><div class="modal-socials">
+                ${social.twitter ? `<a href="${social.twitter}" target="_blank"><i class="fa-brands fa-x-twitter"></i></a>` : ''}
+                ${social.instagram ? `<a href="${social.instagram}" target="_blank"><i class="fa-brands fa-instagram"></i></a>` : ''}
+            </div></div>` : ''}
+            ${(!candidate.biography && !candidate.manifesto) ? `<p style="color:var(--muted);font-size:0.85rem;">No additional information provided.</p>` : ''}
+            <button class="btn-close-modal" onclick="closeManifesto()">Close</button>`;
+
+        document.getElementById('manifesto-modal').classList.add('show');
+    };
+
+    window.closeManifesto = function() {
+        document.getElementById('manifesto-modal').classList.remove('show');
+    };
+
+    // ── REVIEW STEP ──────────────────────────────────────────────────────────
+    window.goToReview = function() {
+        reviewMode = true;
+        const positions = election.positions || [];
+
+        let html = `
+        <div class="countdown-banner"><i class="fa-solid fa-shield-halved"></i> Review your selections before submitting — this cannot be changed afterwards.</div>
+        <div style="padding:18px 16px;">
+            <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:14px;">Review Your Ballot</h2>`;
+
+        positions.forEach(pos => {
+            const sel = selections[pos];
+            let candName = null;
+            if (sel !== 'ABSTAIN') {
+                const candidates = candidatesByPosition[pos] || [];
+                const cand = candidates.find(c => c.id === sel);
+                candName = cand?.fullName || 'Unknown';
+            }
+
+            html += `<div class="review-item">
+                <div style="flex:1;">
+                    <span class="pos-label">${pos}</span>
+                    ${sel === 'ABSTAIN' ? `<span class="abstain-tag"><i class="fa-solid fa-circle-minus"></i> Abstained</span>` : `<div class="cand-name">${candName}</div>`}
+                </div>
+                <button class="review-edit-btn" onclick="editPosition('${pos}')">Edit</button>
+            </div>`;
+        });
+
+        html += `</div><div style="height:20px;"></div>`;
+
+        document.getElementById('content').innerHTML = html;
+
+        let bar = document.getElementById('submit-bar-el');
+        bar.innerHTML = `
+            <button class="btn-secondary" onclick="backToBallot()"><i class="fa-solid fa-arrow-left"></i> Back</button>
+            <button class="btn-primary" id="btn-submit-vote" onclick="submitVote()">
+                <i class="fa-solid fa-vote-yea"></i> Submit Vote
+            </button>`;
+
+        window.scrollTo(0, 0);
+    };
+
+    window.editPosition = function(position) {
+        reviewMode = false;
+        renderBallot();
+        setTimeout(() => {
+            const positions = election.positions || [];
+            const idx = positions.indexOf(position);
+            const sections = document.querySelectorAll('.position-section');
+            sections[idx]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+    };
+
+    window.backToBallot = function() {
+        reviewMode = false;
+        renderBallot();
+        window.scrollTo(0, 0);
+    };
+
+    // ── SUBMIT VOTE (FIRESTORE TRANSACTION) ─────────────────────────────────
+    window.submitVote = async function() {
+        const btn = document.getElementById('btn-submit-vote');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Submitting...';
+
+        const votedField = hasVotedField[election.type];
+        const voteDocId = `${currentMatric}_${electionId}`;
+        const voteRef = doc(db, 'votes', voteDocId);
+        const counterRef = doc(db, 'voteCounters', electionId);
+        const studentRef = doc(db, 'students', currentMatric);
+
+        // Build selections object excluding abstains (abstains don't count toward any candidate)
+        const voteSelections = {};
+        Object.entries(selections).forEach(([pos, val]) => {
+            voteSelections[pos] = val; // includes 'ABSTAIN' for audit completeness
+        });
+
+        try {
+            await runTransaction(db, async (transaction) => {
+                // 1. Check vote doc doesn't already exist
+                const existingVote = await transaction.get(voteRef);
+                if (existingVote.exists()) {
+                    throw new Error('ALREADY_VOTED');
+                }
+
+                // 2. Re-check student hasn't voted (race condition guard)
+                const studentSnap = await transaction.get(studentRef);
+                if (!studentSnap.exists()) throw new Error('STUDENT_NOT_FOUND');
+                if (studentSnap.data()[votedField]) throw new Error('ALREADY_VOTED');
+
+                // 3. Get current counter
+                const counterSnap = await transaction.get(counterRef);
+                let candidateCounts = {};
+                let totalVotesCast = 0;
+                if (counterSnap.exists()) {
+                    candidateCounts = { ...(counterSnap.data().candidateCounts || {}) };
+                    totalVotesCast = counterSnap.data().totalVotesCast || 0;
+                }
+
+                // 4. Increment counts for non-abstain selections
+                Object.values(voteSelections).forEach(val => {
+                    if (val !== 'ABSTAIN') {
+                        candidateCounts[val] = (candidateCounts[val] || 0) + 1;
+                    }
+                });
+                totalVotesCast += 1;
+
+                // 5. Write vote document
+                transaction.set(voteRef, {
+                    electionId,
+                    matricNumber: currentMatric,
+                    electionType: election.type,
+                    selections: voteSelections,
+                    castAt: new Date()
+                });
+
+                // 6. Update counter
+                if (counterSnap.exists()) {
+                    transaction.update(counterRef, { candidateCounts, totalVotesCast, lastUpdated: new Date() });
+                } else {
+                    transaction.set(counterRef, { electionId, candidateCounts, totalVotesCast, lastUpdated: new Date() });
+                }
+
+                // 7. Mark student as voted
+                transaction.update(studentRef, { [votedField]: true });
+            });
+
+            renderConfirmation();
+
+        } catch (e) {
+            console.error(e);
+            if (e.message === 'ALREADY_VOTED') {
+                renderBlocked('fa-circle-check', 'Already Voted', "You've already cast your vote in this election. Thank you for participating!", true);
+            } else {
+                showToast('Something went wrong. Please try again.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-vote-yea"></i> Submit Vote';
+            }
+        }
+    };
+
+    // ── CONFIRMATION ─────────────────────────────────────────────────────────
+    function renderConfirmation() {
+        document.getElementById('header-sub').textContent = 'Vote Submitted';
+        const bar = document.getElementById('submit-bar-el');
+        if (bar) bar.remove();
+
+        const positions = election.positions || [];
+        const votedCount = Object.values(selections).filter(v => v !== 'ABSTAIN').length;
+        const abstainCount = Object.values(selections).filter(v => v === 'ABSTAIN').length;
+
+        document.getElementById('content').innerHTML = `
+        <div class="confirm-screen">
+            <div class="confirm-icon"><i class="fa-solid fa-check"></i></div>
+            <h2>Vote Submitted!</h2>
+            <p>Your vote in <strong>${election.title}</strong> has been securely recorded. Thank you for participating in this election.</p>
+            <div class="confirm-receipt">
+                <div class="confirm-receipt-row"><span>Election</span><strong>${election.title}</strong></div>
+                <div class="confirm-receipt-row"><span>Positions voted</span><strong>${votedCount} of ${positions.length}</strong></div>
+                ${abstainCount ? `<div class="confirm-receipt-row"><span>Abstained</span><strong>${abstainCount}</strong></div>` : ''}
+                <div class="confirm-receipt-row"><span>Submitted</span><strong>${new Date().toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</strong></div>
+                <div class="confirm-receipt-row"><span>Status</span><strong style="color:var(--success)">✅ Recorded</strong></div>
+            </div>
+            <button class="btn-primary" style="width:100%;" onclick="window.location.href='dashboard.html'"><i class="fa-solid fa-house"></i> Back to Dashboard</button>
+        </div>`;
+    }
+</script>
+</body>
+</html>

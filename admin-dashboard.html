@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Dashboard | Campus Circle E-Voting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root{--bg:#0a1628;--surface:#112236;--surface2:#1a2f4a;--primary:#3d72b4;--primary-bright:#5b9bd5;--accent:#64b5f6;--text:#e2eaf4;--muted:#7a9cc0;--border:rgba(61,114,180,0.2);--success:#22c55e;--danger:#ef4444;--warning:#f59e0b;}
+        *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+        body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:30px;}
+
+        .header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px;position:sticky;top:0;z-index:100;}
+        .header-top{display:flex;align-items:center;justify-content:space-between;}
+        .logo{font-size:1.05rem;font-weight:800;}
+        .logo span{color:var(--accent);}
+        .logout-btn{color:var(--muted);font-size:0.78rem;font-weight:600;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;gap:5px;}
+
+        /* WELCOME / ROLE CARD */
+        .welcome-card{background:linear-gradient(135deg,#0d2240,#112236);border:1px solid var(--border);border-radius:18px;padding:20px;margin:16px;position:relative;overflow:hidden;}
+        .welcome-card::before{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;background:radial-gradient(circle,rgba(61,114,180,0.25) 0%,transparent 70%);}
+        .welcome-greeting{font-size:0.78rem;color:var(--muted);margin-bottom:4px;}
+        .welcome-name{font-size:1.2rem;font-weight:800;margin-bottom:10px;position:relative;}
+        .role-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(61,114,180,0.15);border:1px solid rgba(61,114,180,0.3);border-radius:8px;padding:5px 10px;font-size:0.72rem;color:var(--accent);font-weight:700;position:relative;margin-right:6px;margin-bottom:6px;}
+
+        /* STATS GRID */
+        .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:0 16px;margin-bottom:20px;}
+        .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;}
+        .stat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:8px;}
+        .stat-value{font-size:1.4rem;font-weight:800;}
+        .stat-label{font-size:0.72rem;color:var(--muted);margin-top:2px;}
+
+        /* SECTION */
+        .section{padding:0 16px;margin-bottom:20px;}
+        .section-title{font-size:0.95rem;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+        .section-title i{color:var(--accent);}
+
+        /* ACTION GRID */
+        .action-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+        .action-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;cursor:pointer;transition:0.2s;text-align:center;}
+        .action-card:active{transform:scale(0.97);}
+        .action-card i{font-size:1.6rem;color:var(--accent);display:block;margin-bottom:8px;}
+        .action-card .title{font-size:0.85rem;font-weight:700;margin-bottom:2px;}
+        .action-card .sub{font-size:0.7rem;color:var(--muted);}
+        .action-card.disabled{opacity:0.4;pointer-events:none;}
+
+        /* ELECTION CARD (mirrors dashboard style) */
+        .election-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:12px;}
+        .election-top{padding:14px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+        .election-type-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+        .type-sug{background:rgba(124,58,237,0.15);}
+        .type-faculty{background:rgba(61,114,180,0.15);}
+        .type-department{background:rgba(34,197,94,0.15);}
+        .election-info{flex:1;}
+        .election-title{font-size:0.92rem;font-weight:800;margin-bottom:4px;line-height:1.3;}
+        .election-scope{font-size:0.75rem;color:var(--muted);}
+        .election-status{font-size:0.68rem;font-weight:700;padding:4px 10px;border-radius:8px;flex-shrink:0;white-space:nowrap;}
+        .status-active{background:rgba(34,197,94,0.15);color:var(--success);}
+        .status-upcoming{background:rgba(245,158,11,0.15);color:var(--warning);}
+        .status-closed{background:rgba(122,156,192,0.15);color:var(--muted);}
+        .election-footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+        .footer-btn{flex:1;min-width:80px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.76rem;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:5px;}
+        .footer-btn.success{border-color:rgba(34,197,94,0.3);color:var(--success);}
+        .footer-btn.danger{border-color:rgba(239,68,68,0.3);color:var(--danger);}
+        .footer-btn.primary{border-color:rgba(61,114,180,0.3);color:var(--accent);}
+
+        .empty-state{text-align:center;padding:30px 20px;color:var(--muted);}
+        .empty-state i{font-size:2.2rem;opacity:0.2;display:block;margin-bottom:10px;}
+        .empty-state p{font-size:0.85rem;}
+
+        .spinner{width:32px;height:32px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:30px auto;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 20px;font-size:0.85rem;font-weight:600;display:none;z-index:999;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,0.3);max-width:90vw;text-align:center;}
+        #toast.error{border-color:rgba(239,68,68,0.4);color:var(--danger);}
+        #toast.success{border-color:rgba(34,197,94,0.4);color:var(--success);}
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-top">
+        <div class="logo">Campus<span>Circle</span> Voting Admin</div>
+        <button class="logout-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+    </div>
+</div>
+
+<div id="content">
+    <div class="spinner"></div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBOHwOgJn80vtEyhy70D0VP4z6cAYgEsu8",
+        authDomain: "campuscircle-49461.firebaseapp.com",
+        projectId: "campuscircle-49461",
+        storageBucket: "campuscircle-49461.firebasestorage.app",
+        messagingSenderId: "920560772166",
+        appId: "1:920560772166:web:e53d6a3c22fbd56b4c5647"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const roleLabels = {
+        super_admin: '👑 Super Admin',
+        election_admin: '🗳️ Election Admin',
+        faculty_admin: '🎓 Faculty Admin',
+        department_admin: '📚 Department Admin'
+    };
+    const typeIcons = { sug: '🏛️', faculty: '🎓', department: '📚' };
+    const typeClass = { sug: 'type-sug', faculty: 'type-faculty', department: 'type-department' };
+    const typeLabel = { sug: 'SUG Election', faculty: 'Faculty Election', department: 'Departmental Election' };
+
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.className = type; t.style.display = 'block';
+        setTimeout(() => { t.style.display = 'none'; }, 3000);
+    }
+
+    window.onload = () => {
+        const matric = sessionStorage.getItem('voterMatric');
+        if (!matric) { window.location.href = 'evoting-login.html'; return; }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                sessionStorage.removeItem('voterMatric');
+                sessionStorage.removeItem('voterEmail');
+                window.location.href = 'evoting-login.html';
+                return;
+            }
+
+            try {
+                const studentRef = doc(db, 'students', matric);
+                const studentSnap = await getDoc(studentRef);
+
+                if (!studentSnap.exists() || studentSnap.data().authUid !== user.uid) {
+                    window.location.href = 'evoting-login.html';
+                    return;
+                }
+
+                const student = studentSnap.data();
+                if (!student.isAdmin) {
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+
+                await renderAdminDashboard(student, matric);
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>Something went wrong loading the dashboard. Please try again.</p></div>`;
+            }
+        });
+    };
+
+    async function renderAdminDashboard(admin, matric) {
+        const role = admin.adminRole || 'department_admin';
+        const scope = admin.adminScope || {};
+        const isSuper = role === 'super_admin';
+        const isElection = role === 'election_admin';
+        const isFaculty = role === 'faculty_admin';
+        const isDept = role === 'department_admin';
+
+        // Fetch elections relevant to this admin's scope
+        const electionsSnap = await getDocs(collection(db, 'elections'));
+        let elections = electionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        if (isFaculty) {
+            elections = elections.filter(e =>
+                (e.type === 'faculty' && e.scope?.faculty === scope.faculty) ||
+                (e.type === 'department' && e.scope?.faculty === scope.faculty)
+            );
+        } else if (isDept) {
+            elections = elections.filter(e =>
+                e.type === 'department' && e.scope?.faculty === scope.faculty && e.scope?.department === scope.department
+            );
+        }
+        // super_admin and election_admin see everything
+
+        // Fetch total students for stats (super_admin / election_admin only, to keep it light)
+        let totalStudents = null, activatedStudents = null;
+        if (isSuper || isElection) {
+            const studentsSnap = await getDocs(collection(db, 'students'));
+            const allStudents = studentsSnap.docs.map(d => d.data());
+            totalStudents = allStudents.length;
+            activatedStudents = allStudents.filter(s => s.isActivated).length;
+        }
+
+        const activeCount = elections.filter(e => e.status === 'active').length;
+        const upcomingCount = elections.filter(e => e.status === 'upcoming').length;
+        const closedCount = elections.filter(e => e.status === 'closed').length;
+
+        let scopeChips = '';
+        if (scope.faculty) scopeChips += `<span class="role-badge"><i class="fa-solid fa-graduation-cap"></i> ${scope.faculty}</span>`;
+        if (scope.department) scopeChips += `<span class="role-badge"><i class="fa-solid fa-book"></i> ${scope.department}</span>`;
+
+        let html = `
+        <div class="welcome-card">
+            <div class="welcome-greeting">Logged in as</div>
+            <div class="welcome-name">${admin.fullName || matric}</div>
+            <span class="role-badge">${roleLabels[role] || role}</span>${scopeChips}
+        </div>`;
+
+        // Stats
+        html += `<div class="stats-grid">`;
+        html += statCard('fa-bolt', 'rgba(34,197,94,0.15)', 'var(--success)', activeCount, 'Active Elections');
+        html += statCard('fa-clock', 'rgba(245,158,11,0.15)', 'var(--warning)', upcomingCount, 'Upcoming');
+        html += statCard('fa-flag-checkered', 'rgba(122,156,192,0.15)', 'var(--muted)', closedCount, 'Closed');
+        if (totalStudents !== null) {
+            html += statCard('fa-users', 'rgba(61,114,180,0.15)', 'var(--accent)', `${activatedStudents}/${totalStudents}`, 'Activated Students');
+        } else {
+            html += statCard('fa-list-check', 'rgba(61,114,180,0.15)', 'var(--accent)', elections.length, 'Total Elections');
+        }
+        html += `</div>`;
+
+        // Quick actions — role-based
+        html += `<div class="section"><div class="section-title"><i class="fa-solid fa-bolt"></i> Quick Actions</div><div class="action-grid">`;
+
+        if (isSuper || isElection) {
+            html += actionCard('fa-square-plus', 'Create Election', 'New departmental, faculty or SUG election', "window.location.href='create-election.html'");
+            html += actionCard('fa-users-gear', 'Manage Admins', 'Assign election, faculty & department admins', "window.location.href='manage-admins.html'");
+        }
+        if (isSuper) {
+            html += actionCard('fa-file-import', 'Import Students', 'Bulk upload via Excel/CSV', "window.location.href='import-students.html'");
+        }
+        if (isSuper || isElection || isFaculty || isDept) {
+            html += actionCard('fa-user-tie', 'Manage Candidates', 'Add or edit candidates for your elections', "window.location.href='manage-candidates.html'");
+        }
+        if (isSuper || isElection) {
+            html += actionCard('fa-chart-pie', 'Reports', 'Turnout, results & audit exports', "window.location.href='reports.html'");
+        }
+
+        html += `</div></div>`;
+
+        // Elections list
+        html += `<div class="section"><div class="section-title"><i class="fa-solid fa-list"></i> ${isSuper || isElection ? 'All Elections' : 'Your Elections'}</div>`;
+
+        if (!elections.length) {
+            html += `<div class="empty-state"><i class="fa-solid fa-box-open"></i><p>No elections yet. ${(isSuper || isElection) ? 'Create one to get started.' : 'Election admins will set these up.'}</p></div>`;
+        } else {
+            const order = { active: 0, upcoming: 1, closed: 2 };
+            elections.sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
+            elections.forEach(e => html += renderElectionCard(e, admin));
+        }
+
+        html += `</div>`;
+
+        document.getElementById('content').innerHTML = html;
+    }
+
+    function statCard(icon, bg, color, value, label) {
+        return `<div class="stat-card">
+            <div class="stat-icon" style="background:${bg};color:${color};"><i class="fa-solid ${icon}"></i></div>
+            <div class="stat-value">${value}</div>
+            <div class="stat-label">${label}</div>
+        </div>`;
+    }
+
+    function actionCard(icon, title, sub, onclick) {
+        return `<div class="action-card" onclick="${onclick}">
+            <i class="fa-solid ${icon}"></i>
+            <div class="title">${title}</div>
+            <div class="sub">${sub}</div>
+        </div>`;
+    }
+
+    function renderElectionCard(e, admin) {
+        const icon = typeIcons[e.type] || '🗳️';
+        const cls = typeClass[e.type] || '';
+        const label = typeLabel[e.type] || 'Election';
+        const statusClass = `status-${e.status}`;
+
+        let scopeText = '';
+        if (e.type === 'department') scopeText = `${e.scope?.department || ''}, ${e.scope?.faculty || ''}`;
+        else if (e.type === 'faculty') scopeText = e.scope?.faculty || '';
+        else scopeText = 'All Students';
+
+        const canManage = admin.adminRole === 'super_admin' || admin.adminRole === 'election_admin';
+
+        let footer = `<button class="footer-btn primary" onclick="window.location.href='results.html?electionId=${e.id}'"><i class="fa-solid fa-chart-bar"></i> Results</button>`;
+        footer += `<button class="footer-btn" onclick="window.location.href='manage-candidates.html?electionId=${e.id}'"><i class="fa-solid fa-user-tie"></i> Candidates</button>`;
+
+        if (canManage) {
+            if (e.status === 'upcoming') {
+                footer += `<button class="footer-btn success" onclick="setElectionStatus('${e.id}','active')"><i class="fa-solid fa-play"></i> Activate</button>`;
+            }
+            if (e.status === 'active') {
+                footer += `<button class="footer-btn danger" onclick="setElectionStatus('${e.id}','closed')"><i class="fa-solid fa-lock"></i> Close</button>`;
+            }
+        }
+
+        return `<div class="election-card">
+            <div class="election-top">
+                <div class="election-type-icon ${cls}">${icon}</div>
+                <div class="election-info">
+                    <div class="election-title">${e.title}</div>
+                    <div class="election-scope">${label} · ${scopeText}</div>
+                </div>
+                <div class="election-status ${statusClass}">${e.status?.toUpperCase()}</div>
+            </div>
+            <div class="election-footer">${footer}</div>
+        </div>`;
+    }
+
+    window.setElectionStatus = async function(id, status) {
+        try {
+            await updateDoc(doc(db, 'elections', id), { status });
+            showToast(`Election ${status === 'active' ? 'activated' : 'closed'}!`, 'success');
+            setTimeout(() => window.location.reload(), 800);
+        } catch (e) {
+            console.error(e);
+            showToast('Error: ' + e.message, 'error');
+        }
+    };
+
+    window.logout = async function() {
+        sessionStorage.removeItem('voterMatric');
+        sessionStorage.removeItem('voterEmail');
+        try { await signOut(auth); } catch (e) {}
+        window.location.href = 'evoting-login.html';
+    };
+</script>
+</body>
+</html>

@@ -3,404 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Marketplace | Campus Circle</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Dashboard | Campus Circle E-Voting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #2563eb; --primary-dark: #1e40af; --bg: #f8fafc; --white: #ffffff; --dark: #0f172a; --gray: #64748b; }
-        
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { height: 100%; margin: 0; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
-        
-        /* --- ICONS (FIXED CUTTING ISSUE) --- */
-        .icon { 
-            width: 22px; height: 22px; 
-            stroke: currentColor; stroke-width: 2; fill: none; 
-            stroke-linecap: round; stroke-linejoin: round; 
-            overflow: visible; /* Critical fix for cut-off icons */
-        }
+        :root{--bg:#0a1628;--surface:#112236;--surface2:#1a2f4a;--primary:#3d72b4;--primary-bright:#5b9bd5;--accent:#64b5f6;--text:#e2eaf4;--muted:#7a9cc0;--border:rgba(61,114,180,0.2);--success:#22c55e;--danger:#ef4444;--warning:#f59e0b;}
+        *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+        body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:30px;}
 
-        /* --- SIDEBAR MENU --- */
-        .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; opacity: 0; visibility: hidden; transition: all 0.3s; }
-        .sidebar-overlay.active { opacity: 1; visibility: visible; }
-        
-        .sidebar { 
-            position: fixed; top: 0; left: -280px; width: 280px; height: 100%; 
-            background: white; z-index: 1000; transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            display: flex; flex-direction: column; box-shadow: 2px 0 20px rgba(0,0,0,0.1); 
-        }
-        .sidebar.active { left: 0; }
-        
-        .sidebar-header { 
-            background: white; padding: 20px; border-bottom: 1px solid #f1f5f9; 
-            display: flex; align-items: center; justify-content: space-between; 
-        }
-        .brand-title { color: var(--primary); font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 8px; }
-        
-        .sidebar-menu { padding: 15px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
-        .menu-item { 
-            display: flex; align-items: center; gap: 12px; padding: 12px 15px; 
-            color: #334155; text-decoration: none; font-size: 15px; font-weight: 500; 
-            border-radius: 8px; transition: background 0.2s; 
-        }
-        .menu-item:hover { background: #f8fafc; color: var(--primary); }
-        
-        .menu-label { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 15px; margin-bottom: 5px; padding-left: 15px; }
+        .header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px;position:sticky;top:0;z-index:100;}
+        .header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;}
+        .logo{font-size:1.05rem;font-weight:800;}
+        .logo span{color:var(--accent);}
+        .logout-btn{color:var(--muted);font-size:0.78rem;font-weight:600;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;gap:5px;}
 
-        /* --- HEADER --- */
-        .header { 
-            background: var(--white); padding: 12px 20px; display: flex; 
-            align-items: center; gap: 15px; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
-        }
-        .menu-btn { background: none; border: none; cursor: pointer; color: var(--dark); padding: 0; display: flex; align-items: center;}
-        
-        .search-container { flex: 1; position: relative; }
-        .search-input { 
-            width: 100%; padding: 10px 15px 10px 40px; border-radius: 8px; 
-            border: 1px solid #e2e8f0; background: #f8fafc; color: var(--dark); 
-            outline: none; font-size: 14px; transition: border 0.2s; 
-        }
-        .search-input:focus { border-color: var(--primary); background: white; }
-        
-        /* FIXED SEARCH ICON */
-        .search-icon { 
-            position: absolute; left: 12px; top: 50%; transform: translateY(-50%); 
-            width: 18px; height: 18px; fill: none; stroke: var(--gray); stroke-width: 2; 
-            pointer-events: none; overflow: visible;
-        }
+        /* WELCOME CARD */
+        .welcome-card{background:linear-gradient(135deg,#0d2240,#112236);border:1px solid var(--border);border-radius:18px;padding:20px;margin:16px;position:relative;overflow:hidden;}
+        .welcome-card::before{content:'';position:absolute;top:-40px;right:-40px;width:140px;height:140px;background:radial-gradient(circle,rgba(61,114,180,0.25) 0%,transparent 70%);}
+        .welcome-greeting{font-size:0.78rem;color:var(--muted);margin-bottom:4px;}
+        .welcome-name{font-size:1.25rem;font-weight:800;margin-bottom:10px;position:relative;}
+        .welcome-meta{display:flex;gap:8px;flex-wrap:wrap;position:relative;}
+        .meta-chip{background:rgba(61,114,180,0.15);border:1px solid rgba(61,114,180,0.3);border-radius:8px;padding:5px 10px;font-size:0.72rem;color:var(--accent);display:flex;align-items:center;gap:5px;}
 
-        /* --- SCROLL AREA --- */
-        .scroll-area { flex: 1; overflow-y: auto; padding-bottom: 100px; }
+        /* SECTION */
+        .section{padding:0 16px;margin-bottom:20px;}
+        .section-title{font-size:0.95rem;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+        .section-title i{color:var(--accent);}
 
-        /* --- HERO BANNER --- */
-        .hero { 
-            background: linear-gradient(135deg, #2563eb, #1e40af); color: white; 
-            padding: 25px 20px; border-radius: 0 0 20px 20px; margin-bottom: 15px; 
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.2); 
-        }
-        .hero h1 { margin: 0; font-size: 22px; font-weight: 800; }
-        .hero p { margin: 5px 0 0; font-size: 13px; opacity: 0.9; }
+        /* ELECTION CARD */
+        .election-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:12px;cursor:pointer;transition:0.2s;}
+        .election-card:active{transform:scale(0.98);}
+        .election-card.voted{opacity:0.7;}
+        .election-top{padding:14px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+        .election-type-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+        .type-sug{background:rgba(124,58,237,0.15);}
+        .type-faculty{background:rgba(61,114,180,0.15);}
+        .type-department{background:rgba(34,197,94,0.15);}
+        .election-info{flex:1;}
+        .election-title{font-size:0.92rem;font-weight:800;margin-bottom:4px;line-height:1.3;}
+        .election-scope{font-size:0.75rem;color:var(--muted);}
+        .election-status{font-size:0.68rem;font-weight:700;padding:4px 10px;border-radius:8px;flex-shrink:0;white-space:nowrap;}
+        .status-active{background:rgba(34,197,94,0.15);color:var(--success);}
+        .status-upcoming{background:rgba(245,158,11,0.15);color:var(--warning);}
+        .status-closed{background:rgba(122,156,192,0.15);color:var(--muted);}
 
-        /* --- FILTERS --- */
-        .filter-bar { 
-            padding: 0 15px 15px; display: flex; gap: 10px; overflow-x: auto; 
-            scrollbar-width: none; flex-shrink: 0; 
-        }
-        .filter-bar::-webkit-scrollbar { display: none; }
-        .chip { 
-            white-space: nowrap; padding: 8px 18px; border-radius: 30px; 
-            font-size: 13px; font-weight: 600; color: var(--gray); background: white; 
-            border: 1px solid #e2e8f0; cursor: pointer; transition: all 0.2s; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02); 
-        }
-        .chip.active { background: var(--dark); color: white; border-color: var(--dark); }
+        .election-footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+        .countdown-text{font-size:0.75rem;color:var(--muted);display:flex;align-items:center;gap:5px;}
+        .countdown-text i{color:var(--accent);}
+        .vote-btn{background:linear-gradient(135deg,var(--primary),var(--primary-bright));color:white;border:none;padding:7px 16px;border-radius:8px;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;gap:5px;}
+        .voted-badge{background:rgba(34,197,94,0.15);color:var(--success);padding:5px 12px;border-radius:8px;font-size:0.75rem;font-weight:700;display:flex;align-items:center;gap:5px;}
+        .closed-text{color:var(--muted);font-size:0.78rem;font-weight:600;}
 
-        /* --- GRID --- */
-        .grid { 
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; 
-            padding: 0 15px; max-width: 1000px; margin: 0 auto; 
-        }
-        @media(min-width: 768px) { .grid { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } }
+        /* EMPTY */
+        .empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+        .empty-state i{font-size:2.5rem;opacity:0.2;display:block;margin-bottom:12px;}
+        .empty-state p{font-size:0.85rem;}
 
-        /* --- CARD --- */
-        .card { 
-            background: var(--white); border-radius: 12px; overflow: hidden; 
-            display: flex; flex-direction: column; cursor: pointer; position: relative; 
-            border: 1px solid #e2e8f0; transition: transform 0.1s; 
-        }
-        .card:active { transform: scale(0.98); }
-        .card-img-box { position: relative; width: 100%; aspect-ratio: 1; background: #f1f5f9; }
-        .card-img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .heart-btn { 
-            position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; 
-            background: rgba(255,255,255,0.95); border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 5; transition: transform 0.2s; 
-        }
-        .heart-btn:active { transform: scale(0.8); }
-        
-        /* FIXED HEART ICON */
-        .heart-icon { 
-            width: 16px; height: 16px; fill: none; stroke: var(--dark); 
-            stroke-width: 2; transition: all 0.2s; overflow: visible;
-        }
-        .heart-btn.liked .heart-icon { fill: #ef4444; stroke: #ef4444; }
-        
-        .card-info { padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; }
-        .card-price { font-weight: 800; font-size: 15px; color: var(--primary); }
-        .card-title { font-size: 13px; font-weight: 500; color: var(--dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .card-meta { font-size: 11px; color: var(--gray); display: flex; justify-content: space-between; margin-top: 4px; }
+        .spinner{width:32px;height:32px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:30px auto;}
+        @keyframes spin{to{transform:rotate(360deg)}}
 
-        /* --- BOTTOM NAV --- */
-        .nav { 
-            background: white; border-top: 1px solid #f1f5f9; padding: 10px 0; 
-            display: flex; justify-content: space-around; position: fixed; bottom: 0; 
-            width: 100%; z-index: 100; padding-bottom: max(10px, env(safe-area-inset-bottom)); 
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.05); 
-        }
-        .nav a { 
-            text-decoration: none; color: #94a3b8; font-size: 10px; font-weight: 500; 
-            text-align: center; display: flex; flex-direction: column; align-items: center; 
-            gap: 5px; transition: color 0.2s; flex: 1;
-        }
-        .nav a.active { color: var(--primary); font-weight: 700; }
-        .nav svg { width: 24px; height: 24px; overflow: visible; }
-
-        /* Skeletons */
-        .skeleton { background: #e2e8f0; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        /* NOTICE BANNER */
+        .notice-banner{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:12px 14px;margin:0 16px 16px;font-size:0.78rem;color:#fbbf24;line-height:1.5;display:flex;gap:8px;}
+        .notice-banner i{margin-top:2px;flex-shrink:0;}
     </style>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#2563eb">
 </head>
 <body>
 
-    <div class="sidebar-overlay" onclick="toggleMenu()"></div>
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="brand-title">
-                <span style="background:var(--primary); color:white; padding:4px 8px; border-radius:6px; font-size:14px;">CC</span>
-                Campus Circle
-            </div>
-            <button onclick="toggleMenu()" style="background:none; border:none; cursor:pointer;">
-                <svg class="icon" viewBox="0 0 24 24" style="color:#64748b;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-        </div>
-
-        <div class="sidebar-menu">
-            <div class="menu-label">My Account</div>
-            
-            <a href="my-listings.html" class="menu-item">
-                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                My Listings
-            </a>
-            <a href="resources.html" class="menu-item">
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-    Academic Resources
-</a>
-
-
-            <a href="favorites.html" class="menu-item">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                Saved Items
-            </a>
-
-            <a href="#" class="menu-item" onclick="alert('Campus Safety Tips:\n\n1. Meet in open places (Library, SUB).\n2. Don\'t pay before seeing the item.\n3. Check item condition carefully.')">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                Safety Tips
-            </a>
-
-            <div class="menu-label">Help & Legal</div>
-
-            <a href="contact.html" class="menu-item">
-                <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                Contact Support
-            </a>
-
-            <div class="menu-item logout" onclick="logout()" style="color:#ef4444; margin-top:auto;">
-                <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                Log Out
-            </div>
-        </div>
-    </div>
-
-    <div class="header">
-        <button class="menu-btn" onclick="toggleMenu()">
-            <svg class="icon" viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-        </button>
-        <div class="search-container">
-            <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" class="search-input" id="search" placeholder="What are you looking for?">
-        </div>
-    </div>
-
-    <div class="scroll-area">
-        <div class="hero">
-            <h1>Campus Circle</h1>
-            <p>The safest marketplace for students.</p>
-        </div>
-
-        <div class="filter-bar">
-            <div class="chip active" onclick="filterCat(null, this)">All</div>
-            <div class="chip" onclick="filterCat('Books', this)">📚 Books</div>
-            <div class="chip" onclick="filterCat('Electronics', this)">💻 Tech</div>
-            <div class="chip" onclick="filterCat('Fashion', this)">👕 Fashion</div>
-            <div class="chip" onclick="filterCat('Housing', this)">🏠 Housing</div>
-            <div class="chip" onclick="filterCat('Services', this)">🛠️ Services</div>
-        </div>
-
-        <div class="grid" id="grid">
-            <div class="card" style="height:220px;"><div class="card-img-box skeleton"></div><div class="card-info"><div class="skeleton" style="height:15px; width:40%; margin-bottom:5px;"></div><div class="skeleton" style="height:12px; width:80%;"></div></div></div>
-            <div class="card" style="height:220px;"><div class="card-img-box skeleton"></div><div class="card-info"><div class="skeleton" style="height:15px; width:40%; margin-bottom:5px;"></div><div class="skeleton" style="height:12px; width:80%;"></div></div></div>
-        </div>
-    </div>
-
-    <nav class="nav">
-        <a href="dashboard.html" class="active">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-            Home
-        </a>
-        
-        <a href="post-item.html">
-            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
-            Sell
-        </a>
-
-        <a href="profile.html">
-            <svg class="icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-            Profile
-        </a>
-    </nav>
-
-    <script>
-        const supabaseUrl = 'https://nijjgpgxdhsrtftuqcoy.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g'; 
-        const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
-
-        let allItems = [];
-        let userFavorites = new Set();
-        let currentUser = null;
-
-        // --- MENU LOGIC ---
-        function toggleMenu() {
-            document.getElementById('sidebar').classList.toggle('active');
-            document.querySelector('.sidebar-overlay').classList.toggle('active');
-        }
-
-        async function init() {
-            const { data: { user } } = await _supabase.auth.getUser();
-            currentUser = user;
-
-            if (user) {
-                const { data: favs } = await _supabase.from('favorites').select('listing_id').eq('user_id', user.id);
-                if (favs) favs.forEach(f => userFavorites.add(f.listing_id));
-            }
-
-            const { data, error } = await _supabase.from('listings').select('*').order('created_at', { ascending: false });
-            if (data) {
-                allItems = data;
-                render(allItems);
-            }
-        }
-
-        function render(items) {
-            const grid = document.getElementById('grid');
-            if (items.length === 0) {
-                grid.innerHTML = '<div style="padding:40px 20px; text-align:center; grid-column:1/-1; color:#94a3b8;">No items found.</div>';
-                return;
-            }
-
-            grid.innerHTML = items.map(p => {
-                const isLiked = userFavorites.has(p.id);
-                const heartClass = isLiked ? 'liked' : '';
-                const price = "₦" + (p.price||0).toLocaleString();
-                
-                return `
-                <div class="card">
-                    <div class="card-img-box" onclick="location.href='product-details.html?id=${p.id}'">
-                        <img src="${p.image_url}" class="card-img" loading="lazy">
-                    </div>
-                    
-                    <div class="heart-btn ${heartClass}" onclick="toggleLike(event, '${p.id}', this)">
-                        <svg class="heart-icon" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-                    </div>
-
-                    <div class="card-info" onclick="location.href='product-details.html?id=${p.id}'">
-                        <div class="card-price">${price}</div>
-                        <div class="card-title">${p.name}</div>
-                        <div class="card-meta">
-                            <span>${p.category || 'Item'}</span>
-                            <span>${p.condition}</span>
-                        </div>
-                    </div>
-                </div>
-                `;
-            }).join('');
-        }
-
-        async function toggleLike(e, itemId, btn) {
-            e.stopPropagation(); 
-            if (!currentUser) return alert("Please login to like items.");
-
-            if (userFavorites.has(parseInt(itemId))) {
-                userFavorites.delete(parseInt(itemId));
-                btn.classList.remove('liked');
-                await _supabase.from('favorites').delete().eq('listing_id', itemId).eq('user_id', currentUser.id);
-            } else {
-                userFavorites.add(parseInt(itemId));
-                btn.classList.add('liked');
-                btn.style.transform = "scale(1.2)";
-                setTimeout(() => btn.style.transform = "scale(1)", 200);
-                await _supabase.from('favorites').insert({ listing_id: itemId, user_id: currentUser.id });
-            }
-        }
-
-        function filterCat(cat, el) {
-            document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-            el.classList.add('active');
-            render(cat ? allItems.filter(i => i.category === cat) : allItems);
-        }
-
-        document.getElementById('search').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            render(allItems.filter(i => i.name.toLowerCase().includes(term)));
-        });
-
-        async function logout() { await _supabase.auth.signOut(); window.location.href = 'index.html'; }
-
-        init();
-    </script>
-    <div id="popup-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;">
-    
-    <div style="background:white; width:90%; max-width:350px; border-radius:12px; overflow:hidden; position:relative; animation: popIn 0.3s ease-out;">
-        
-        <button onclick="closePopup()" style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); color:white; border:none; width:30px; height:30px; border-radius:50%; font-weight:bold; cursor:pointer;">&times;</button>
-        
-        <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/file_00000000290471f4a9d51001c52ba824.png" style="width:100%; display:block;">
-        
-        <div style="padding:15px; text-align:center;">
-            <h3 style="margin:0 0 5px 0; color:#0f172a;">Special Announcement!</h3>
-            <p style="margin:0 0 15px 0; font-size:13px; color:#64748b;">Join our premium student community today.</p>
-            <button onclick="closePopup()" style="width:100%; padding:10px; background:#2563eb; color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Get Started</button>
-        </div>
-
+<div class="header">
+    <div class="header-top">
+        <div class="logo">Campus<span>Circle</span> Voting</div>
+        <button class="logout-btn" onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
     </div>
 </div>
 
-<style>
-    /* Animation for smooth entrance */
-    @keyframes popIn {
-        from { transform: scale(0.8); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
-    }
-</style>
+<div id="content">
+    <div class="spinner"></div>
+</div>
 
-<script>
-    // Run this when page loads
-    window.addEventListener('load', () => {
-        // 1. Check if user has already seen the ad in this session
-        const hasSeenAd = sessionStorage.getItem('campus_ad_seen');
-        
-        // 2. If NOT seen yet, show it
-        if (!hasSeenAd) {
-            // Small delay so it feels natural (500ms)
-            setTimeout(() => {
-                document.getElementById('popup-overlay').style.display = 'flex';
-            }, 500);
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+    import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+    import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBOHwOgJn80vtEyhy70D0VP4z6cAYgEsu8",
+        authDomain: "campuscircle-49461.firebaseapp.com",
+        projectId: "campuscircle-49461",
+        storageBucket: "campuscircle-49461.firebasestorage.app",
+        messagingSenderId: "920560772166",
+        appId: "1:920560772166:web:e53d6a3c22fbd56b4c5647"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const typeIcons = { sug: '🏛️', faculty: '🎓', department: '📚' };
+    const typeClass = { sug: 'type-sug', faculty: 'type-faculty', department: 'type-department' };
+    const typeLabel = { sug: 'SUG Election', faculty: 'Faculty Election', department: 'Departmental Election' };
+
+    window.onload = () => {
+        const matric = sessionStorage.getItem('voterMatric');
+        if (!matric) {
+            window.location.href = 'evoting-login.html';
+            return;
         }
-    });
 
-    function closePopup() {
-        // 3. Hide the ad
-        document.getElementById('popup-overlay').style.display = 'none';
-        
-        // 4. Mark as "Seen" so it doesn't appear again until browser closes
-        sessionStorage.setItem('campus_ad_seen', 'true');
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                sessionStorage.removeItem('voterMatric');
+                sessionStorage.removeItem('voterEmail');
+                window.location.href = 'evoting-login.html';
+                return;
+            }
+
+            try {
+                const studentRef = doc(db, 'students', matric);
+                const studentSnap = await getDoc(studentRef);
+
+                if (!studentSnap.exists() || studentSnap.data().authUid !== user.uid) {
+                    window.location.href = 'evoting-login.html';
+                    return;
+                }
+
+                const student = studentSnap.data();
+                if (student.isAdmin) {
+                    window.location.href = 'admin-dashboard.html';
+                    return;
+                }
+                await renderDashboard(student, matric);
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('content').innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>Something went wrong loading your dashboard. Please try again.</p></div>`;
+            }
+        });
+    };
+
+    async function renderDashboard(student, matric) {
+        // Fetch all elections
+        const electionsSnap = await getDocs(collection(db, 'elections'));
+        const allElections = electionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        // Filter eligible elections
+        const eligible = allElections.filter(e => {
+            if (e.type === 'sug') return true;
+            if (e.type === 'faculty') return e.scope?.faculty === student.faculty;
+            if (e.type === 'department') return e.scope?.faculty === student.faculty && e.scope?.department === student.department;
+            return false;
+        });
+
+        // Sort: active first, then upcoming, then closed
+        const order = { active: 0, upcoming: 1, closed: 2 };
+        eligible.sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
+
+        const hasVotedMap = {
+            sug: student.hasVotedSUG,
+            faculty: student.hasVotedFaculty,
+            department: student.hasVotedDepartment
+        };
+
+        const content = document.getElementById('content');
+
+        let html = `
+        <div class="welcome-card">
+            <div class="welcome-greeting">Welcome back,</div>
+            <div class="welcome-name">${student.fullName || 'Student'}</div>
+            <div class="welcome-meta">
+                <div class="meta-chip"><i class="fa-solid fa-id-card"></i> ${student.matricNumber || '-'}</div>
+                <div class="meta-chip"><i class="fa-solid fa-graduation-cap"></i> ${student.faculty || '-'}</div>
+                <div class="meta-chip"><i class="fa-solid fa-book"></i> ${student.department || '-'}</div>
+            </div>
+        </div>`;
+
+        if (!eligible.length) {
+            html += `
+            <div class="notice-banner">
+                <i class="fa-solid fa-circle-info"></i>
+                <span>There are no elections set up yet for your faculty/department. Check back when election admins create one.</span>
+            </div>
+            <div class="empty-state">
+                <i class="fa-solid fa-box-open"></i>
+                <p>No elections available right now.</p>
+            </div>`;
+            content.innerHTML = html;
+            return;
+        }
+
+        const active = eligible.filter(e => e.status === 'active');
+        const upcoming = eligible.filter(e => e.status === 'upcoming');
+        const closed = eligible.filter(e => e.status === 'closed');
+
+        if (active.length) {
+            html += `<div class="section"><div class="section-title"><i class="fa-solid fa-bolt"></i> Active Elections</div>`;
+            active.forEach(e => html += renderCard(e, hasVotedMap[e.type]));
+            html += `</div>`;
+        }
+
+        if (upcoming.length) {
+            html += `<div class="section"><div class="section-title"><i class="fa-solid fa-clock"></i> Upcoming Elections</div>`;
+            upcoming.forEach(e => html += renderCard(e, hasVotedMap[e.type]));
+            html += `</div>`;
+        }
+
+        if (closed.length) {
+            html += `<div class="section"><div class="section-title"><i class="fa-solid fa-flag-checkered"></i> Closed Elections</div>`;
+            closed.forEach(e => html += renderCard(e, hasVotedMap[e.type]));
+            html += `</div>`;
+        }
+
+        content.innerHTML = html;
     }
+
+    function renderCard(e, hasVoted) {
+        const icon = typeIcons[e.type] || '🗳️';
+        const cls = typeClass[e.type] || '';
+        const label = typeLabel[e.type] || 'Election';
+        const statusClass = `status-${e.status}`;
+
+        let scopeText = '';
+        if (e.type === 'department') scopeText = `${e.scope?.department || ''}, ${e.scope?.faculty || ''}`;
+        else if (e.type === 'faculty') scopeText = e.scope?.faculty || '';
+        else scopeText = 'All Students';
+
+        let footer = '';
+        if (e.status === 'active') {
+            const endDate = e.endDate?.toDate ? e.endDate.toDate() : new Date(e.endDate);
+            const countdown = formatCountdown(endDate);
+            if (hasVoted) {
+                footer = `<div class="countdown-text"><i class="fa-solid fa-clock"></i> ${countdown}</div><div class="voted-badge"><i class="fa-solid fa-check"></i> Voted</div>`;
+            } else {
+                footer = `<div class="countdown-text"><i class="fa-solid fa-clock"></i> ${countdown}</div><button class="vote-btn" onclick="window.location.href='ballot.html?electionId=${e.id}'"><i class="fa-solid fa-vote-yea"></i> Vote Now</button>`;
+            }
+        } else if (e.status === 'upcoming') {
+            const startDate = e.startDate?.toDate ? e.startDate.toDate() : new Date(e.startDate);
+            footer = `<div class="countdown-text"><i class="fa-solid fa-calendar"></i> Starts ${startDate.toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>`;
+        } else {
+            footer = `<div class="closed-text"><i class="fa-solid fa-lock"></i> Election Closed</div>`;
+            if (e.resultsMode === 'live' || e.status === 'closed') {
+                footer += `<button class="vote-btn" style="background:var(--surface2);color:var(--accent);" onclick="window.location.href='results.html?electionId=${e.id}'"><i class="fa-solid fa-chart-bar"></i> View Results</button>`;
+            }
+        }
+
+        return `<div class="election-card">
+            <div class="election-top">
+                <div class="election-type-icon ${cls}">${icon}</div>
+                <div class="election-info">
+                    <div class="election-title">${e.title}</div>
+                    <div class="election-scope">${label} · ${scopeText}</div>
+                </div>
+                <div class="election-status ${statusClass}">${e.status?.toUpperCase()}</div>
+            </div>
+            <div class="election-footer">${footer}</div>
+        </div>`;
+    }
+
+    function formatCountdown(endDate) {
+        const diff = endDate - new Date();
+        if (diff <= 0) return 'Ending soon';
+        const days = Math.floor(diff / 86400000);
+        const hours = Math.floor((diff % 86400000) / 3600000);
+        const mins = Math.floor((diff % 3600000) / 60000);
+        if (days > 0) return `${days}d ${hours}h left`;
+        if (hours > 0) return `${hours}h ${mins}m left`;
+        return `${mins}m left`;
+    }
+
+    window.logout = async function() {
+        sessionStorage.removeItem('voterMatric');
+        sessionStorage.removeItem('voterEmail');
+        try { await signOut(auth); } catch (e) {}
+        window.location.href = 'evoting-login.html';
+    };
 </script>
 </body>
 </html>
-                                                                                                                                                                                                            </html>
-    

@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Results | Campus Circle E-Voting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root{--bg:#0a1628;--surface:#112236;--surface2:#1a2f4a;--primary:#3d72b4;--primary-bright:#5b9bd5;--accent:#64b5f6;--text:#e2eaf4;--muted:#7a9cc0;--border:rgba(61,114,180,0.2);--success:#22c55e;--danger:#ef4444;--warning:#f59e0b;}
+        *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+        body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:30px;}
+
+        .header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;}
+        .back-btn{color:var(--muted);text-decoration:none;width:36px;height:36px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);flex-shrink:0;}
+        .header-info h1{font-size:1.02rem;font-weight:800;line-height:1.2;}
+        .header-info span{font-size:0.75rem;color:var(--muted);}
+        .live-badge{background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.3);font-size:0.68rem;font-weight:700;padding:3px 8px;border-radius:8px;display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0;}
+        .live-badge::before{content:'';width:5px;height:5px;background:var(--danger);border-radius:50%;animation:pulse 1s infinite;}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+
+        /* INFO BANNER */
+        .info-banner{padding:12px 16px;font-size:0.78rem;display:flex;align-items:flex-start;gap:8px;line-height:1.5;border-bottom:1px solid var(--border);}
+        .info-banner.live{background:rgba(34,197,94,0.06);color:#86efac;border-bottom-color:rgba(34,197,94,0.15);}
+        .info-banner.hidden{background:rgba(245,158,11,0.06);color:#fbbf24;border-bottom-color:rgba(245,158,11,0.15);}
+        .info-banner.closed{background:rgba(61,114,180,0.06);color:var(--accent);border-bottom-color:rgba(61,114,180,0.15);}
+
+        /* STATS */
+        .stats-row{display:flex;gap:10px;padding:14px 16px;}
+        .stat-box{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+        .stat-box .val{font-size:1.3rem;font-weight:800;color:var(--accent);}
+        .stat-box .label{font-size:0.7rem;color:var(--muted);margin-top:2px;}
+
+        /* POSITION SECTION */
+        .position-section{padding:0 16px 22px;}
+        .position-title{font-size:1.02rem;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+        .position-title i{color:var(--accent);}
+
+        /* CANDIDATE RESULT CARD */
+        .result-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px;margin-bottom:10px;}
+        .result-top{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+        .rank-badge{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.85rem;font-weight:800;flex-shrink:0;}
+        .rank-1{background:linear-gradient(135deg,#f59e0b,#d97706);color:white;}
+        .rank-2{background:linear-gradient(135deg,#9ca3af,#6b7280);color:white;}
+        .rank-3{background:linear-gradient(135deg,#cd7c3e,#b45309);color:white;}
+        .rank-other{background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+        .result-photo{width:42px;height:42px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0;}
+        .result-photo-placeholder{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-bright));display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+        .result-name{flex:1;}
+        .result-name strong{display:block;font-size:0.92rem;font-weight:800;}
+        .result-votes{font-size:0.78rem;color:var(--muted);}
+        .winner-tag{font-size:0.68rem;font-weight:700;color:var(--success);background:rgba(34,197,94,0.12);padding:3px 8px;border-radius:6px;display:inline-flex;align-items:center;gap:4px;margin-top:2px;}
+
+        .progress-bar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-bottom:6px;}
+        .progress-fill{height:100%;border-radius:4px;transition:width 0.8s ease;background:linear-gradient(90deg,var(--primary),var(--accent));}
+        .progress-fill.gold{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+        .progress-fill.silver{background:linear-gradient(90deg,#9ca3af,#d1d5db);}
+        .progress-fill.bronze{background:linear-gradient(90deg,#cd7c3e,#d97706);}
+        .progress-meta{display:flex;justify-content:space-between;font-size:0.75rem;color:var(--muted);}
+
+        /* HIDDEN RESULTS STATE */
+        .hidden-state{text-align:center;padding:60px 24px;color:var(--muted);}
+        .hidden-state i{font-size:2.8rem;opacity:0.3;display:block;margin-bottom:14px;}
+        .hidden-state h3{color:var(--text);font-size:1.1rem;margin-bottom:8px;}
+        .hidden-state .countdown{margin-top:18px;display:flex;gap:8px;justify-content:center;}
+        .count-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;text-align:center;}
+        .count-box .num{font-size:1.3rem;font-weight:800;color:var(--accent);display:block;}
+        .count-box .lbl{font-size:0.65rem;color:var(--muted);text-transform:uppercase;}
+
+        .blocked-state{text-align:center;padding:60px 24px;color:var(--muted);}
+        .blocked-state i{font-size:2.8rem;opacity:0.3;display:block;margin-bottom:14px;}
+        .blocked-state h3{color:var(--text);font-size:1.1rem;margin-bottom:8px;}
+        .btn-primary{padding:12px 24px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--primary),var(--primary-bright));color:white;font-weight:700;font-size:0.9rem;cursor:pointer;font-family:'Outfit',sans-serif;display:inline-flex;align-items:center;gap:8px;margin-top:16px;box-shadow:0 4px 14px rgba(61,114,180,0.3);}
+
+        .spinner-center{text-align:center;padding:60px 0;}
+        .spinner{width:32px;height:32px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="header-info">
+        <h1 id="header-title">Loading...</h1>
+        <span id="header-sub">Campus Circle E-Voting</span>
+    </div>
+    <div class="live-badge" id="live-badge" style="display:none;">LIVE</div>
+</div>
+
+<div id="content">
+    <div class="spinner-center"><div class="spinner"></div></div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBOHwOgJn80vtEyhy70D0VP4z6cAYgEsu8",
+        authDomain: "campuscircle-49461.firebaseapp.com",
+        projectId: "campuscircle-49461",
+        storageBucket: "campuscircle-49461.firebasestorage.app",
+        messagingSenderId: "920560772166",
+        appId: "1:920560772166:web:e53d6a3c22fbd56b4c5647"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const params = new URLSearchParams(window.location.search);
+    const electionId = params.get('electionId');
+
+    let election = null;
+    let currentStudent = null;
+    let candidatesByPosition = {};
+    let unsubscribeCounter = null;
+    let countdownInterval = null;
+
+    function toDate(d) {
+        if (!d) return null;
+        return d.toDate ? d.toDate() : new Date(d);
+    }
+    function formatDate(d) {
+        const date = toDate(d);
+        return date ? date.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+    }
+
+    window.onload = () => {
+        const matric = sessionStorage.getItem('voterMatric');
+        if (!matric) { window.location.href = 'evoting-login.html'; return; }
+        if (!electionId) { window.location.href = 'dashboard.html'; return; }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { window.location.href = 'evoting-login.html'; return; }
+
+            try {
+                const studentRef = doc(db, 'students', matric);
+                const studentSnap = await getDoc(studentRef);
+                if (!studentSnap.exists() || studentSnap.data().authUid !== user.uid) {
+                    window.location.href = 'evoting-login.html'; return;
+                }
+                currentStudent = studentSnap.data();
+
+                await loadElection();
+
+            } catch (e) {
+                console.error(e);
+                renderBlocked('fa-triangle-exclamation', 'Something Went Wrong', 'Please go back and try again.');
+            }
+        });
+    };
+
+    async function loadElection() {
+        const electionSnap = await getDoc(doc(db, 'elections', electionId));
+        if (!electionSnap.exists()) {
+            renderBlocked('fa-circle-question', 'Election Not Found', 'This election does not exist or has been removed.');
+            return;
+        }
+        election = { id: electionId, ...electionSnap.data() };
+
+        // Eligibility check (same as ballot — only eligible voters can view results too)
+        const isEligible = checkEligibility(election, currentStudent);
+        if (!isEligible) {
+            renderBlocked('fa-lock', 'Not Eligible', "You're not eligible to view this election's results.");
+            return;
+        }
+
+        document.getElementById('header-title').textContent = election.title;
+
+        // Load candidates
+        const candSnap = await getDocs(query(collection(db, 'candidates'), where('electionId', '==', electionId)));
+        const allCandidates = candSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        candidatesByPosition = {};
+        (election.positions || []).forEach(pos => {
+            candidatesByPosition[pos] = allCandidates.filter(c => c.position === pos);
+        });
+
+        const isLive = election.status === 'active';
+        const isClosed = election.status === 'closed';
+        const resultsVisible = election.resultsMode === 'live' || isClosed;
+
+        if (isLive) {
+            document.getElementById('live-badge').style.display = 'flex';
+        }
+
+        if (!resultsVisible) {
+            renderHiddenState();
+            return;
+        }
+
+        document.getElementById('header-sub').textContent = isClosed ? 'Final Results' : 'Live Results';
+
+        // Banner
+        const banner = isClosed
+            ? bannerHtml('closed', 'fa-flag-checkered', `This election closed on ${formatDate(election.endDate)}. These are the final results.`)
+            : bannerHtml('live', 'fa-bolt', 'Results are updating live as votes come in. Final results will be confirmed when the election closes.');
+
+        if (isLive) {
+            // Realtime listener for live updates
+            unsubscribeCounter = onSnapshot(doc(db, 'voteCounters', electionId), (snap) => {
+                renderResults(banner, snap.exists() ? snap.data() : { candidateCounts: {}, totalVotesCast: 0 }, isClosed);
+            });
+        } else {
+            const counterSnap = await getDoc(doc(db, 'voteCounters', electionId));
+            renderResults(banner, counterSnap.exists() ? counterSnap.data() : { candidateCounts: {}, totalVotesCast: 0 }, isClosed);
+        }
+    }
+
+    function checkEligibility(e, student) {
+        if (e.type === 'sug') return true;
+        if (e.type === 'faculty') return e.scope?.faculty === student.faculty;
+        if (e.type === 'department') return e.scope?.faculty === student.faculty && e.scope?.department === student.department;
+        return false;
+    }
+
+    function bannerHtml(type, icon, text) {
+        return `<div class="info-banner ${type}"><i class="fa-solid ${icon}" style="margin-top:2px;"></i><span>${text}</span></div>`;
+    }
+
+    function renderHiddenState() {
+        document.getElementById('header-sub').textContent = 'Results Hidden';
+        const endDate = toDate(election.endDate);
+
+        document.getElementById('content').innerHTML = `
+        <div class="hidden-state">
+            <i class="fa-solid fa-lock"></i>
+            <h3>Results Are Hidden</h3>
+            <p>Results for this election will be revealed once voting closes${endDate ? `, on <strong style="color:var(--text)">${formatDate(election.endDate)}</strong>` : ''}.</p>
+            <div class="countdown" id="hidden-countdown"></div>
+        </div>`;
+
+        if (endDate) startCountdown(endDate);
+    }
+
+    function startCountdown(endDate) {
+        function update() {
+            const diff = endDate - new Date();
+            const el = document.getElementById('hidden-countdown');
+            if (!el) { clearInterval(countdownInterval); return; }
+            if (diff <= 0) {
+                el.innerHTML = `<div class="count-box"><span class="num">--</span><span class="lbl">Closing now</span></div>`;
+                clearInterval(countdownInterval);
+                setTimeout(() => window.location.reload(), 2000);
+                return;
+            }
+            const d = Math.floor(diff / 86400000);
+            const h = Math.floor((diff % 86400000) / 3600000);
+            const m = Math.floor((diff % 3600000) / 60000);
+            const s = Math.floor((diff % 60000) / 1000);
+            el.innerHTML = `
+                <div class="count-box"><span class="num">${d}</span><span class="lbl">Days</span></div>
+                <div class="count-box"><span class="num">${h}</span><span class="lbl">Hrs</span></div>
+                <div class="count-box"><span class="num">${m}</span><span class="lbl">Min</span></div>
+                <div class="count-box"><span class="num">${s}</span><span class="lbl">Sec</span></div>`;
+        }
+        update();
+        countdownInterval = setInterval(update, 1000);
+    }
+
+    function renderResults(banner, counterData, isClosed) {
+        const candidateCounts = counterData.candidateCounts || {};
+        const totalVotesCast = counterData.totalVotesCast || 0;
+        const positions = election.positions || [];
+
+        let html = banner;
+        html += `<div class="stats-row">
+            <div class="stat-box"><div class="val">${totalVotesCast}</div><div class="label">Total Votes Cast</div></div>
+            <div class="stat-box"><div class="val">${positions.length}</div><div class="label">Positions</div></div>
+        </div>`;
+
+        positions.forEach(pos => {
+            const candidates = candidatesByPosition[pos] || [];
+            const withVotes = candidates.map(c => ({ ...c, votes: candidateCounts[c.id] || 0 }));
+            withVotes.sort((a, b) => b.votes - a.votes);
+
+            const posTotalVotes = withVotes.reduce((sum, c) => sum + c.votes, 0);
+            const maxVotes = withVotes[0]?.votes || 0;
+
+            html += `<div class="position-section">
+                <div class="position-title"><i class="fa-solid fa-square-poll-vertical"></i> ${pos}</div>`;
+
+            if (!withVotes.length) {
+                html += `<p style="color:var(--muted);font-size:0.85rem;">No candidates for this position.</p>`;
+            } else {
+                withVotes.forEach((c, i) => {
+                    const pct = posTotalVotes > 0 ? Math.round((c.votes / posTotalVotes) * 100) : 0;
+                    const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-other';
+                    const rankLabel = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i+1}`;
+                    const fillClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+                    const isWinner = isClosed && i === 0 && c.votes > 0 && (withVotes.length === 1 || withVotes[1].votes < c.votes);
+
+                    html += `<div class="result-card">
+                        <div class="result-top">
+                            <div class="rank-badge ${rankClass}">${rankLabel}</div>
+                            ${c.photoUrl ? `<img class="result-photo" src="${c.photoUrl}">` : `<div class="result-photo-placeholder">😊</div>`}
+                            <div class="result-name">
+                                <strong>${c.fullName}</strong>
+                                <div class="result-votes">${c.votes} vote${c.votes !== 1 ? 's' : ''}</div>
+                                ${isWinner ? `<span class="winner-tag"><i class="fa-solid fa-trophy"></i> Winner</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="progress-bar"><div class="progress-fill ${fillClass}" style="width:${pct}%"></div></div>
+                        <div class="progress-meta"><span>${pct}% of votes</span><span>${c.votes} / ${posTotalVotes}</span></div>
+                    </div>`;
+                });
+            }
+
+            html += `</div>`;
+        });
+
+        document.getElementById('content').innerHTML = html;
+    }
+
+    function renderBlocked(icon, title, message) {
+        document.getElementById('content').innerHTML = `
+            <div class="blocked-state">
+                <i class="fa-solid ${icon}"></i>
+                <h3>${title}</h3>
+                <p>${message}</p>
+                <button class="btn-primary" onclick="window.location.href='dashboard.html'"><i class="fa-solid fa-house"></i> Back to Dashboard</button>
+            </div>`;
+    }
+
+    window.addEventListener('beforeunload', () => {
+        if (unsubscribeCounter) unsubscribeCounter();
+        if (countdownInterval) clearInterval(countdownInterval);
+    });
+</script>
+</body>
+</html>
