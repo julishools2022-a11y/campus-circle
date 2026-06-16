@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Manage Candidates | Campus Circle E-Voting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root{--bg:#0a1628;--surface:#112236;--surface2:#1a2f4a;--primary:#3d72b4;--primary-bright:#5b9bd5;--accent:#64b5f6;--text:#e2eaf4;--muted:#7a9cc0;--border:rgba(61,114,180,0.2);--success:#22c55e;--danger:#ef4444;--warning:#f59e0b;}
+        *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+        body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px;}
+
+        .header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;}
+        .back-btn{color:var(--muted);text-decoration:none;width:36px;height:36px;border-radius:50%;background:var(--surface2);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);flex-shrink:0;}
+        .header-info h1{font-size:1.05rem;font-weight:800;}
+        .header-info span{font-size:0.78rem;color:var(--muted);}
+
+        .form-wrap{padding:16px;}
+        .section-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;margin-bottom:16px;}
+        .section-card h3{font-size:0.9rem;font-weight:800;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+
+        /* ELECTION PICKER */
+        .election-picker{display:flex;flex-direction:column;gap:8px;}
+        .election-pick-item{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+        .election-pick-item:active{transform:scale(0.98);}
+        .election-pick-item .info strong{display:block;font-size:0.88rem;}
+        .election-pick-item .info span{font-size:0.74rem;color:var(--muted);}
+        .status-pill{font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:6px;}
+        .status-active{background:rgba(34,197,94,0.15);color:var(--success);}
+        .status-upcoming{background:rgba(245,158,11,0.15);color:var(--warning);}
+        .status-closed{background:rgba(122,156,192,0.15);color:var(--muted);}
+
+        .form-group{margin-bottom:14px;}
+        .form-group label{display:block;font-size:0.78rem;font-weight:600;color:var(--muted);margin-bottom:6px;}
+        .form-group label span{color:var(--danger);}
+        input,select,textarea{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Outfit',sans-serif;font-size:0.9rem;}
+        input:focus,select:focus,textarea:focus{border-color:var(--primary);outline:none;}
+        textarea{resize:none;}
+
+        /* PHOTO UPLOAD */
+        .photo-upload{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+        .photo-preview{width:56px;height:56px;border-radius:50%;background:var(--surface2);border:2px dashed rgba(61,114,180,0.4);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;overflow:hidden;}
+        .photo-preview img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+        .photo-preview i{color:var(--muted);font-size:1.2rem;}
+        .photo-info{flex:1;}
+        .photo-info .title{font-size:0.82rem;font-weight:600;}
+        .photo-info .sub{font-size:0.72rem;color:var(--muted);}
+
+        .social-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+        .btn-save{width:100%;padding:13px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--success),#16a34a);color:white;font-weight:700;font-size:0.95rem;cursor:pointer;font-family:'Outfit',sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;}
+        .btn-save:disabled{opacity:0.5;cursor:not-allowed;}
+
+        /* CANDIDATE LIST */
+        .position-group{margin-bottom:18px;}
+        .position-group-title{font-size:0.82rem;font-weight:800;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;}
+        .candidate-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;}
+        .candidate-photo{width:46px;height:46px;border-radius:50%;object-fit:cover;background:var(--surface);flex-shrink:0;}
+        .candidate-photo-placeholder{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-bright));display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+        .candidate-info{flex:1;}
+        .candidate-info strong{display:block;font-size:0.9rem;}
+        .candidate-info span{font-size:0.75rem;color:var(--muted);display:block;margin-top:2px;}
+        .candidate-actions{display:flex;gap:6px;flex-shrink:0;}
+        .icon-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:0.85rem;}
+        .icon-btn.danger{border-color:rgba(239,68,68,0.3);color:var(--danger);}
+        .icon-btn.primary{border-color:rgba(61,114,180,0.3);color:var(--accent);}
+
+        .empty-state{text-align:center;padding:30px 20px;color:var(--muted);}
+        .empty-state i{font-size:2.2rem;opacity:0.2;display:block;margin-bottom:10px;}
+
+        .spinner-center{text-align:center;padding:60px 0;}
+        .spinner{width:32px;height:32px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto;}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        .access-denied{text-align:center;padding:60px 20px;color:var(--muted);}
+        .access-denied i{font-size:2.5rem;opacity:0.3;display:block;margin-bottom:12px;}
+
+        #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 20px;font-size:0.85rem;font-weight:600;display:none;z-index:999;white-space:nowrap;box-shadow:0 8px 24px rgba(0,0,0,0.3);max-width:90vw;text-align:center;}
+        #toast.error{border-color:rgba(239,68,68,0.4);color:var(--danger);}
+        #toast.success{border-color:rgba(34,197,94,0.4);color:var(--success);}
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="admin-dashboard.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+    <div class="header-info">
+        <h1 id="header-title">Manage Candidates</h1>
+        <span id="header-sub">Loading...</span>
+    </div>
+</div>
+
+<div id="content">
+    <div class="spinner-center"><div class="spinner"></div></div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, getDocs, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBOHwOgJn80vtEyhy70D0VP4z6cAYgEsu8",
+        authDomain: "campuscircle-49461.firebaseapp.com",
+        projectId: "campuscircle-49461",
+        storageBucket: "campuscircle-49461.firebasestorage.app",
+        messagingSenderId: "920560772166",
+        appId: "1:920560772166:web:e53d6a3c22fbd56b4c5647"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const params = new URLSearchParams(window.location.search);
+    let electionId = params.get('electionId');
+
+    const SUPABASE_URL = "https://nijjgpgxdhsrtftuqcoy.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5pampncGd4ZGhzcnRmdHVxY295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTM1OTAsImV4cCI6MjA4MzUyOTU5MH0.v0pcYyNBjD_FeBVJCJHICEvbLwP1Q2Hjp08Jo_5ii3g";
+    const SUPABASE_BUCKET = "evoting-photos";
+
+    let currentAdmin = null;
+    let currentElection = null;
+    let editingCandidateId = null;
+    let photoFile = null;
+    let existingPhotoUrl = null;
+    
+    const typeLabel = { sug: 'SUG Election', faculty: 'Faculty Election', department: 'Departmental Election' };
+
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.className = type; t.style.display = 'block';
+        setTimeout(() => { t.style.display = 'none'; }, 3000);
+    }
+
+    window.onload = () => {
+        const matric = sessionStorage.getItem('voterMatric');
+        if (!matric) { window.location.href = 'evoting-login.html'; return; }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { window.location.href = 'evoting-login.html'; return; }
+
+            try {
+                const studentRef = doc(db, 'students', matric);
+                const studentSnap = await getDoc(studentRef);
+                if (!studentSnap.exists() || studentSnap.data().authUid !== user.uid) {
+                    window.location.href = 'evoting-login.html'; return;
+                }
+
+                const admin = studentSnap.data();
+                currentAdmin = { matric, ...admin };
+
+                if (!admin.isAdmin) {
+                    document.getElementById('content').innerHTML = accessDenied();
+                    return;
+                }
+
+                if (electionId) {
+                    await loadElectionAndCandidates();
+                } else {
+                    await loadElectionPicker();
+                }
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('content').innerHTML = `<div class="access-denied"><i class="fa-solid fa-triangle-exclamation"></i><p>Something went wrong. Please try again.</p></div>`;
+            }
+        });
+    };
+
+    function accessDenied() {
+        return `<div class="access-denied"><i class="fa-solid fa-lock"></i><h3 style="color:var(--text);margin-bottom:6px;">Access Restricted</h3><p>You don't have permission to manage candidates.</p></div>`;
+    }
+
+    // ── ELECTION PICKER (no electionId in URL) ──────────────────────────────
+    async function loadElectionPicker() {
+        document.getElementById('header-sub').textContent = 'Select an election';
+        const snap = await getDocs(collection(db, 'elections'));
+        let elections = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        const role = currentAdmin.adminRole;
+        const scope = currentAdmin.adminScope || {};
+
+        if (role === 'faculty_admin') {
+            elections = elections.filter(e => e.scope?.faculty === scope.faculty);
+        } else if (role === 'department_admin') {
+            elections = elections.filter(e => e.type === 'department' && e.scope?.faculty === scope.faculty && e.scope?.department === scope.department);
+        }
+        // super_admin / election_admin see all
+
+        const content = document.getElementById('content');
+        if (!elections.length) {
+            content.innerHTML = `<div class="form-wrap"><div class="empty-state"><i class="fa-solid fa-box-open"></i><p>No elections found for your scope.</p></div></div>`;
+            return;
+        }
+
+        const order = { active: 0, upcoming: 1, closed: 2 };
+        elections.sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
+
+        content.innerHTML = `<div class="form-wrap"><div class="section-card">
+            <h3><i class="fa-solid fa-list"></i> Select Election</h3>
+            <div class="election-picker">
+                ${elections.map(e => {
+                    let scopeText = e.type === 'department' ? `${e.scope?.department || ''}, ${e.scope?.faculty || ''}`
+                        : e.type === 'faculty' ? e.scope?.faculty || '' : 'All Students';
+                    return `<div class="election-pick-item" onclick="window.location.href='manage-candidates.html?electionId=${e.id}'">
+                        <div class="info"><strong>${e.title}</strong><span>${typeLabel[e.type] || e.type} · ${scopeText}</span></div>
+                        <span class="status-pill status-${e.status}">${e.status?.toUpperCase()}</span>
+                    </div>`;
+                }).join('')}
+            </div>
+        </div></div>`;
+    }
+
+    // ── ELECTION + CANDIDATES VIEW ───────────────────────────────────────────
+    async function loadElectionAndCandidates() {
+        const electionSnap = await getDoc(doc(db, 'elections', electionId));
+        if (!electionSnap.exists()) {
+            document.getElementById('content').innerHTML = `<div class="form-wrap"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>Election not found.</p></div></div>`;
+            return;
+        }
+        currentElection = { id: electionId, ...electionSnap.data() };
+
+        // Scope check for non-super admins
+        const role = currentAdmin.adminRole;
+        const scope = currentAdmin.adminScope || {};
+        if (role === 'faculty_admin' && currentElection.scope?.faculty !== scope.faculty) {
+            document.getElementById('content').innerHTML = accessDenied(); return;
+        }
+        if (role === 'department_admin' && (currentElection.type !== 'department' || currentElection.scope?.faculty !== scope.faculty || currentElection.scope?.department !== scope.department)) {
+            document.getElementById('content').innerHTML = accessDenied(); return;
+        }
+
+        let scopeText = currentElection.type === 'department' ? `${currentElection.scope?.department || ''}, ${currentElection.scope?.faculty || ''}`
+            : currentElection.type === 'faculty' ? currentElection.scope?.faculty || '' : 'All Students';
+
+        document.getElementById('header-title').textContent = currentElection.title;
+        document.getElementById('header-sub').textContent = `${typeLabel[currentElection.type] || currentElection.type} · ${scopeText}`;
+
+        renderAddForm();
+        await renderCandidateList();
+    }
+
+    function renderAddForm() {
+        const positions = currentElection.positions || [];
+        document.getElementById('content').innerHTML = `
+        <div class="form-wrap">
+            <div class="section-card" id="add-form-card">
+                <h3 id="form-title"><i class="fa-solid fa-user-plus"></i> Add Candidate</h3>
+
+                <div class="form-group">
+                    <label>Position <span>*</span></label>
+                    <select id="cand-position">${positions.map(p => `<option value="${p}">${p}</option>`).join('')}</select>
+                </div>
+
+                <div class="photo-upload">
+                    <div class="photo-preview" onclick="document.getElementById('cand-photo-file').click()">
+                        <img id="cand-photo-img" style="display:none;">
+                        <i id="cand-photo-icon" class="fa-solid fa-camera"></i>
+                    </div>
+                    <div class="photo-info">
+                        <div class="title">Candidate Photo</div>
+                        <div class="sub">Tap to upload (optional)</div>
+                    </div>
+                    <input type="file" id="cand-photo-file" accept="image/*" style="display:none;" onchange="previewPhoto(this)">
+                </div>
+
+                <div class="form-group">
+                    <label>Full Name <span>*</span></label>
+                    <input id="cand-name" placeholder="e.g. Jane Smith">
+                </div>
+                <div class="form-group">
+                    <label>Biography</label>
+                    <textarea id="cand-bio" rows="2" placeholder="Short background about the candidate"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Manifesto</label>
+                    <textarea id="cand-manifesto" rows="3" placeholder="What they're promising / campaign agenda"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Social Links</label>
+                    <div class="social-grid">
+                        <input id="cand-twitter" placeholder="X / Twitter URL">
+                        <input id="cand-instagram" placeholder="Instagram URL">
+                    </div>
+                </div>
+
+                <button class="btn-save" id="btn-save-candidate" onclick="saveCandidate()">
+                    <i class="fa-solid fa-floppy-disk"></i> <span id="save-btn-text">Add Candidate</span>
+                </button>
+                <button class="btn-save" id="btn-cancel-edit" style="display:none;background:var(--surface2);color:var(--muted);margin-top:8px;" onclick="cancelEdit()">
+                    Cancel Edit
+                </button>
+            </div>
+
+            <div class="section-card">
+                <h3><i class="fa-solid fa-users"></i> Candidates</h3>
+                <div id="candidates-container"></div>
+            </div>
+        </div>`;
+    }
+
+    window.previewPhoto = function(input) {
+        photoFile = input.files[0];
+        if (!photoFile) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('cand-photo-icon').style.display = 'none';
+            const img = document.getElementById('cand-photo-img');
+            img.src = e.target.result;
+            img.style.display = 'block';
+        };
+        reader.readAsDataURL(photoFile);
+    };
+
+    async function uploadPhotoToSupabase(file) {
+        const ext = file.name.split('.').pop();
+        const fileName = `candidates/${electionId}_${Date.now()}_${Math.random().toString(36).substr(2,6)}.${ext}`;
+        const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${SUPABASE_BUCKET}/${fileName}`;
+
+        const resp = await fetch(uploadUrl, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'Content-Type': file.type,
+                'apikey': SUPABASE_ANON_KEY
+            },
+            body: file
+        });
+
+        if (!resp.ok) {
+            const err = await resp.text();
+            throw new Error('Photo upload failed: ' + err);
+        }
+
+        return `${SUPABASE_URL}/storage/v1/object/public/${SUPABASE_BUCKET}/${fileName}`;
+    }
+
+    async function renderCandidateList() {
+        const snap = await getDocs(query(collection(db, 'candidates'), where('electionId', '==', electionId)));
+        const candidates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        const container = document.getElementById('candidates-container');
+        if (!candidates.length) {
+            container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-user-slash"></i><p>No candidates yet. Add one above.</p></div>`;
+            return;
+        }
+
+        const positions = currentElection.positions || [];
+        let html = '';
+        positions.forEach(pos => {
+            const posCandidates = candidates.filter(c => c.position === pos);
+            if (!posCandidates.length) return;
+            html += `<div class="position-group">
+                <div class="position-group-title">${pos} (${posCandidates.length})</div>
+                ${posCandidates.map(c => `
+                    <div class="candidate-card">
+                        ${c.photoUrl ? `<img class="candidate-photo" src="${c.photoUrl}">` : `<div class="candidate-photo-placeholder">😊</div>`}
+                        <div class="candidate-info">
+                            <strong>${c.fullName}</strong>
+                            <span>${c.manifesto ? c.manifesto.substring(0, 60) + (c.manifesto.length > 60 ? '...' : '') : 'No manifesto'}</span>
+                        </div>
+                        <div class="candidate-actions">
+                            <button class="icon-btn primary" onclick="editCandidate('${c.id}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="icon-btn danger" onclick="deleteCandidate('${c.id}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>`).join('')}
+            </div>`;
+        });
+
+        // Candidates with positions not in current list (edge case)
+        const orphans = candidates.filter(c => !positions.includes(c.position));
+        if (orphans.length) {
+            html += `<div class="position-group"><div class="position-group-title">Other</div>
+                ${orphans.map(c => `
+                    <div class="candidate-card">
+                        ${c.photoUrl ? `<img class="candidate-photo" src="${c.photoUrl}">` : `<div class="candidate-photo-placeholder">😊</div>`}
+                        <div class="candidate-info"><strong>${c.fullName}</strong><span>${c.position}</span></div>
+                        <div class="candidate-actions">
+                            <button class="icon-btn primary" onclick="editCandidate('${c.id}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="icon-btn danger" onclick="deleteCandidate('${c.id}')"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>`).join('')}
+            </div>`;
+        }
+
+        container.innerHTML = html || `<div class="empty-state"><i class="fa-solid fa-user-slash"></i><p>No candidates yet. Add one above.</p></div>`;
+        window._candidatesCache = candidates;
+    }
+
+    window.editCandidate = function(id) {
+        const c = (window._candidatesCache || []).find(x => x.id === id);
+        if (!c) return;
+        editingCandidateId = id;
+
+        document.getElementById('cand-position').value = c.position;
+        document.getElementById('cand-name').value = c.fullName || '';
+        document.getElementById('cand-bio').value = c.biography || '';
+        document.getElementById('cand-manifesto').value = c.manifesto || '';
+        document.getElementById('cand-twitter').value = c.socialLinks?.twitter || '';
+        document.getElementById('cand-instagram').value = c.socialLinks?.instagram || '';
+
+        existingPhotoUrl = c.photoUrl || null;
+        if (c.photoUrl) {
+            document.getElementById('cand-photo-icon').style.display = 'none';
+            const img = document.getElementById('cand-photo-img');
+            img.src = c.photoUrl;
+            img.style.display = 'block';
+        }
+
+        document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-pen"></i> Edit Candidate';
+        document.getElementById('save-btn-text').textContent = 'Save Changes';
+        document.getElementById('btn-cancel-edit').style.display = 'block';
+
+        document.getElementById('add-form-card').scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.cancelEdit = function() {
+        editingCandidateId = null;
+        photoFile = null;
+        existingPhotoUrl = null;
+        renderAddForm();
+        renderCandidateList();
+    };
+
+    window.saveCandidate = async function() {
+        const position = document.getElementById('cand-position').value;
+        const fullName = document.getElementById('cand-name').value.trim();
+        const biography = document.getElementById('cand-bio').value.trim();
+        const manifesto = document.getElementById('cand-manifesto').value.trim();
+        const twitter = document.getElementById('cand-twitter').value.trim();
+        const instagram = document.getElementById('cand-instagram').value.trim();
+
+        if (!position) { showToast('Select a position', 'error'); return; }
+        if (!fullName) { showToast('Enter candidate name', 'error'); return; }
+
+        const btn = document.getElementById('btn-save-candidate');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Saving...';
+
+        try {
+            let photoUrl = existingPhotoUrl;
+            if (photoFile) {
+                btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Uploading photo...';
+                photoUrl = await uploadPhotoToSupabase(photoFile);
+            }
+
+            const data = {
+                electionId,
+                fullName, position, biography, manifesto,
+                photoUrl: photoUrl || null,
+                faculty: currentElection.scope?.faculty || '',
+                department: currentElection.scope?.department || '',
+                socialLinks: { twitter, instagram },
+            };
+
+            if (editingCandidateId) {
+                await updateDoc(doc(db, 'candidates', editingCandidateId), data);
+                showToast('Candidate updated!', 'success');
+            } else {
+                await addDoc(collection(db, 'candidates'), { ...data, voteCount: 0, createdAt: new Date() });
+                showToast('Candidate added!', 'success');
+            }
+
+            editingCandidateId = null;
+            photoFile = null;
+            existingPhotoUrl = null;
+            renderAddForm();
+            await renderCandidateList();
+
+        } catch (e) {
+            console.error(e);
+            showToast('Error: ' + e.message, 'error');
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> <span>${editingCandidateId ? 'Save Changes' : 'Add Candidate'}</span>`;
+        }
+    };
+
+    window.deleteCandidate = async function(id) {
+        if (!confirm('Delete this candidate? This cannot be undone.')) return;
+        try {
+            await deleteDoc(doc(db, 'candidates', id));
+            showToast('Candidate deleted', 'success');
+            await renderCandidateList();
+        } catch (e) {
+            console.error(e);
+            showToast('Error: ' + e.message, 'error');
+        }
+    };
+</script>
+</body>
+</html>
