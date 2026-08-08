@@ -26,7 +26,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-        /* LOGIN */
         #login-screen {
             min-height: 100vh;
             display: flex; align-items: center; justify-content: center;
@@ -67,7 +66,6 @@
         .btn-login:active { transform: scale(.98); }
         .login-error { color: var(--danger); font-size: .85rem; margin-top: 12px; display: none; }
 
-        /* MAIN LAYOUT */
         #admin-screen { display: none; }
         .sidebar {
             position: fixed; top: 0; left: 0; bottom: 0; width: 220px;
@@ -116,24 +114,23 @@
         .btn-logout:hover { background: rgba(239,68,68,0.2); }
         .content { padding: 24px; }
 
-        /* TABS */
         .tab-panel { display: none; }
         .tab-panel.active { display: block; }
 
-        /* STATS */
         .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 24px; }
         .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
         .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-bottom: 12px; }
         .stat-num { font-size: 1.8rem; font-weight: 900; line-height: 1; margin-bottom: 4px; }
         .stat-label { font-size: .78rem; color: var(--muted); font-weight: 500; }
 
-        /* TABLE */
         .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 20px; }
-        .table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
         .table-title { font-weight: 700; font-size: .95rem; }
         .table-count { background: var(--primary-light); color: var(--primary); padding: 2px 10px; border-radius: 50px; font-size: .75rem; font-weight: 700; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 10px 16px; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); background: var(--surface2); border-bottom: 1px solid var(--border); }
+        .table-header-actions { display: flex; align-items: center; gap: 10px; }
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; min-width: 560px; border-collapse: collapse; }
+        th { text-align: left; padding: 10px 16px; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); background: var(--surface2); border-bottom: 1px solid var(--border); white-space: nowrap; }
         td { padding: 12px 16px; font-size: .85rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: rgba(255,255,255,0.02); }
@@ -143,8 +140,7 @@
         .badge-danger { background: rgba(239,68,68,0.15); color: var(--danger); }
         .badge-blue { background: rgba(61,114,180,0.15); color: var(--primary); }
 
-        /* BUTTONS */
-        .btn { padding: 7px 14px; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; border: none; font-family: 'Outfit', sans-serif; transition: opacity .2s, transform .1s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn { padding: 7px 14px; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; border: none; font-family: 'Outfit', sans-serif; transition: opacity .2s, transform .1s; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
         .btn:active { transform: scale(.97); }
         .btn-primary { background: var(--primary); color: white; }
         .btn-primary:hover { opacity: .9; }
@@ -154,7 +150,6 @@
         .btn-danger:hover { background: rgba(239,68,68,0.25); }
         .btn-sm { padding: 5px 10px; font-size: .75rem; }
 
-        /* FORMS */
         .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px; }
         .form-card h3 { font-weight: 700; margin-bottom: 6px; font-size: 1rem; }
         .form-card .form-desc { font-size: .85rem; color: var(--muted); margin-bottom: 18px; }
@@ -171,7 +166,6 @@
         .form-group select option { background: var(--surface); }
         .full-width { grid-column: 1 / -1; }
 
-        /* PARTNER CARDS */
         .partners-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
         .partner-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: transform .2s, border-color .2s; }
         .partner-card:hover { transform: translateY(-3px); border-color: var(--primary); }
@@ -182,7 +176,6 @@
         .partner-role { font-size: .8rem; color: var(--muted); margin-bottom: 10px; }
         .partner-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
-        /* TOAST */
         .toast {
             position: fixed; bottom: 24px; right: 24px; background: var(--surface);
             border: 1px solid var(--border); border-radius: 12px; padding: 14px 20px;
@@ -194,14 +187,12 @@
         .toast.success { border-color: var(--success); color: var(--success); }
         .toast.error { border-color: var(--danger); color: var(--danger); }
 
-        /* MODAL */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
         .modal-overlay.show { display: flex; }
         .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 28px; width: 100%; max-width: 420px; }
         .modal h3 { font-weight: 800; margin-bottom: 12px; }
         .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
 
-        /* MISC */
         .loading { text-align: center; padding: 40px; color: var(--muted); font-size: .9rem; }
         .spinner { display: inline-block; width: 24px; height: 24px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .6s linear infinite; margin-bottom: 10px; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -215,7 +206,6 @@
         }
         .search-bar:focus { border-color: var(--primary); }
 
-        /* MOBILE */
         @media (max-width: 768px) {
             .sidebar { width: 100%; height: auto; position: fixed; bottom: 0; top: auto; flex-direction: row; padding: 0; border-right: none; border-top: 1px solid var(--border); overflow-x: auto; }
             .sidebar-logo, .sidebar-bottom { display: none; }
@@ -233,7 +223,6 @@
 </head>
 <body>
 
-<!-- ════════════ LOGIN ════════════ -->
 <div id="login-screen">
     <div class="login-box">
         <img src="https://nijjgpgxdhsrtftuqcoy.supabase.co/storage/v1/object/public/listing-images/1000389657-removebg-preview.png" alt="Campus Circle" style="width:64px;height:64px;border-radius:16px;object-fit:cover;margin:0 auto 16px;display:block;">
@@ -252,7 +241,6 @@
     </div>
 </div>
 
-<!-- ════════════ ADMIN ════════════ -->
 <div id="admin-screen">
     <div class="sidebar">
         <div class="sidebar-logo">
@@ -280,7 +268,6 @@
         </div>
         <div class="content">
 
-            <!-- DASHBOARD -->
             <div class="tab-panel active" id="tab-dashboard">
                 <div class="stats-grid">
                     <div class="stat-card" style="border-left:4px solid var(--primary)">
@@ -319,31 +306,34 @@
                 </div>
             </div>
 
-            <!-- USERS -->
             <div class="tab-panel" id="tab-users">
                 <input class="search-bar" type="text" placeholder="🔍  Search by email or name..." oninput="filterUsers(this.value)">
                 <div class="table-card">
                     <div class="table-header">
                         <span class="table-title">All Registered Users</span>
-                        <span class="table-count" id="users-count">0</span>
+                        <div class="table-header-actions">
+                            <span class="table-count" id="users-count">0</span>
+                            <button class="btn btn-primary btn-sm" onclick="exportUsersCSV()"><i class="fa-solid fa-file-csv"></i> Export</button>
+                        </div>
                     </div>
                     <div id="users-body"><div class="loading"><div class="spinner"></div><br>Loading...</div></div>
                 </div>
             </div>
 
-            <!-- TRANSACTIONS -->
             <div class="tab-panel" id="tab-transactions">
                 <input class="search-bar" type="text" placeholder="🔍  Search by email or material..." oninput="filterTxns(this.value)">
                 <div class="table-card">
                     <div class="table-header">
                         <span class="table-title">All Transactions</span>
-                        <span class="table-count" id="txns-count">0</span>
+                        <div class="table-header-actions">
+                            <span class="table-count" id="txns-count">0</span>
+                            <button class="btn btn-primary btn-sm" onclick="exportTransactionsCSV()"><i class="fa-solid fa-file-csv"></i> Export</button>
+                        </div>
                     </div>
                     <div id="txns-body"><div class="loading"><div class="spinner"></div><br>Loading...</div></div>
                 </div>
             </div>
 
-            <!-- GRANT ACCESS -->
             <div class="tab-panel" id="tab-access">
                 <div class="form-card">
                     <h3><i class="fa-solid fa-key" style="color:var(--primary)"></i> Manually Grant Access</h3>
@@ -367,7 +357,6 @@
                 </div>
             </div>
 
-            <!-- PARTNERS -->
             <div class="tab-panel" id="tab-partners">
                 <div class="form-card">
                     <h3><i class="fa-solid fa-user-plus" style="color:var(--primary)"></i> Add New Partner</h3>
@@ -412,7 +401,6 @@
                 </div>
             </div>
 
-            <!-- ANNOUNCE -->
             <div class="tab-panel" id="tab-announce">
                 <div class="form-card">
                     <h3><i class="fa-solid fa-bullhorn" style="color:var(--primary)"></i> Send Announcement</h3>
@@ -447,10 +435,8 @@
     </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay">
     <div class="modal">
         <h3 id="modal-title">Confirm</h3>
@@ -468,18 +454,19 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let allUsers = [], allTxns = [];
 
-// ── AUTH ──
+function shortId(id) {
+    return id ? (id.slice(0, 8) + '...') : '—';
+}
+
 async function doLogin() {
     const email = document.getElementById('login-email').value.trim();
     const pass = document.getElementById('login-password').value;
     const err = document.getElementById('login-error');
     err.style.display = 'none';
 
-    // Sign in first
     const { error } = await sb.auth.signInWithPassword({ email, password: pass });
     if (error) { err.textContent = error.message; err.style.display = 'block'; return; }
 
-    // Check admin_users table in Supabase
     const { data: adminRow } = await sb.from('admin_users').select('email').eq('email', email).maybeSingle();
     if (!adminRow) {
         await sb.auth.signOut();
@@ -501,7 +488,6 @@ async function doLogout() {
     window.location.href = 'index.html';
 }
 
-// ── NAV ──
 const tabTitles = { dashboard:'Dashboard', users:'Users', transactions:'Transactions', access:'Grant Access', partners:'Partners', announce:'Announcements' };
 function showTab(tab, el) {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -511,12 +497,10 @@ function showTab(tab, el) {
     document.getElementById('topbar-title').textContent = tabTitles[tab];
 }
 
-// ── LOAD ALL ──
 async function loadAll() {
     await Promise.all([loadDashboard(), loadUsers(), loadTransactions(), loadResources(), loadPartners(), loadAnnouncements()]);
 }
 
-// ── DASHBOARD ──
 async function loadDashboard() {
     const [{ count: uc }, { count: tc }, { data: rev }, { count: pc }, { count: rc }] = await Promise.all([
         sb.from('profiles').select('*', { count: 'exact', head: true }),
@@ -532,12 +516,10 @@ async function loadDashboard() {
     document.getElementById('stat-partners').textContent = pc || 0;
     document.getElementById('stat-resources').textContent = rc || 0;
 
-    // Join transactions -> academic_resources, then match buyer_id to profiles.id
     const { data: recent } = await sb.from('transactions')
         .select('id, amount_paid, created_at, buyer_id, academic_resources(title)')
         .order('created_at', { ascending: false }).limit(8);
 
-    // Fetch buyer emails from profiles using buyer_id
     const buyerIds = [...new Set((recent||[]).map(t => t.buyer_id).filter(Boolean))];
     let profileMap = {};
     if (buyerIds.length) {
@@ -547,17 +529,16 @@ async function loadDashboard() {
 
     const el = document.getElementById('recent-txns-body');
     if (!recent || !recent.length) { el.innerHTML = '<div class="empty"><i class="fa-solid fa-receipt"></i><p>No transactions yet</p></div>'; return; }
-    el.innerHTML = `<table><thead><tr><th>Student</th><th>Material</th><th>Amount</th><th>Date</th></tr></thead><tbody>
+    el.innerHTML = `<div class="table-responsive"><table><thead><tr><th>Student</th><th>Material</th><th>Amount</th><th>Date</th></tr></thead><tbody>
         ${recent.map(t => `<tr>
-            <td style="font-size:.82rem">${profileMap[t.buyer_id] || t.buyer_id?.slice(0,8)+'...' || '—'}</td>
+            <td style="font-size:.82rem">${profileMap[t.buyer_id] || shortId(t.buyer_id)}</td>
             <td>${t.academic_resources?.title || '—'}</td>
             <td style="color:var(--success);font-weight:700">\u20a6${(t.amount_paid||0).toLocaleString()}</td>
             <td style="color:var(--muted)">${new Date(t.created_at).toLocaleDateString()}</td>
         </tr>`).join('')}
-    </tbody></table>`;
+    </tbody></table></div>`;
 }
 
-// ── USERS ──
 async function loadUsers() {
     const { data } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
     allUsers = data || [];
@@ -567,19 +548,18 @@ function renderUsers(users) {
     document.getElementById('users-count').textContent = users.length;
     const el = document.getElementById('users-body');
     if (!users.length) { el.innerHTML = '<div class="empty"><i class="fa-solid fa-users"></i><p>No users found</p></div>'; return; }
-    el.innerHTML = `<table><thead><tr><th>Email</th><th>Name</th><th>Joined</th></tr></thead><tbody>
+    el.innerHTML = `<div class="table-responsive"><table><thead><tr><th>Email</th><th>Name</th><th>Joined</th></tr></thead><tbody>
         ${users.map(u => `<tr>
             <td style="font-size:.82rem">${u.email || '—'}</td>
             <td>${u.full_name || u.name || '—'}</td>
             <td style="color:var(--muted)">${new Date(u.created_at).toLocaleDateString()}</td>
         </tr>`).join('')}
-    </tbody></table>`;
+    </tbody></table></div>`;
 }
 function filterUsers(q) {
     renderUsers(allUsers.filter(u => (u.email||'').toLowerCase().includes(q.toLowerCase()) || (u.full_name||'').toLowerCase().includes(q.toLowerCase())));
 }
 
-// ── TRANSACTIONS ──
 async function loadTransactions() {
     const { data } = await sb.from('transactions')
         .select('id, amount_paid, created_at, buyer_id, academic_resources(title)')
@@ -591,21 +571,21 @@ async function loadTransactions() {
         const { data: profs } = await sb.from('profiles').select('id, email').in('id', buyerIds);
         (profs||[]).forEach(p => profileMap[p.id] = p.email);
     }
-    allTxns = (data || []).map(t => ({ ...t, studentEmail: profileMap[t.buyer_id] || '—' }));
+    allTxns = (data || []).map(t => ({ ...t, studentEmail: profileMap[t.buyer_id] || shortId(t.buyer_id) }));
     renderTxns(allTxns);
 }
 function renderTxns(txns) {
     document.getElementById('txns-count').textContent = txns.length;
     const el = document.getElementById('txns-body');
     if (!txns.length) { el.innerHTML = '<div class="empty"><i class="fa-solid fa-receipt"></i><p>No transactions yet</p></div>'; return; }
-    el.innerHTML = `<table><thead><tr><th>Student</th><th>Material</th><th>Amount</th><th>Date</th></tr></thead><tbody>
+    el.innerHTML = `<div class="table-responsive"><table><thead><tr><th>Student</th><th>Material</th><th>Amount</th><th>Date</th></tr></thead><tbody>
         ${txns.map(t => `<tr>
             <td style="font-size:.82rem">${t.studentEmail}</td>
             <td>${t.academic_resources?.title || '—'}</td>
             <td style="color:var(--success);font-weight:700">\u20a6${(t.amount_paid||0).toLocaleString()}</td>
             <td style="color:var(--muted)">${new Date(t.created_at).toLocaleDateString()}</td>
         </tr>`).join('')}
-    </tbody></table>`;
+    </tbody></table></div>`;
 }
 function filterTxns(q) {
     renderTxns(allTxns.filter(t =>
@@ -614,7 +594,6 @@ function filterTxns(q) {
     ));
 }
 
-// ── RESOURCES ──
 async function loadResources() {
     const { data } = await sb.from('academic_resources').select('id, title').order('title');
     const sel = document.getElementById('grant-resource');
@@ -622,7 +601,6 @@ async function loadResources() {
     (data || []).forEach(r => sel.innerHTML += `<option value="${r.id}">${r.title}</option>`);
 }
 
-// ── GRANT ACCESS ──
 async function grantAccess() {
     const email = document.getElementById('grant-email').value.trim();
     const resourceId = document.getElementById('grant-resource').value;
@@ -639,7 +617,6 @@ async function grantAccess() {
     loadTransactions(); loadDashboard();
 }
 
-// ── RECOVERY ──
 async function runRecovery() {
     const result = document.getElementById('recovery-result');
     result.innerHTML = '<span style="color:var(--muted)">Running recovery scan...</span>';
@@ -657,7 +634,6 @@ async function runRecovery() {
     loadDashboard(); loadTransactions();
 }
 
-// ── PARTNERS ──
 async function loadPartners() {
     const { data } = await sb.from('partners').select('*').order('created_at', { ascending: false });
     renderPartners(data || []);
@@ -720,7 +696,6 @@ function deletePartner(id, name) {
     });
 }
 
-// ── ANNOUNCEMENTS ──
 async function sendAnnouncement() {
     const title = document.getElementById('ann-title').value.trim();
     const message = document.getElementById('ann-message').value.trim();
@@ -747,16 +722,54 @@ async function loadAnnouncements() {
     if (!data || !data.length) { el.innerHTML = '<div class="empty"><i class="fa-solid fa-bullhorn"></i><p>No announcements sent yet</p></div>'; return; }
     const seen = new Set();
     const unique = data.filter(n => { const k = n.message + n.created_at?.slice(0,16); if (seen.has(k)) return false; seen.add(k); return true; });
-    el.innerHTML = `<table><thead><tr><th>Message</th><th>Type</th><th>Date</th></tr></thead><tbody>
+    el.innerHTML = `<div class="table-responsive"><table><thead><tr><th>Message</th><th>Type</th><th>Date</th></tr></thead><tbody>
         ${unique.map(n => `<tr>
             <td style="font-size:.82rem">${n.message}</td>
             <td><span class="badge ${n.type==='success'?'badge-success':n.type==='warning'?'badge-warning':'badge-blue'}">${n.type}</span></td>
             <td style="color:var(--muted)">${new Date(n.created_at).toLocaleDateString()}</td>
         </tr>`).join('')}
-    </tbody></table>`;
+    </tbody></table></div>`;
 }
 
-// ── TOAST ──
+function downloadCSV(filename, rows, headers) {
+    const csvRows = [headers.join(',')];
+    rows.forEach(r => {
+        csvRows.push(headers.map(h => {
+            let val = r[h] ?? '';
+            val = String(val).replace(/"/g, '""');
+            if (/[",\n]/.test(val)) val = `"${val}"`;
+            return val;
+        }).join(','));
+    });
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+function exportTransactionsCSV() {
+    if (!allTxns.length) { showToast('No transactions to export', 'error'); return; }
+    const rows = allTxns.map(t => ({
+        Student: t.studentEmail,
+        Material: t.academic_resources?.title || '—',
+        Amount: t.amount_paid || 0,
+        Date: new Date(t.created_at).toLocaleString()
+    }));
+    downloadCSV(`campus-circle-transactions-${new Date().toISOString().slice(0,10)}.csv`, rows, ['Student','Material','Amount','Date']);
+    showToast('Transactions exported ✅', 'success');
+}
+function exportUsersCSV() {
+    if (!allUsers.length) { showToast('No users to export', 'error'); return; }
+    const rows = allUsers.map(u => ({
+        Email: u.email || '—',
+        Name: u.full_name || u.name || '—',
+        Joined: new Date(u.created_at).toLocaleString()
+    }));
+    downloadCSV(`campus-circle-users-${new Date().toISOString().slice(0,10)}.csv`, rows, ['Email','Name','Joined']);
+    showToast('Users exported ✅', 'success');
+}
+
 function showToast(msg, type = 'success') {
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -764,7 +777,6 @@ function showToast(msg, type = 'success') {
     setTimeout(() => t.classList.remove('show'), 3500);
 }
 
-// ── MODAL ──
 let modalCallback = null;
 function openModal(title, body, cb) {
     document.getElementById('modal-title').textContent = title;
@@ -775,7 +787,6 @@ function openModal(title, body, cb) {
 function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); modalCallback = null; }
 document.getElementById('modal-confirm-btn').onclick = () => { if (modalCallback) { modalCallback(); } closeModal(); };
 
-// ── AUTO-LOGIN CHECK ──
 sb.auth.getSession().then(async ({ data }) => {
     if (data.session) {
         const email = data.session.user.email;
