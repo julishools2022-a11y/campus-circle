@@ -707,7 +707,7 @@ async function sendAnnouncement() {
     if (!profiles || !profiles.length) { result.innerHTML = '<span style="color:var(--muted)">No users to notify.</span>'; return; }
 
     const { error } = await sb.from('notifications').insert(
-        profiles.map(p => ({ user_id: p.id, type, message: `${title}: ${message}`, is_read: false }))
+        profiles.map(p => ({ user_id: p.id, type, title: title, message: `${title}: ${message}`, is_read: false }))
     );
     if (error) { showToast('Error: ' + error.message, 'error'); return; }
     showToast(`Sent to ${profiles.length} students ✅`, 'success');
