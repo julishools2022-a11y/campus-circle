@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sign Up | Campus Circle</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mailcheck@1.1.1/src/mailcheck.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
@@ -134,6 +135,18 @@
 
         select option { background: var(--surface2); color: var(--text); }
 
+        /* Typo suggestion + mismatch hint under email fields */
+        .field-hint {
+            font-size: 0.78rem;
+            margin-top: 6px;
+            display: none;
+        }
+        .field-hint.show { display: block; }
+        .field-hint.suggestion { color: var(--accent); cursor: pointer; }
+        .field-hint.suggestion:hover { text-decoration: underline; }
+        .field-hint.error { color: var(--danger); }
+        .field-hint.ok { color: var(--success); }
+
         .btn {
             width: 100%;
             padding: 14px;
@@ -247,6 +260,16 @@
                     <i class="fa-regular fa-envelope"></i>
                     <input type="email" id="signupEmail" placeholder="you@email.com" required>
                 </div>
+                <div id="emailSuggestion" class="field-hint suggestion"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Confirm Email Address</label>
+                <div class="input-wrap">
+                    <i class="fa-regular fa-envelope"></i>
+                    <input type="email" id="confirmEmail" placeholder="Re-enter your email" required>
+                </div>
+                <div id="emailMatchHint" class="field-hint"></div>
             </div>
 
             <div class="form-group">
@@ -283,6 +306,74 @@
     const msg = document.getElementById("message");
     const btn = document.getElementById("submitBtn");
 
+    const emailInput = document.getElementById("signupEmail");
+    const confirmEmailInput = document.getElementById("confirmEmail");
+    const suggestionEl = document.getElementById("emailSuggestion");
+    const matchHintEl = document.getElementById("emailMatchHint");
+
+    // Strict format check — catches trailing punctuation (john@gmail.com?), stray
+    // spaces/letters, missing TLD, double dots, etc. that a loose regex lets through
+    const EMAIL_RE = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    function isCleanEmail(val) {
+        if (!val) return false;
+        if (val !== val.trim()) return false;          // leading/trailing whitespace
+        if (/[?!,;:'"()\[\]{}<>]/.test(val)) return false; // stray punctuation anywhere
+        if (/\.\.|@.*@/.test(val)) return false;        // double dots, double @
+        return EMAIL_RE.test(val);
+    }
+    function formatHint(el, input) {
+        const val = input.value.trim();
+        if (!val) { el.classList.remove("show"); return true; }
+        if (!isCleanEmail(val)) {
+            el.textContent = "That email doesn't look right — check for stray characters or punctuation";
+            el.className = "field-hint error show";
+            return false;
+        }
+        el.classList.remove("show");
+        return true;
+    }
+
+    // Suggest a fix for common domain typos (gmial.com, gmail.con, etc.)
+    function checkEmailTypo() {
+        const val = emailInput.value.trim();
+        suggestionEl.classList.remove("show");
+        if (!formatHint(matchHintEl, emailInput)) return; // don't suggest on top of a format error
+        if (!val || typeof Mailcheck === "undefined") return;
+        Mailcheck.run({
+            email: val,
+            suggested: function (suggestion) {
+                suggestionEl.textContent = `Did you mean ${suggestion.full}?`;
+                suggestionEl.classList.add("show");
+                suggestionEl.onclick = function () {
+                    emailInput.value = suggestion.full;
+                    suggestionEl.classList.remove("show");
+                    checkEmailMatch();
+                };
+            },
+            empty: function () {}
+        });
+    }
+
+    // Confirm the two email fields match before allowing submit
+    function checkEmailMatch() {
+        const a = emailInput.value.trim().toLowerCase();
+        const b = confirmEmailInput.value.trim().toLowerCase();
+        if (!b) { matchHintEl.classList.remove("show"); return true; }
+        if (a === b) {
+            matchHintEl.textContent = "✓ Emails match";
+            matchHintEl.className = "field-hint ok show";
+            return true;
+        } else {
+            matchHintEl.textContent = "Emails don't match";
+            matchHintEl.className = "field-hint error show";
+            return false;
+        }
+    }
+
+    emailInput.addEventListener("blur", checkEmailTypo);
+    emailInput.addEventListener("input", checkEmailMatch);
+    confirmEmailInput.addEventListener("input", checkEmailMatch);
+
     signupForm.onsubmit = async (e) => {
         e.preventDefault();
 
@@ -291,10 +382,19 @@
         const name = document.getElementById("fullName").value;
         const dept = document.getElementById("dept").value;
         const level = document.getElementById("level").value;
-        const email = document.getElementById("signupEmail").value;
+        const email = emailInput.value.trim();
+        const confirmEmail = confirmEmailInput.value.trim();
         const password = document.getElementById("signupPassword").value;
 
         msg.textContent = "";
+
+        if (email.toLowerCase() !== confirmEmail.toLowerCase()) {
+            msg.textContent = "Your email addresses don't match. Please check and try again.";
+            msg.style.color = "var(--danger)";
+            checkEmailMatch();
+            return;
+        }
+
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Account...';
 
