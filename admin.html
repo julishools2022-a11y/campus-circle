@@ -738,14 +738,20 @@ async function runRecovery() {
 function normalizePhotoUrl(url) {
     if (!url) return url;
     const trimmed = url.trim();
+    // Google's thumbnail endpoint embeds reliably as <img src>. The uc?export=view
+    // endpoint works when opened directly in a browser tab but is often blocked or
+    // redirected when loaded cross-site as an image element (referrer check on Google's end).
     const match = trimmed.match(/drive\.google\.com\/file\/d\/([^/]+)/);
     if (match) {
-        return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+        return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w500`;
     }
-    // Also handle links already using ?id= but pointed at /open or similar
     const openMatch = trimmed.match(/drive\.google\.com\/open\?id=([^&]+)/);
     if (openMatch) {
-        return `https://drive.google.com/uc?export=view&id=${openMatch[1]}`;
+        return `https://drive.google.com/thumbnail?id=${openMatch[1]}&sz=w500`;
+    }
+    const ucMatch = trimmed.match(/drive\.google\.com\/uc\?export=view&id=([^&]+)/);
+    if (ucMatch) {
+        return `https://drive.google.com/thumbnail?id=${ucMatch[1]}&sz=w500`;
     }
     return trimmed;
 }
