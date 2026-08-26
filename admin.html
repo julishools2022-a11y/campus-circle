@@ -335,7 +335,7 @@
             <div class="tab-panel" id="tab-access">
                 <div class="form-card">
                     <h3><i class="fa-solid fa-key" style="color:var(--gold)"></i> Manually Grant Access</h3>
-                    <p class="form-desc">Use this when a student paid but didn't get access. Enter their email and select the material.</p>
+                    <p class="form-desc">Use this when a student paid but didn't get access, or to give a resource away free (scholarships, promos, winners, etc.).</p>
                     <div class="form-group">
                         <label>Student Email</label>
                         <input type="email" id="grant-email" placeholder="student@gmail.com">
@@ -343,6 +343,14 @@
                     <div class="form-group">
                         <label>Material</label>
                         <select id="grant-resource"><option value="">— Select material —</option></select>
+                    </div>
+                    <div class="form-group" style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                        <input type="checkbox" id="grant-free" onchange="toggleFreeGrant()" style="width:auto;accent-color:var(--gold)">
+                        <label for="grant-free" style="margin:0;text-transform:none;font-size:.85rem;color:var(--text);letter-spacing:normal">Free grant — no charge (₦0)</label>
+                    </div>
+                    <div class="form-group" id="grant-reason-wrap" style="display:none">
+                        <label>Reason (for your records)</label>
+                        <input type="text" id="grant-reason" placeholder="e.g. Essay contest winner, scholarship student">
                     </div>
                     <button class="btn btn-success" onclick="grantAccess()"><i class="fa-solid fa-circle-check"></i> Grant Access Now</button>
                 </div>
@@ -352,6 +360,17 @@
                     <p class="form-desc">Scans payment_logs and automatically grants access to students who paid but have no transaction record.</p>
                     <button class="btn btn-primary" onclick="runRecovery()"><i class="fa-solid fa-rotate"></i> Run Auto-Recovery</button>
                     <div id="recovery-result" style="margin-top:14px;font-size:.85rem;"></div>
+                </div>
+
+                <div class="table-card">
+                    <div class="table-header">
+                        <span class="table-title">Resource Pricing</span>
+                        <div class="table-header-actions">
+                            <span class="table-count" id="pricing-count">0</span>
+                        </div>
+                    </div>
+                    <p class="form-desc" style="padding:14px 20px 0">Flip any material to Free for every student, or back to Paid. This applies platform-wide, not to one person.</p>
+                    <div id="pricing-body"><div class="loading"><div class="spinner"></div><br>Loading...</div></div>
                 </div>
             </div>
 
@@ -529,7 +548,7 @@ function showTab(tab, el) {
 
 // ── LOAD ALL ──
 async function loadAll() {
-    await Promise.all([loadDashboard(), loadUsers(), loadTransactions(), loadResources(), loadPartners(), loadAnnouncements()]);
+    await Promise.all([loadDashboard(), loadUsers(), loadTransactions(), loadResources(), loadResourcePricing(), loadPartners(), loadAnnouncements()]);
 }
 
 // ── CHARTS ──
@@ -625,7 +644,7 @@ async function loadDashboard() {
         ${recent.map(t => `<tr>
             <td style="font-size:.82rem">${profileMap[t.buyer_id] || shortId(t.buyer_id)}</td>
             <td>${t.academic_resources?.title || '—'}</td>
-            <td style="color:var(--success);font-weight:700">\u20a6${(t.amount_paid||0).toLocaleString()}</td>
+            <td>${(t.amount_paid||0) === 0 ? '<span class="badge badge-blue">FREE</span>' : '<span style="color:var(--success);font-weight:700">\u20a6' + (t.amount_paid||0).toLocaleString() + '</span>'}</td>
             <td style="color:var(--muted)">${new Date(t.created_at).toLocaleDateString()}</td>
         </tr>`).join('')}
     </tbody></table></div>`;
@@ -676,7 +695,7 @@ function renderTxns(txns) {
         ${txns.map(t => `<tr>
             <td style="font-size:.82rem">${t.studentEmail}</td>
             <td>${t.academic_resources?.title || '—'}</td>
-            <td style="color:var(--success);font-weight:700">\u20a6${(t.amount_paid||0).toLocaleString()}</td>
+            <td>${(t.amount_paid||0) === 0 ? '<span class="badge badge-blue">FREE</span>' : '<span style="color:var(--success);font-weight:700">\u20a6' + (t.amount_paid||0).toLocaleString() + '</span>'}</td>
             <td style="color:var(--muted)">${new Date(t.created_at).toLocaleDateString()}</td>
         </tr>`).join('')}
     </tbody></table></div>`;
@@ -696,20 +715,67 @@ async function loadResources() {
     (data || []).forEach(r => sel.innerHTML += `<option value="${r.id}">${r.title}</option>`);
 }
 
+// ── RESOURCE PRICING (Free-for-everyone toggle) ──
+async function loadResourcePricing() {
+    const { data, error } = await sb.from('academic_resources').select('id, title, is_free').order('title');
+    const el = document.getElementById('pricing-body');
+    if (error) {
+        el.innerHTML = `<div class="empty"><i class="fa-solid fa-triangle-exclamation"></i><p>Could not load pricing — is the "is_free" column added yet?</p></div>`;
+        document.getElementById('pricing-count').textContent = '0';
+        return;
+    }
+    document.getElementById('pricing-count').textContent = (data || []).length;
+    if (!data || !data.length) { el.innerHTML = '<div class="empty"><i class="fa-solid fa-book"></i><p>No materials found</p></div>'; return; }
+    el.innerHTML = `<div class="table-responsive"><table><thead><tr><th>Material</th><th>Status</th><th>Action</th></tr></thead><tbody>
+        ${data.map(r => `<tr>
+            <td>${r.title}</td>
+            <td>${r.is_free ? '<span class="badge badge-blue">FREE for everyone</span>' : '<span class="badge badge-success">Paid</span>'}</td>
+            <td>
+                ${r.is_free
+                    ? `<button class="btn btn-primary btn-sm" onclick="setResourceFree(${r.id}, false, '${r.title.replace(/'/g,"\\'")}')"><i class="fa-solid fa-naira-sign"></i> Make Paid</button>`
+                    : `<button class="btn btn-gold btn-sm" onclick="setResourceFree(${r.id}, true, '${r.title.replace(/'/g,"\\'")}')"><i class="fa-solid fa-gift"></i> Make Free</button>`}
+            </td>
+        </tr>`).join('')}
+    </tbody></table></div>`;
+}
+
+function setResourceFree(resourceId, makeFree, title) {
+    const action = makeFree ? 'make this free for every student' : 'switch this back to paid';
+    openModal(makeFree ? 'Make Resource Free' : 'Switch to Paid', `Are you sure you want to ${action}: "${title}"?`, async () => {
+        const { error } = await sb.from('academic_resources').update({ is_free: makeFree }).eq('id', resourceId);
+        if (error) { showToast('Error: ' + error.message, 'error'); return; }
+        showToast(`"${title}" is now ${makeFree ? 'free for everyone ✅' : 'paid again ✅'}`, 'success');
+        loadResourcePricing();
+    });
+}
+
 // ── GRANT ACCESS ──
+function toggleFreeGrant() {
+    const isFree = document.getElementById('grant-free').checked;
+    document.getElementById('grant-reason-wrap').style.display = isFree ? 'block' : 'none';
+}
+
 async function grantAccess() {
     const email = document.getElementById('grant-email').value.trim();
     const resourceId = document.getElementById('grant-resource').value;
+    const isFree = document.getElementById('grant-free').checked;
+    const reason = document.getElementById('grant-reason').value.trim();
     if (!email || !resourceId) { showToast('Fill in all fields', 'error'); return; }
+    if (isFree && !reason) { showToast('Add a reason for the free grant, for your own records', 'error'); return; }
 
     const { data: profile } = await sb.from('profiles').select('id').eq('email', email).single();
     if (!profile) { showToast('Student not found: ' + email, 'error'); return; }
 
-    const { error } = await sb.from('transactions').insert({ buyer_id: profile.id, resource_id: parseInt(resourceId), amount_paid: 1500 });
+    const insertRow = { buyer_id: profile.id, resource_id: parseInt(resourceId), amount_paid: isFree ? 0 : 1500 };
+
+    const { error } = await sb.from('transactions').insert(insertRow);
     if (error && !error.message.includes('duplicate')) { showToast('Error: ' + error.message, 'error'); return; }
-    showToast('Access granted to ' + email + ' ✅', 'success');
+    showToast((isFree ? 'Free access granted to ' : 'Access granted to ') + email + ' ✅', 'success');
     document.getElementById('grant-email').value = '';
     document.getElementById('grant-resource').value = '';
+    document.getElementById('grant-reason').value = '';
+    document.getElementById('grant-free').checked = false;
+    toggleFreeGrant();
     loadTransactions(); loadDashboard();
 }
 
